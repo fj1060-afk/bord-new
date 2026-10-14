@@ -63,7 +63,7 @@ export const phases: Phase[] = [
     title: "المكاتب",
     scope: "مكتب الحوكمة (مركز العمل، التقويم، التقارير) ومكتب المدير (الوارد، المسودات، المتابعات، جهات الاتصال).",
     doneWhen: "يعمل المكتبان بالكامل.",
-    status: "planned",
+    status: "active",
   },
   {
     number: 8,
