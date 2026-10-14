@@ -5,11 +5,12 @@ import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
 import { LEVELS } from "@/lib/permissions";
 import { siteUrl } from "@/lib/site-url";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminConfigured, createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const PAGE = "/admin/users";
 const fail = (message: string): ActionState => ({ ok: false, message });
+const NOT_CONFIGURED = "مفتاح Supabase السري غير مضبوط على الخادم (SUPABASE_SECRET_KEY). راجع docs/SETUP.md.";
 
 /** Emails a link to set a password; works for new and existing accounts. */
 async function emailInvitation(userId: string, email: string): Promise<boolean> {
@@ -32,6 +33,7 @@ export async function createUser(_prev: ActionState, form: FormData): Promise<Ac
   const sendNow = form.get("intent") === "invite";
   if (!email || !fullName) return fail("الاسم والبريد الإلكتروني مطلوبان.");
   if (roleIds.length === 0) return fail("اختر دوراً واحداً على الأقل.");
+  if (!adminConfigured()) return fail(NOT_CONFIGURED);
 
   const { data, error } = await createAdminClient().auth.admin.createUser({
     email,
@@ -62,6 +64,7 @@ export async function createUser(_prev: ActionState, form: FormData): Promise<Ac
 
 export async function sendInvitation(userId: string): Promise<ActionState> {
   await requirePage(PAGE, LEVELS.manage);
+  if (!adminConfigured()) return fail(NOT_CONFIGURED);
   const supabase = await createClient();
   const { data: profile } = await supabase.from("profiles").select("email, status").eq("id", userId).single();
   if (!profile) return fail("المستخدم غير موجود.");
@@ -98,6 +101,8 @@ export async function updateUserRoles(userId: string, _prev: ActionState, form: 
 export async function setUserStatus(userId: string, status: "active" | "disabled") {
   const viewer = await requirePage(PAGE, LEVELS.edit);
   if (userId === viewer.id) return;
+  // Without the ban the user could keep signing in, so change nothing.
+  if (!adminConfigured()) throw new Error("SUPABASE_SECRET_KEY is not set");
 
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({ status }).eq("id", userId);

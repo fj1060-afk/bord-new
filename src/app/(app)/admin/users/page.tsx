@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
 import { requirePage } from "@/lib/auth";
 import { can, LEVELS } from "@/lib/permissions";
+import { adminConfigured } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { CreateUserForm, UserRow } from "./user-forms";
 
@@ -46,6 +47,12 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
   return (
     <>
       <PageHeader section="الإدارة" title="المستخدمون" description="أضف المستخدمين وحدد أدوارهم، وعطّل من لم يعد بحاجة للوصول." />
+      {canManage && !adminConfigured() && (
+        <p role="alert" className="mb-6 rounded-md bg-danger/10 px-4 py-3 text-sm text-danger">
+          إنشاء المستخدمين وإرسال الدعوات وتعطيل الحسابات متوقف: أضف <span dir="ltr">SUPABASE_SECRET_KEY</span> إلى متغيرات
+          البيئة في Vercel ثم أعد النشر (راجع docs/SETUP.md).
+        </p>
+      )}
       {canManage && <CreateUserForm roles={roles ?? []} />}
 
       <form className="mb-4 flex flex-wrap gap-2" role="search">

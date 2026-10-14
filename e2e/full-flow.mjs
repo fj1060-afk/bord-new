@@ -9,7 +9,11 @@ const stamp = Date.now().toString().slice(-5);
 const results = [];
 const problems = [];
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
+const browser = await chromium.launch({
+  executablePath: process.env.CHROMIUM_PATH || undefined,
+  // Chromium ignores HTTPS_PROXY unless it is passed in explicitly.
+  proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY } : undefined,
+});
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 page.on("dialog", (d) => (d.type() === "prompt" ? d.accept("يرجى التحديث") : d.accept()));
 page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
@@ -46,7 +50,8 @@ await step("صفحات الإدارة تفتح", async () => {
 
 await step("إنشاء المجلس (إن لم يوجد)", async () => {
   await go("/board");
-  if (await page.locator("input[name=term_start]").count()) {
+  // The edit form of an existing board has the same fields, so look for the create button.
+  if (await page.getByRole("button", { name: "إنشاء المجلس" }).count()) {
     await page.fill("input[name=name]", "مجلس الإدارة");
     await page.fill("input[name=term_start]", "2026-01-01");
     await page.getByText("تنتهي الدورة في").waitFor();
@@ -87,7 +92,7 @@ await step("إنشاء لجنة وإضافة عضو", async () => {
 let meetingUrl = "";
 await step("إنشاء اجتماع للمجلس", async () => {
   await go("/meetings/new");
-  const board = await page.locator("select[name=body] option").filter({ hasText: "مجلس" }).first().getAttribute("value");
+  const board = await page.locator("select[name=body] option[value^='board:']").first().getAttribute("value");
   await page.selectOption("select[name=body]", board);
   await page.fill("input[name=title]", `اجتماع اختبار ${stamp}`);
   await page.fill("input[name=date]", "2026-12-20");
@@ -117,8 +122,10 @@ await step("رفع مستند على البند", async () => {
 
 await step("طلب مستند من الإدارة", async () => {
   await page.click("summary:has-text('طلب مستند من إدارة')");
-  await page.fill("input[placeholder='المستند المطلوب']", "تقرير الربع الثالث");
-  await page.selectOption("select[name=department_id] >> nth=-1", { label: `إدارة اختبار ${stamp}` });
+  // Scope to the request form: the hidden "add item" form has a department select too.
+  const request = page.locator("form:has(button:has-text('إرسال الطلب'))").first();
+  await request.locator("input[placeholder='المستند المطلوب']").fill("تقرير الربع الثالث");
+  await request.locator("select[name=department_id]").selectOption({ label: `إدارة اختبار ${stamp}` });
   await page.click("button:has-text('إرسال الطلب')");
   await status("أُرسل طلب المستند");
 });
@@ -145,7 +152,8 @@ await step("تقديم إفصاح لعضو", async () => {
   await go("/board");
   await page.click(`a:has-text('عضو اختبار ${stamp}')`);
   await page.click("button:has-text('تقديم الإفصاح')");
-  await status("قُدّم الإفصاح");
+  // Once filed, the form is replaced by the disclosure card, so its message never shows.
+  await page.getByText("بانتظار المراجعة").first().waitFor({ timeout: 20000 });
 });
 
 await step("سجل التدقيق يسجّل العمليات", async () => {
