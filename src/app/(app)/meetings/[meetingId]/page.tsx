@@ -13,13 +13,14 @@ import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
 import { InviteesTab } from "../_components/invitees-tab";
 import { LiveTab, type LiveData } from "../_components/live-tab";
+import { MinutesTab } from "../_components/minutes-tab";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MeetingDetailsForm, RsvpForm } from "../_components/meeting-forms";
 import type { AgendaItem } from "../_components/agenda-forms";
 
 export const metadata: Metadata = { title: "الاجتماع" };
 
-const TABS = { overview: "نظرة عامة", agenda: "الأجندة والمستندات", invitees: "المدعوون", live: "الانعقاد" } as const;
+const TABS = { overview: "نظرة عامة", agenda: "الأجندة والمستندات", invitees: "المدعوون", live: "الانعقاد", minutes: "المحضر والقرارات" } as const;
 
 export default async function MeetingPage({ params, searchParams }: PageProps<"/meetings/[meetingId]">) {
   const viewer = await requirePage("/meetings");
@@ -166,6 +167,8 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
       )}
 
       {tab === "invitees" && <InviteesTab meetingId={meetingId} invitees={inviteeRows} people={people} editable={editable} />}
+
+      {tab === "minutes" && <MinutesTab meeting={meeting} items={agenda} viewerId={viewer.id} organizer={organizer} />}
 
       {tab === "live" &&
         (status === "scheduled" ? (
