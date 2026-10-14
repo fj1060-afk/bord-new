@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { RegulationNote } from "@/components/ui/regulation-note";
+import { NOTES } from "@/lib/regulations";
 import Link from "next/link";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -76,6 +78,7 @@ export default async function BoardPage() {
         title={board.name}
         description={`الدورة من ${formatGregorianDate(new Date(board.term_start))} إلى ${formatGregorianDate(new Date(board.term_end))}`}
       />
+      <RegulationNote notes={NOTES.board} />
 
       <dl className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { RegulationNote } from "@/components/ui/regulation-note";
+import { NOTES } from "@/lib/regulations";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/org/confirm-button";
@@ -30,7 +32,7 @@ export default async function CommitteePage({ params }: PageProps<"/committees/[
   const supabase = await createClient();
 
   const [{ data: committee }, { data: rows }, people] = await Promise.all([
-    supabase.from("committees").select("id, name, mandate, status").eq("id", committeeId).maybeSingle(),
+    supabase.from("committees").select("id, name, mandate, kind, status").eq("id", committeeId).maybeSingle(),
     supabase
       .from("committee_members")
       .select("id, position, start_date, person:people(id, full_name)")
@@ -55,6 +57,7 @@ export default async function CommitteePage({ params }: PageProps<"/committees/[
           </Link>
         }
       />
+      <RegulationNote notes={NOTES.committees} />
       {archived && <p className="mb-6 rounded-md bg-brass-soft px-4 py-3 text-sm text-brass">هذه اللجنة مؤرشفة.</p>}
 
       <section className="mb-8 rounded-lg border border-rule bg-surface p-5">

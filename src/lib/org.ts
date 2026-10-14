@@ -4,6 +4,16 @@ export const BOARD_POSITIONS = { chair: "رئيس المجلس", vice_chair: "ن
 export const BOARD_CATEGORIES = { independent: "مستقل", non_executive: "غير تنفيذي", executive: "تنفيذي" } as const;
 export const COMMITTEE_POSITIONS = { chair: "رئيس اللجنة", member: "عضو", secretary: "أمين اللجنة" } as const;
 
+export const COMMITTEE_KINDS = {
+  audit: "لجنة المراجعة",
+  remuneration: "لجنة المكافآت",
+  nomination: "لجنة الترشيحات",
+  remuneration_nomination: "لجنة المكافآت والترشيحات",
+  executive: "اللجنة التنفيذية",
+  risk: "لجنة المخاطر",
+  other: "أخرى",
+} as const;
+
 export type BoardPosition = keyof typeof BOARD_POSITIONS;
 export type BoardCategory = keyof typeof BOARD_CATEGORIES;
 export type CommitteePosition = keyof typeof COMMITTEE_POSITIONS;

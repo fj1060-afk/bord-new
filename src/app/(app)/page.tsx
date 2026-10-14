@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PhaseStatusTag } from "@/components/ui/phase-tag";
 import { phases } from "@/config/phases";
 import { requirePage } from "@/lib/auth";
+import { score } from "@/lib/compliance";
+import { complianceFindings } from "@/lib/compliance-server";
 import { attendanceRates, greeting, implementation, type AttendanceRow } from "@/lib/dashboard";
 import { formatDateTime } from "@/lib/format";
 import { MEETING_STATUS, meetingReference } from "@/lib/meetings";
@@ -72,6 +74,9 @@ export default async function HomePage() {
     if ((signers ?? []).some((s: { person_id: string }) => s.person_id === viewer.personId) && !(signed ?? []).length) toSign++;
   }
 
+  const findings = can(p, "/governance-office") ? await complianceFindings(supabase) : null;
+  const violations = findings?.filter((f) => f.status === "violation").length ?? 0;
+  const compliance = findings && score(findings);
   const mine = implementation(myTasks ?? [], today);
   const overall = implementation(allTasks ?? [], today);
 
@@ -104,6 +109,7 @@ export default async function HomePage() {
         {can(p, "/meetings") && <StatTile label="اجتماعات قادمة" value={(upcoming ?? []).length} href="/meetings" />}
         {viewer.personId && <StatTile label="محاضر بانتظار توقيعك" value={toSign} href="/minutes" tone={toSign ? "alert" : "default"} />}
         <StatTile label="مهامي المفتوحة" value={mine.total} note={mine.overdue ? `${mine.overdue} متأخرة` : "لا توجد مهام متأخرة"} tone={mine.overdue ? "alert" : "default"} href="/my-tasks" />
+        {findings && <StatTile label="الامتثال" value={compliance === null ? "—" : `${compliance}%`} note={violations ? `${violations} مخالفات` : "لا توجد مخالفات"} tone={violations ? "alert" : "default"} href="/governance-office" />}
         {seesResolutions && <StatTile label="تنفيذ القرارات" value={overall.percent === null ? "—" : `${overall.percent}%`} note={overall.total ? `${overall.done} من ${overall.total} مهام منجزة${overall.overdue ? ` · ${overall.overdue} متأخرة` : ""}` : "لا توجد مهام بعد"} tone={overall.overdue ? "alert" : "default"} href="/resolutions" />}
       </div>
 

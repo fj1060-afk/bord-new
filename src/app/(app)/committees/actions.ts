@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
-import { COMMITTEE_POSITIONS, isOneOf, membershipError } from "@/lib/org";
+import { COMMITTEE_KINDS, COMMITTEE_POSITIONS, isOneOf, membershipError } from "@/lib/org";
 import { resolvePerson } from "@/lib/people";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -15,11 +15,13 @@ export async function saveCommittee(committeeId: string | null, _prev: ActionSta
   await requirePage(PAGE, LEVELS.manage);
   const name = String(form.get("name") ?? "").trim();
   const mandate = String(form.get("mandate") ?? "").trim() || null;
+  const kindRaw = String(form.get("kind") ?? "other");
+  const kind = isOneOf(kindRaw, COMMITTEE_KINDS) ? kindRaw : "other";
   if (!name) return { ok: false, message: "اسم اللجنة مطلوب." };
 
   const supabase = await createClient();
   if (committeeId) {
-    const { error } = await supabase.from("committees").update({ name, mandate }).eq("id", committeeId);
+    const { error } = await supabase.from("committees").update({ name, mandate, kind }).eq("id", committeeId);
     if (error) return { ok: false, message: "تعذّر حفظ اللجنة." };
     revalidatePath(`${PAGE}/${committeeId}`);
     return { ok: true, message: "حُفظت بيانات اللجنة." };
@@ -28,7 +30,7 @@ export async function saveCommittee(committeeId: string | null, _prev: ActionSta
   const { data: board } = await supabase.from("boards").select("id").eq("status", "active").limit(1).maybeSingle();
   const { data, error } = await supabase
     .from("committees")
-    .insert({ name, mandate, board_id: board?.id ?? null })
+    .insert({ name, mandate, kind, board_id: board?.id ?? null })
     .select("id")
     .single();
   if (error || !data) return { ok: false, message: "تعذّر إنشاء اللجنة." };

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { RegulationNote } from "@/components/ui/regulation-note";
+import { NOTES } from "@/lib/regulations";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
 import { buttonClass } from "@/components/ui/styles";
@@ -29,6 +31,7 @@ export default async function CommitteesPage() {
   return (
     <>
       <PageHeader section="الحوكمة" title="اللجان" description="لجان المجلس وأعضاؤها." />
+      <RegulationNote notes={NOTES.committees} />
 
       {can(viewer.permissions, "/committees", LEVELS.manage) && (
         <details className="mb-6 rounded-lg border border-rule bg-surface">
