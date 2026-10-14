@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 import { navItems } from "@/config/navigation";
@@ -21,7 +22,13 @@ export function AppShell({ viewer, children }: { viewer: Viewer; children: React
             <Today />
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="hidden max-w-48 truncate sm:inline">{viewer.fullName || viewer.email}</span>
+            {viewer.personId ? (
+              <Link href={`/people/${viewer.personId}`} className="hidden max-w-48 truncate text-primary hover:underline sm:inline">
+                {viewer.fullName || viewer.email}
+              </Link>
+            ) : (
+              <span className="hidden max-w-48 truncate sm:inline">{viewer.fullName || viewer.email}</span>
+            )}
             <form action={signOut}>
               <button
                 type="submit"

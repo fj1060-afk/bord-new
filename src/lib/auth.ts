@@ -8,6 +8,8 @@ export type Viewer = {
   id: string;
   email: string;
   fullName: string;
+  /** The viewer's member record, when an admin linked one. */
+  personId: string | null;
   permissions: Permissions;
 };
 
@@ -18,9 +20,10 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   const userId = claims?.claims.sub;
   if (!userId) return null;
 
-  const [{ data: profile }, { data: rows }] = await Promise.all([
+  const [{ data: profile }, { data: rows }, { data: person }] = await Promise.all([
     supabase.from("profiles").select("email, full_name, status").eq("id", userId).single(),
     supabase.rpc("my_permissions"),
+    supabase.from("people").select("id").eq("user_id", userId).maybeSingle(),
   ]);
   if (!profile || profile.status !== "active") return null;
 
@@ -28,6 +31,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     id: userId,
     email: profile.email,
     fullName: profile.full_name,
+    personId: person?.id ?? null,
     permissions: toPermissions(rows),
   };
 });
