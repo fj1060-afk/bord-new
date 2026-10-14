@@ -18,7 +18,9 @@ export async function signIn(_prev: ActionState, form: FormData): Promise<Action
       message:
         error.status === 429
           ? "محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة."
-          : "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+          : error.status === 400
+            ? "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+            : "تعذّر الاتصال بخدمة الدخول. أعد المحاولة بعد قليل.",
     };
   }
   redirect("/");
