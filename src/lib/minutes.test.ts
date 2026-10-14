@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultIntro, isOverdue, resolutionReference, riyadhToday, signatureProgress } from "./minutes";
+import { defaultClosing, defaultIntro, isOverdue, resolutionReference, riyadhToday, signatureProgress } from "./minutes";
 
 describe("minutes", () => {
   it("formats resolution references", () => {
@@ -19,11 +19,18 @@ describe("minutes", () => {
     expect(riyadhToday(new Date("2026-10-14T22:00:00Z"))).toBe("2026-10-15");
   });
 
-  it("drafts an opening paragraph", () => {
-    const text = defaultIntro({ body: "مجلس الإدارة", reference: "رقم 3 لعام 2026", date: "الاثنين 21 ديسمبر 2026", time: "10:00 ص", location: "قاعة المجلس", attendees: 5, members: 7 });
-    expect(text).toContain("مجلس الإدارة");
-    expect(text).toContain("في قاعة المجلس");
-    expect(text).toContain("5 من أصل 7");
+  it("drafts an opening paragraph with scheduled and actual time, own right and proxies", () => {
+    const [ar, en] = defaultIntro({ body: "مجلس الإدارة", bodyEn: "Board of Directors", number: 3, year: "2026", date: "21 ديسمبر 2026", dateEn: "21 December 2026", scheduled: "10:00 ص", started: "10:05 ص", scheduledEn: "10:00 AM", startedEn: "10:05 AM", location: "قاعة المجلس", locationEn: null, own: 4, proxies: 1, members: 5, quorumMet: true });
+    expect(ar).toContain("موعده المقرر الساعة 10:00 ص وبدأ فعلياً الساعة 10:05 ص");
+    expect(ar).toContain("4 من الأعضاء أصالةً و1 بالإنابة من أصل 5");
+    expect(en).toContain("4 members attending in their own right and 1 by proxy out of 5");
+  });
+
+  it("closes without claiming deferred items were discussed", () => {
+    expect(defaultClosing("12:20 م", "12:20 PM", [])[0]).toContain("استكمال مناقشة");
+    const [ar, en] = defaultClosing("12:20 م", "12:20 PM", [2]);
+    expect(ar).toContain("عدا البند (2) الذي أُجّل");
+    expect(en).toContain("item 2 was deferred");
   });
 
   it("tracks who still has to sign", () => {

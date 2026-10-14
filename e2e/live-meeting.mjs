@@ -41,7 +41,7 @@ await step("إنشاء اجتماع ببندين واعتماد موعده", asy
   const board = await page.locator("select[name=body] option[value^='board:']").first().getAttribute("value");
   await page.selectOption("select[name=body]", board);
   await page.fill("input[name=title]", `اجتماع انعقاد ${stamp}`);
-  await page.fill("input[name=date]", "2026-12-21");
+  await page.fill("input[name=date]", new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10));
   await page.fill("input[name=location]", "قاعة المجلس");
   await page.click("button:has-text('إنشاء الاجتماع')");
   await page.waitForURL(/\/meetings\/[0-9a-f-]{36}/, { timeout: 20000 });
@@ -127,8 +127,8 @@ await step("كشف الحضور للطباعة", async () => {
   const res = await page.goto(`${base}/print/meetings/${id}/attendance`, { waitUntil: "networkidle" });
   if (!res || res.status() !== 200) throw new Error(`status ${res?.status()}`);
   await page.getByText("كشف حضور اجتماع").waitFor();
-  await page.getByText("ينوب عنه").waitFor();
-  await page.getByText("(مكتمل)").waitFor();
+  await page.getByText(/يحمل إنابة/).first().waitFor();
+  await page.locator(".doc-quorum .met").waitFor();
 });
 
 await browser.close();

@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { englishDate, ITEM_KINDS_EN, MEETING_MODES_EN, MEETING_TYPES_EN } from "@/lib/doc-labels";
+import { englishDate, englishTime, ITEM_KINDS_EN, MEETING_MODES_EN, MEETING_TYPES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
 import { ITEM_KINDS, MEETING_MODES, MEETING_TYPES } from "@/lib/meetings";
-import { DocChrome, InfoCard, L, reference } from "../../../doc";
+import { DocChrome, InfoCard, L, reference, Signatures } from "../../../doc";
 import { loadMeeting } from "../_meeting";
 import { H2, MeetingHead } from "../parts";
 
 export const metadata: Metadata = { title: "جدول الأعمال" };
+
+const NOTES: [string, string][] = [
+  ["المستندات متاحة في المنصة، ويمكن طلب معلومات إضافية على أي بند من أمين السر قبل الاجتماع.", "Documents are on the platform; members may ask the secretary for further information on any item before the meeting."],
+  ["على العضو الذي له مصلحة مباشرة أو غير مباشرة في أي بند الإفصاح عنها والامتناع عن التصويت عليه (نظام الشركات م71).", "A member with a direct or indirect interest in an item must disclose it and abstain from voting on it (Companies Law Art. 71)."],
+  ["يصح الاجتماع بحضور نصف الأعضاء أصالةً أو نيابةً على ألا يقل الحاضرون عن ثلاثة، والإنابة لعضو في المجلس وبإنابة واحدة (م80، م81؛ لائحة الحوكمة م30).", "The meeting is valid with half of the members in their own right or by proxy and at least three present; a proxy may go only to another member, one each (Arts. 80, 81; CMA Art. 30)."],
+];
 
 export default async function AgendaPrint({ params }: PageProps<"/print/meetings/[meetingId]/agenda">) {
   const { meetingId } = await params;
@@ -24,27 +30,32 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
   const docCount = (id: string) => (docs ?? []).filter((d) => d.agenda_item_id === id).length;
   const mode = meeting.mode as keyof typeof MEETING_MODES;
   const type = meeting.meeting_type as keyof typeof MEETING_TYPES;
+  const d = dateParts(start);
+  const th = (ar: string, en: string, width?: string) => (
+    <th style={width ? { width } : undefined}>
+      <L as="div" ar={ar} en={en} bi={bi} />
+    </th>
+  );
 
   return (
     <main className="doc">
-      <DocChrome bi={bi} footer={`جدول أعمال الاجتماع ${ref}`} note={sent ? null : "لم تُرسل الدعوة بعد."} />
-      <MeetingHead m={m} reference={ref} title="دعوة وجدول أعمال اجتماع" titleEn="Meeting Invitation and Agenda" date={sent ?? start} badges={[{ label: "سري · Confidential", tone: "c" }]} />
+      <DocChrome bi={bi} footer={`${ref} · جدول الأعمال`} note={sent ? null : "لم تُرسل الدعوة بعد."} />
+      <MeetingHead m={m} title="دعوة وجدول أعمال اجتماع" titleEn="Meeting Invitation and Agenda" badges={[{ ar: "سري", en: "Confidential", tone: "c" }]} />
       <InfoCard
         bi={bi}
-        date={start}
-        dateEn={bi ? englishDate(start) : undefined}
+        day={{ ...d, en: englishDate(start) }}
         cells={[
-          ["المكان", mode === "virtual" ? "اتصال مرئي" : meeting.location, "Venue", mode === "virtual" ? "Video conference" : meeting.location_en],
-          ["الوقت", `${dateParts(start).time} – ${dateParts(end).time}`, "Time"],
-          ["نوع الاجتماع", MEETING_TYPES[type], "Type", MEETING_TYPES_EN[type]],
-          ["طريقة الانعقاد", MEETING_MODES[mode], "Format", MEETING_MODES_EN[mode]],
-          ["الدعوة من", m.chair, "Called by", m.chairEn],
-          ["إرسال الدعوة", sent ? `${dateParts(sent).long} (قبل ${notice} أيام)` : "لم تُرسل", "Invitation sent", sent ? `${englishDate(sent)} (${notice} days before)` : "Not sent"],
+          { ar: "الوقت", en: "Time", value: `${d.time} – ${dateParts(end).time}`, valueEn: `${englishTime(start)} – ${englishTime(end)}` },
+          { ar: "نوع الاجتماع", en: "Type", value: MEETING_TYPES[type], valueEn: MEETING_TYPES_EN[type] },
+          { ar: "طريقة الانعقاد", en: "Format", value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
+          { ar: "المكان", en: "Venue", value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
+          { ar: "الدعوة من", en: "Called by", value: m.chair, valueEn: m.chairEn || "—" },
+          { ar: "إرسال الدعوة", en: "Invitation sent", value: sent ? `${dateParts(sent).long} (قبل ${notice} أيام)` : "لم تُرسل", valueEn: sent ? `${englishDate(sent)} (${notice} days before)` : "Not sent" },
         ]}
       />
       {meeting.virtual_link && meeting.mode !== "in_person" && (
         <p className="ref">
-          رابط الاتصال · Link: <span className="num" dir="ltr">{meeting.virtual_link}</span>
+          {bi ? "رابط الاتصال · Link" : "رابط الاتصال"}: <span className="num" dir="ltr">{meeting.virtual_link}</span>
         </p>
       )}
 
@@ -52,21 +63,12 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
       <table>
         <thead>
           <tr>
-            <th style={{ width: "5%" }}>م</th>
-            <th>البند</th>
-            {bi && <th className="en">Item</th>}
-            <th style={{ width: "13%" }}>
-              <L as="div" ar="الغرض" en="Purpose" bi={bi} />
-            </th>
-            <th style={{ width: "16%" }}>
-              <L as="div" ar="العرض" en="Presenter" bi={bi} />
-            </th>
-            <th style={{ width: "8%" }}>
-              <L as="div" ar="المدة" en="Min" bi={bi} />
-            </th>
-            <th style={{ width: "8%" }}>
-              <L as="div" ar="مرفقات" en="Docs" bi={bi} />
-            </th>
+            <th style={{ width: "4%" }}>م</th>
+            {th("البند", "Item")}
+            {th("الغرض", "Purpose", "15%")}
+            {th("العرض", "Presenter", "15%")}
+            {th("المدة", "Min", "7%")}
+            {th("مرفقات", "Docs", "7%")}
           </tr>
         </thead>
         <tbody>
@@ -75,16 +77,10 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
             return (
               <tr key={i.id}>
                 <td className="num">{i.position}</td>
+                <td>{bi ? <L as="div" className="top" ar={<b>{i.title}</b>} en={i.title_en?.trim() ? <b>{i.title_en}</b> : <span className="missing">—</span>} bi /> : <b>{i.title}</b>}</td>
                 <td>
-                  <b>{i.title}</b>
-                </td>
-                {bi && (
-                  <td className="en">
-                    <b>{i.title_en}</b>
-                  </td>
-                )}
-                <td>
-                  <span className={kind === "decision" ? "pill" : "pill m"}>{bi ? `${ITEM_KINDS[kind]} · ${ITEM_KINDS_EN[kind]}` : ITEM_KINDS[kind]}</span>
+                  <span className={kind === "decision" ? "pill" : "pill m"}>{ITEM_KINDS[kind]}</span>
+                  {bi && <span className="note-en">{ITEM_KINDS_EN[kind]}</span>}
                 </td>
                 <td>{i.presenter || "—"}</td>
                 <td className="num">{i.duration_minutes ?? "—"}</td>
@@ -95,41 +91,29 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
         </tbody>
       </table>
 
-      <div className={bi ? "doc-box doc-bi" : "doc-box"}>
-        <div>
-          <b>تنبيهات للأعضاء</b>
-          <ol>
-            <li>المستندات متاحة في المنصة، ويمكن طلب معلومات إضافية على أي بند من أمين السر قبل الاجتماع.</li>
-            <li>على العضو الذي له مصلحة مباشرة أو غير مباشرة في أي بند الإفصاح عنها والامتناع عن التصويت عليه (نظام الشركات م71).</li>
-            <li>يصح الاجتماع بحضور نصف الأعضاء أصالة أو نيابة على ألا يقل الحاضرون عن ثلاثة، والإنابة لعضو في المجلس وبإنابة واحدة (نظام الشركات م80، م81؛ لائحة حوكمة الشركات م30).</li>
-          </ol>
-        </div>
-        {bi && (
-          <div className="en">
-            <b>Notes to members</b>
-            <ol style={{ paddingLeft: 18, paddingRight: 0 }}>
-              <li>Documents are available on the platform; members may request further information on any item from the secretary before the meeting.</li>
-              <li>A member with a direct or indirect interest in any item must disclose it and abstain from voting on it (Companies Law Art. 71).</li>
-              <li>The meeting is valid with half of the members present in person or by proxy and no fewer than three; a proxy may only be given to another member, one proxy each (Companies Law Arts. 80, 81; CMA Art. 30).</li>
-            </ol>
+      <div className="doc-box">
+        <L as="div" ar={<b>تنبيهات للأعضاء</b>} en={<b>Notes to members</b>} bi={bi} />
+        {NOTES.map(([ar, en], i) => (
+          <div key={i} className={bi ? "doc-bi" : undefined} style={{ marginTop: 3 }}>
+            <p>
+              <span className="num">{i + 1}.</span> {ar}
+            </p>
+            {bi && (
+              <p className="en">
+                <span className="num">{i + 1}.</span> {en}
+              </p>
+            )}
           </div>
-        )}
+        ))}
       </div>
 
-      <div className="doc-lead">
-        <div>
-          <L ar="أمين السر" en="Secretary" bi={bi} />
-          <b>{m.secretary || "—"}</b>
-          <div className="line" />
-          <small>{bi ? "التوقيع · Signature" : "التوقيع"}</small>
-        </div>
-        <div>
-          <L ar={m.isBoard ? "اعتماد رئيس المجلس" : "اعتماد رئيس اللجنة"} en="Approved by the Chair" bi={bi} />
-          <b>{m.chair || "—"}</b>
-          <div className="line" />
-          <small>{bi ? "التوقيع · Signature" : "التوقيع"}</small>
-        </div>
-      </div>
+      <Signatures
+        bi={bi}
+        signers={[
+          { role: "أمين السر", roleEn: "Secretary", name: m.secretary, nameEn: m.secretaryEn },
+          { role: m.isBoard ? "رئيس المجلس" : "رئيس اللجنة", roleEn: "Chair", name: m.chair, nameEn: m.chairEn },
+        ]}
+      />
     </main>
   );
 }

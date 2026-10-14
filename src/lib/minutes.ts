@@ -21,18 +21,45 @@ export function riyadhToday(now = new Date()): string {
   return new Date(now.getTime() + 3 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
-/** Opening paragraph proposed for a new set of minutes; the secretary can edit it. */
-export function defaultIntro(input: {
+export type IntroInput = {
   body: string;
-  reference: string;
+  bodyEn: string;
+  number: number | null;
+  year: string;
   date: string;
-  time: string;
+  dateEn: string;
+  scheduled: string;
+  started: string;
+  scheduledEn: string;
+  startedEn: string;
   location: string | null;
-  attendees: number;
+  locationEn: string | null;
+  own: number;
+  proxies: number;
   members: number;
-}): string {
-  const place = input.location ? ` في ${input.location}` : "";
-  return `عقد ${input.body} اجتماعه ${input.reference} يوم ${input.date} الساعة ${input.time}${place}، بحضور ${input.attendees} من أصل ${input.members} أعضاء، وبذلك اكتمل النصاب النظامي للاجتماع.`;
+  quorumMet: boolean;
+};
+
+/** Opening paragraph proposed for new minutes (Arabic, English): scheduled vs actual time, attendance in own right vs by proxy. */
+export function defaultIntro(i: IntroInput): [string, string] {
+  const place = i.location ? ` في ${i.location}` : "";
+  const placeEn = i.locationEn ? ` at ${i.locationEn}` : "";
+  const proxies = i.proxies ? ` و${i.proxies} بالإنابة` : "";
+  const proxiesEn = i.proxies ? ` and ${i.proxies} by proxy` : "";
+  return [
+    `عقد ${i.body} اجتماعه رقم (${i.number ?? "—"}) لعام ${i.year} يوم ${i.date}${place}، وكان موعده المقرر الساعة ${i.scheduled} وبدأ فعلياً الساعة ${i.started}، بحضور ${i.own} من الأعضاء أصالةً${proxies} من أصل ${i.members} أعضاء، وبذلك ${i.quorumMet ? "اكتمل" : "لم يكتمل"} النصاب النظامي.`,
+    `The ${i.bodyEn} held meeting No. ${i.number ?? "—"} of ${i.year} on ${i.dateEn}${placeEn}. It was scheduled for ${i.scheduledEn} and began at ${i.startedEn}, with ${i.own} members attending in their own right${proxiesEn} out of ${i.members}; the quorum was ${i.quorumMet ? "met" : "not met"}.`,
+  ];
+}
+
+/** Closing paragraph (Arabic, English) that reflects deferred items. */
+export function defaultClosing(ended: string, endedEn: string, deferred: number[]): [string, string] {
+  if (!deferred.length) return [`وانتهى الاجتماع الساعة ${ended} بعد استكمال مناقشة بنود جدول الأعمال.`, `The meeting closed at ${endedEn} after all agenda items were discussed.`];
+  const list = deferred.join("، ");
+  return [
+    `وانتهى الاجتماع الساعة ${ended} بعد مناقشة بنود جدول الأعمال، عدا ${deferred.length > 1 ? "البنود" : "البند"} (${list}) ${deferred.length > 1 ? "التي أُجّلت" : "الذي أُجّل"}.`,
+    `The meeting closed at ${endedEn}. Agenda ${deferred.length > 1 ? "items" : "item"} ${deferred.join(", ")} ${deferred.length > 1 ? "were" : "was"} deferred.`,
+  ];
 }
 
 export function signatureProgress(signers: { person_id: string }[], signed: { person_id: string }[]) {

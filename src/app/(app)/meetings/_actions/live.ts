@@ -5,6 +5,7 @@ import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
 import { ATTENDANCE, nextPendingItem } from "@/lib/live";
 import { companyProfile, meetingQuorum } from "@/lib/live-server";
+import { riyadhToday } from "@/lib/minutes";
 import { isOneOf } from "@/lib/org";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -54,6 +55,9 @@ export async function setQuorumRequired(meetingId: string, _prev: ActionState, f
 
 export async function startMeeting(meetingId: string): Promise<ActionState> {
   const supabase = await organizer();
+  // A meeting is held on or after its scheduled day; otherwise the record (and every signature) would predate it.
+  const { data: scheduled } = await supabase.from("meetings").select("starts_at").eq("id", meetingId).single();
+  if (scheduled && riyadhToday() < riyadhToday(new Date(scheduled.starts_at))) return { ok: false, message: "لم يحن موعد الاجتماع بعد؛ عدّل تاريخه إن كان سيُعقد اليوم." };
   const q = await meetingQuorum(supabase, meetingId);
   if (!q.met) return { ok: false, message: `النصاب غير مكتمل: ${q.counted} من ${q.required} مطلوبين.` };
   const { data: items } = await supabase.from("agenda_items").select("id, position, status").eq("meeting_id", meetingId);

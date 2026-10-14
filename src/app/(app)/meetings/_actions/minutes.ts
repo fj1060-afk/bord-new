@@ -3,11 +3,11 @@
 import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { getViewer, requirePage } from "@/lib/auth";
-import { formatGregorianDate } from "@/lib/format";
-import { meetingQuorum } from "@/lib/live-server";
+import { dateParts } from "@/lib/format";
+import { companyProfile, meetingQuorum } from "@/lib/live-server";
 import { loadMinutesGaps } from "./minutes-check";
-import { meetingReference, riyadhParts } from "@/lib/meetings";
-import { defaultIntro } from "@/lib/minutes";
+import { englishDate, englishTime } from "@/lib/doc-labels";
+import { defaultClosing, defaultIntro } from "@/lib/minutes";
 import { isOneOf } from "@/lib/org";
 import { LEVELS } from "@/lib/permissions";
 import { RESOLUTION_STATUS } from "@/lib/minutes";
@@ -26,34 +26,50 @@ export async function createMinutes(meetingId: string): Promise<ActionState> {
   const supabase = await createClient();
   const { data: meeting } = await supabase
     .from("meetings")
-    .select("number, starts_at, location, live_status, board:boards(name), committee:committees(name)")
+    .select("number, starts_at, started_at, ended_at, location, location_en, live_status, board_id, board:boards(name), committee:committees(name)")
     .eq("id", meetingId)
     .single();
   if (!meeting || meeting.live_status !== "ended") return { ok: false, message: "يُعد المحضر بعد انتهاء الاجتماع." };
 
-  const q = await meetingQuorum(supabase, meetingId);
+  const [q, profile, { data: attendance }, { data: items }] = await Promise.all([
+    meetingQuorum(supabase, meetingId),
+    companyProfile(supabase),
+    supabase.from("meeting_attendance").select("status").eq("meeting_id", meetingId),
+    supabase.from("agenda_items").select("id, position, outcome, status").eq("meeting_id", meetingId).order("position"),
+  ]);
   const body = (meeting.board ?? meeting.committee) as unknown as { name: string } | null;
-  const when = riyadhParts(meeting.starts_at);
+  const held = new Date(meeting.started_at ?? meeting.starts_at);
+  const time = (iso: string | null) => (iso ? dateParts(new Date(iso)).time : "—");
+  const timeEn = (iso: string | null) => (iso ? englishTime(new Date(iso)) : "—");
+  const own = (attendance ?? []).filter((a) => a.status === "present" || a.status === "remote").length;
+  const [intro, introEn] = defaultIntro({
+    body: body?.name ?? "المجلس",
+    bodyEn: meeting.board_id ? "Board of Directors" : "Committee",
+    number: meeting.number,
+    year: meeting.starts_at.slice(0, 4),
+    date: dateParts(held).long,
+    dateEn: englishDate(held),
+    scheduled: time(meeting.starts_at),
+    started: time(meeting.started_at),
+    scheduledEn: timeEn(meeting.starts_at),
+    startedEn: timeEn(meeting.started_at),
+    location: meeting.location,
+    locationEn: meeting.location_en,
+    own,
+    proxies: q.counted - own,
+    members: q.members,
+    quorumMet: q.met,
+  });
+  const deferred = (items ?? []).filter((i) => i.status === "deferred").map((i) => i.position);
+  const [closing, closingEn] = defaultClosing(time(meeting.ended_at), timeEn(meeting.ended_at), deferred);
+  const bilingual = profile?.document_language === "bilingual";
   const { data: minutes, error } = await supabase
     .from("minutes")
-    .insert({
-      meeting_id: meetingId,
-      intro: defaultIntro({
-        body: body?.name ?? "المجلس",
-        reference: meetingReference(meeting.number, meeting.starts_at),
-        date: formatGregorianDate(new Date(meeting.starts_at)),
-        time: when.time,
-        location: meeting.location,
-        attendees: q.counted,
-        members: q.members,
-      }),
-      closing: "وانتهى الاجتماع بعد استكمال مناقشة بنود جدول الأعمال.",
-    })
+    .insert({ meeting_id: meetingId, intro, closing, intro_en: bilingual ? introEn : null, closing_en: bilingual ? closingEn : null })
     .select("id")
     .single();
   if (error || !minutes) return { ok: false, message: "تعذّر إنشاء المحضر." };
 
-  const { data: items } = await supabase.from("agenda_items").select("id, outcome").eq("meeting_id", meetingId);
   if (items?.length) {
     await supabase.from("minutes_items").insert(items.map((i) => ({ minutes_id: minutes.id, agenda_item_id: i.id, deliberation: i.outcome })));
   }

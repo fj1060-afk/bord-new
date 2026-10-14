@@ -82,6 +82,7 @@ export async function loadMeeting(meetingId: string) {
     holderOf,
     names,
     quorum: { ...q, present, byProxy },
+    held: new Date(meeting.started_at ?? meeting.starts_at),
     chair: chair?.name ?? "",
     secretary: secretary?.full_name ?? "",
   };

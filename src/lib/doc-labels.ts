@@ -16,3 +16,10 @@ export function englishDate(date: Date): string {
   const d = new Date(date.getTime() + 3 * 3600000);
   return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
+
+/** "10:00 AM" in Riyadh time. */
+export function englishTime(date: Date): string {
+  const d = new Date(date.getTime() + 3 * 3600000);
+  const h = d.getUTCHours();
+  return `${h % 12 || 12}:${String(d.getUTCMinutes()).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+}

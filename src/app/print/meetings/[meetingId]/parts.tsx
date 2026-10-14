@@ -1,51 +1,101 @@
-import type { ReactNode } from "react";
-import { ATTENDANCE_EN, englishDate } from "@/lib/doc-labels";
+import { englishDate, englishTime, MEETING_MODES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
-import { ATTENDANCE, type AttendanceStatus } from "@/lib/live";
-import { DocHead, DocHeadBi, DocTitle, L } from "../../doc";
+import type { AttendanceStatus } from "@/lib/live";
+import { MEETING_MODES } from "@/lib/meetings";
+import { DocHead, DocTitle, L, type Badge, type Cell } from "../../doc";
 import type { loadMeeting } from "./_meeting";
 
-type Meeting = Awaited<ReturnType<typeof loadMeeting>>;
-const TONE: Record<AttendanceStatus, string> = { present: "pill", remote: "pill", proxy: "pill b", excused: "pill r", absent: "pill r" };
+export type Meeting = Awaited<ReturnType<typeof loadMeeting>>;
 
-export function AttendancePill({ status, bi = false }: { status?: AttendanceStatus; bi?: boolean }) {
+// Attendance has two separate facts: in what capacity a member counted (in own
+// right or by proxy) and how they attended (on site or remotely).
+const CAPACITY: Record<AttendanceStatus, [string, string, string]> = {
+  present: ["أصالة", "In own right", "pill"],
+  remote: ["أصالة", "In own right", "pill"],
+  proxy: ["بالإنابة", "By proxy", "pill b"],
+  excused: ["معتذر", "Excused", "pill r"],
+  absent: ["غائب", "Absent", "pill r"],
+};
+const METHOD: Partial<Record<AttendanceStatus, [string, string]>> = { present: ["في المقر", "On site"], remote: ["عن بُعد", "Remote"] };
+
+export function Capacity({ status, bi }: { status?: AttendanceStatus; bi: boolean }) {
   if (!status) return <span className="pill m">{bi ? "لم يُسجّل · Not recorded" : "لم يُسجّل"}</span>;
-  return <span className={TONE[status]}>{bi ? `${ATTENDANCE[status]} · ${ATTENDANCE_EN[status]}` : ATTENDANCE[status]}</span>;
+  const [ar, en, cls] = CAPACITY[status];
+  return <span className={cls}>{bi ? `${ar} · ${en}` : ar}</span>;
 }
 
-/** Letterhead and title for a meeting document, Arabic or bilingual per the company profile. */
-export function MeetingHead({ m, reference, title, titleEn, date, badges }: { m: Meeting; reference: string; title: string; titleEn: string; date: Date; badges: { label: string; tone: "c" | "s" | "ok" }[] }) {
-  const { meeting } = m;
-  const year = meeting.starts_at.slice(0, 4);
-  const issuer = m.isBoard ? "أمانة سر مجلس الإدارة" : `أمانة سر ${m.body}`;
-  const subtitle: ReactNode = (
-    <>
-      {m.body} - الاجتماع رقم (<span className="num">{meeting.number}</span>) لعام <span className="num">{year}</span>
-    </>
-  );
-  return m.bi ? (
-    <>
-      <DocHeadBi company={m.company} companyEn={m.companyEn || m.company} issuer={issuer} issuerEn={m.isBoard ? "Board Secretariat" : "Committee Secretariat"} reference={reference} date={`${dateParts(date).long}م`} dateEn={englishDate(date)} badges={badges} />
-      <DocTitle title={title} titleEn={titleEn} subtitle={subtitle} subtitleEn={`Meeting No. ${meeting.number} of ${year}`} />
-    </>
-  ) : (
-    <>
-      <DocHead company={m.company} issuer={issuer} reference={reference} date={date} badges={badges.map((b) => ({ ...b, label: b.label.split(" · ")[0] }))} />
-      <DocTitle title={title} subtitle={subtitle} />
-    </>
-  );
+export function Method({ status, bi }: { status?: AttendanceStatus; bi: boolean }) {
+  const m = status && METHOD[status];
+  if (!m) return <span className="ref">—</span>;
+  return <span className="ref">{bi ? `${m[0]} · ${m[1]}` : m[0]}</span>;
 }
 
-/** Section heading, with its English title on the end side when bilingual. */
 export function H2({ ar, en, bi }: { ar: string; en: string; bi: boolean }) {
   return <L as="h2" ar={ar} en={en} bi={bi} />;
 }
 
-/** Members, present, by proxy, required and the result, with the rule it applies. */
-export function QuorumBox({ q, bi = false }: { q: { members: number; present: number; byProxy: number; required: number; met: boolean }; bi?: boolean }) {
-  const cell = (ar: string, en: string, value: ReactNode, cls?: string) => (
+/** Letterhead and title of a meeting document. */
+export function MeetingHead({ m, title, titleEn, badges }: { m: Meeting; title: string; titleEn: string; badges: Badge[] }) {
+  const { meeting } = m;
+  const year = meeting.starts_at.slice(0, 4);
+  return (
+    <>
+      <DocHead
+        bi={m.bi}
+        company={m.company}
+        companyEn={m.companyEn}
+        issuer={m.isBoard ? "أمانة سر مجلس الإدارة" : `أمانة سر ${m.body}`}
+        issuerEn={m.isBoard ? "Board Secretariat" : "Committee Secretariat"}
+        badges={badges}
+      />
+      <DocTitle
+        bi={m.bi}
+        title={title}
+        titleEn={titleEn}
+        subtitle={
+          <>
+            {m.body} · الاجتماع رقم (<span className="num">{meeting.number}</span>) لعام <span className="num">{year}</span>
+          </>
+        }
+        subtitleEn={`${m.isBoard ? "Board of Directors" : "Committee"} · Meeting No. ${meeting.number} of ${year}`}
+      />
+    </>
+  );
+}
+
+/** The date block shows the day the meeting was actually held (or is scheduled). */
+export function heldDay(m: Meeting) {
+  const d = dateParts(m.held);
+  return { ...d, en: englishDate(m.held) };
+}
+
+const time = (iso: string | null) => (iso ? dateParts(new Date(iso)).time : null);
+const timeEn = (iso: string | null) => (iso ? englishTime(new Date(iso)) : null);
+
+/** Card cells for a held meeting: scheduled vs actual time, venue, format, chair and secretary. */
+export function heldCells(m: Meeting): Cell[] {
+  const { meeting } = m;
+  const mode = meeting.mode as keyof typeof MEETING_MODES;
+  const actual = meeting.started_at ? `${time(meeting.started_at)} – ${time(meeting.ended_at) ?? "…"}` : "لم يُعقد";
+  const actualEn = meeting.started_at ? `${timeEn(meeting.started_at)} – ${timeEn(meeting.ended_at) ?? "…"}` : "Not held";
+  return [
+    { ar: "الموعد المقرر", en: "Scheduled", value: time(meeting.starts_at), valueEn: timeEn(meeting.starts_at) },
+    { ar: "الانعقاد الفعلي", en: "Actual", value: actual, valueEn: actualEn },
+    { ar: "طريقة الانعقاد", en: "Format", value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
+    { ar: "المكان", en: "Venue", value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
+    { ar: "رئيس الاجتماع", en: "Chair", value: m.chair, valueEn: m.chairEn || "—" },
+    { ar: "أمين السر", en: "Secretary", value: m.secretary, valueEn: m.secretaryEn || "—" },
+  ];
+}
+
+/** Members, in own right, by proxy, counted, required and the result. */
+export function QuorumBox({ q, bi }: { q: Meeting["quorum"]; bi: boolean }) {
+  const cell = (ar: string, en: string, value: React.ReactNode, cls?: string) => (
     <div className={cls}>
-      <L ar={ar} en={en} bi={bi} />
+      <span className="k">
+        {ar}
+        {bi && <span className="en">{en}</span>}
+      </span>
       <b>{value}</b>
     </div>
   );
@@ -53,15 +103,21 @@ export function QuorumBox({ q, bi = false }: { q: { members: number; present: nu
     <>
       <div className="doc-quorum">
         {cell("عدد الأعضاء", "Members", q.members)}
-        {cell("حاضرون أصالة", "In person", q.present)}
+        {cell("أصالة", "In own right", q.present)}
         {cell("بالإنابة", "By proxy", q.byProxy)}
+        {cell("المحتسبون", "Counted", q.counted)}
         {cell("النصاب المطلوب", "Required", q.required)}
-        {cell("النتيجة", "Result", bi ? (q.met ? "مكتمل · Met" : "غير مكتمل · Not met") : q.met ? "مكتمل" : "غير مكتمل", q.met ? "met" : "unmet")}
+        {cell("النتيجة", "Result", bi ? (
+          <>
+            {q.met ? "مكتمل" : "غير مكتمل"}
+            <span className="en-c" style={{ fontSize: "8pt" }}>{q.met ? "Met" : "Not met"}</span>
+          </>
+        ) : q.met ? "مكتمل" : "غير مكتمل", q.met ? "met" : "unmet")}
       </div>
-      <p className="ref">
-        النصاب: نصف الأعضاء أصالة أو نيابة على ألا يقل الحاضرون عن ثلاثة، ما لم يشترط نظام الشركة الأساس أكثر (نظام الشركات م80/2؛ لائحة حوكمة الشركات م30/د)، والإنابة لعضو في المجلس وبإنابة واحدة (م81).
-        {bi && <span className="en" style={{ display: "block" }}>Quorum: half of the members in person or by proxy, and no fewer than three present (Companies Law Art. 80/2; CMA Corporate Governance Regulations Art. 30/d).</span>}
-      </p>
+      <div className={bi ? "doc-bi" : undefined}>
+        <p className="ref">النصاب نصف الأعضاء أصالةً أو نيابةً، ولا يقل الحاضرون عن ثلاثة ما لم يشترط نظام الشركة الأساس أكثر (نظام الشركات م80/2؛ لائحة الحوكمة م30/د). «أصالة» تشمل الحضور في المقر وعن بُعد.</p>
+        {bi && <p className="ref en">Quorum is half of the members, in their own right or by proxy, with no fewer than three present (Companies Law Art. 80/2; CMA Art. 30/d). “In own right” covers on-site and remote attendance.</p>}
+      </div>
     </>
   );
 }
