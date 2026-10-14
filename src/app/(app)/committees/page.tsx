@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
-import { buttonClass } from "@/components/ui/form";
+import { buttonClass } from "@/components/ui/styles";
 import { requirePage } from "@/lib/auth";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";

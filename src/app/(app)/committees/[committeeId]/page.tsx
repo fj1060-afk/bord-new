@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { PageHeader } from "@/components/ui/page-header";
-import { buttonClass } from "@/components/ui/form";
+import { buttonClass } from "@/components/ui/styles";
 import { requirePage } from "@/lib/auth";
 import { formatGregorianDate } from "@/lib/format";
 import { COMMITTEE_POSITIONS, sortByPosition } from "@/lib/org";

@@ -22,3 +22,4 @@ The build plan and its status live in `src/config/phases.ts` (shown on the home 
 - Cache Components is deliberately off: pages depend on the signed-in user.
 - Page access: guard every page with `requirePage(href, level)` from `src/lib/auth.ts` and every server action with the level it needs; the database enforces the same rules through `page_level()` in RLS policies.
 - The Supabase MCP `apply_migration` times out on statements it treats as destructive (`revoke`, `delete`); put those in a migration the user runs from the SQL editor.
+- Server components must not call functions exported from a `"use client"` file (they become client references and throw at runtime). Shared helpers like `buttonClass` live in `src/components/ui/styles.ts`.
