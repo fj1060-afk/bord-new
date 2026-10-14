@@ -25,7 +25,7 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
 
   return (
     <main className="doc">
-      <DocChrome bi={bi} footer={`${ref} · كشف الحضور`} />
+      <DocChrome bi={bi} footer={`${ref} · كشف الحضور`} fileName={`${ref}-كشف-الحضور`} />
       <MeetingHead m={m} title="كشف حضور اجتماع" titleEn="Meeting Attendance Sheet" badges={[{ ar: "سري", en: "Confidential", tone: "c" }]} />
       <InfoCard bi={bi} day={heldDay(m)} cells={heldCells(m)} />
 

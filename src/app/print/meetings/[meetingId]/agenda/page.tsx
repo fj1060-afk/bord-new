@@ -39,7 +39,7 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
 
   return (
     <main className="doc">
-      <DocChrome bi={bi} footer={`${ref} · جدول الأعمال`} note={sent ? null : "لم تُرسل الدعوة بعد."} />
+      <DocChrome bi={bi} footer={`${ref} · جدول الأعمال`} fileName={`${ref}-جدول-الأعمال`} note={sent ? null : "لم تُرسل الدعوة بعد."} />
       <MeetingHead m={m} title="دعوة وجدول أعمال اجتماع" titleEn="Meeting Invitation and Agenda" badges={[{ ar: "سري", en: "Confidential", tone: "c" }]} />
       <InfoCard
         bi={bi}

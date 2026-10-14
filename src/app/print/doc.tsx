@@ -141,7 +141,7 @@ export function Signatures({ signers, bi }: { signers: Signer[]; bi: boolean }) 
 }
 
 /** Screen toolbar (hidden when printing) and the running footer: reference and version, then page numbers. */
-export function DocChrome({ footer, bi, note }: { footer: string; bi: boolean; note?: ReactNode }) {
+export function DocChrome({ footer, bi, note, fileName }: { footer: string; bi: boolean; note?: ReactNode; fileName: string }) {
   const box = (content: string) => `content: ${content}; font: 8pt var(--font-body); color: #5b6763;`;
   const pages = bi
     ? `@bottom-center { ${box('"صفحة " counter(page) " من " counter(pages)')} } @bottom-left { ${box('"Page " counter(page) " of " counter(pages)')} }`
@@ -149,9 +149,10 @@ export function DocChrome({ footer, bi, note }: { footer: string; bi: boolean; n
   return (
     <>
       <style>{`@page { @bottom-right { ${box(JSON.stringify(footer))} } ${pages} }`}</style>
-      <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-rule bg-paper p-3">
+        <span className="text-sm font-medium">معاينة قبل الطباعة</span>
         <div className="text-sm text-danger">{note}</div>
-        <PrintButton />
+        <PrintButton fileName={fileName} />
       </div>
     </>
   );
