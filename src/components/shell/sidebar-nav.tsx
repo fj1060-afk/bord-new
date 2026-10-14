@@ -5,12 +5,22 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { activeNavItem, navigation } from "@/config/navigation";
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({
+  allowed,
+  onNavigate,
+}: {
+  /** Links the viewer may open; others are hidden. */
+  allowed: string[];
+  onNavigate?: () => void;
+}) {
   const active = activeNavItem(usePathname());
+  const groups = navigation
+    .map((group) => ({ ...group, items: group.items.filter((item) => allowed.includes(item.href)) }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <nav aria-label="القائمة الرئيسية" className="flex flex-col gap-6">
-      {navigation.map((group) => (
+      {groups.map((group) => (
         <div key={group.label}>
           <p className="mb-2 px-3 text-xs font-medium text-sidebar-muted">{group.label}</p>
           <ul className="flex flex-col gap-0.5">

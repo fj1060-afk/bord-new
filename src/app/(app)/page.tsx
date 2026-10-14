@@ -2,9 +2,11 @@ import clsx from "clsx";
 import { PageHeader } from "@/components/ui/page-header";
 import { PhaseStatusTag } from "@/components/ui/phase-tag";
 import { phases } from "@/config/phases";
+import { requirePage } from "@/lib/auth";
 
 // Until the dashboard is built (phase 6), the home page tracks the build itself.
-export default function HomePage() {
+export default async function HomePage() {
+  await requirePage("/");
   return (
     <>
       <PageHeader

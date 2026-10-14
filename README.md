@@ -17,4 +17,4 @@ pnpm check   # lint + typecheck + tests
 pnpm build
 ```
 
-خطة البناء في [docs/PLAN.md](docs/PLAN.md).
+خطة البناء في [docs/PLAN.md](docs/PLAN.md)، وخطوات الإعداد في [docs/SETUP.md](docs/SETUP.md).

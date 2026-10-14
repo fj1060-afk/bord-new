@@ -5,7 +5,7 @@ import { Menu, X } from "lucide-react";
 import { SidebarBrand } from "./sidebar";
 import { SidebarNav } from "./sidebar-nav";
 
-export function MobileNav() {
+export function MobileNav({ allowed }: { allowed: string[] }) {
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -47,7 +47,7 @@ export function MobileNav() {
               <X size={20} aria-hidden="true" />
             </button>
           </div>
-          <SidebarNav onNavigate={() => setOpen(false)} />
+          <SidebarNav allowed={allowed} onNavigate={() => setOpen(false)} />
         </div>
       </dialog>
     </>

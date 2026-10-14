@@ -2,19 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Hammer } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
-import { findNavItem, navigation, navItems } from "@/config/navigation";
+import { requirePage } from "@/lib/auth";
+import { findNavItem, navigation } from "@/config/navigation";
 import { phases } from "@/config/phases";
 
 // Placeholder for every section that is not built yet. Each phase replaces
 // its sections with real routes, which take precedence over this catch-all.
-
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return navItems
-    .filter((item) => item.href !== "/")
-    .map((item) => ({ section: item.href.slice(1).split("/") }));
-}
 
 function lookup(section: string[]) {
   const href = `/${section.join("/")}`;
@@ -36,6 +29,7 @@ export default async function SectionPlaceholder({ params }: PageProps<"/[...sec
   const found = lookup((await params).section);
   if (!found) notFound();
   const { item, group, phase } = found;
+  await requirePage(item.href);
 
   return (
     <>

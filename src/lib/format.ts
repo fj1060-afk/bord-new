@@ -19,6 +19,15 @@ const hijriFormat = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn
   timeZone: TIME_ZONE,
 });
 
+const dateTimeFormat = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: TIME_ZONE,
+});
+
 export function formatNumber(value: number): string {
   return numberFormat.format(value);
 }
@@ -26,6 +35,11 @@ export function formatNumber(value: number): string {
 /** e.g. "الأربعاء، 14 أكتوبر 2026" */
 export function formatGregorianDate(date: Date): string {
   return gregorianFormat.format(date);
+}
+
+/** e.g. "14 أكتوبر 2026، 3:00 م" */
+export function formatDateTime(date: Date): string {
+  return dateTimeFormat.format(date);
 }
 
 /** e.g. "3 جمادى الأولى 1448 هـ" */

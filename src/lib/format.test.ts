@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatDateTime,
   formatGregorianDate,
   formatHijriDate,
   formatNumber,
@@ -31,6 +32,12 @@ describe("format", () => {
   it("uses Saudi time near midnight UTC", () => {
     // 22:30 UTC on the 14th is already the 15th in Riyadh.
     expect(formatGregorianDate(new Date("2026-10-14T22:30:00Z"))).toContain("15");
+  });
+
+  it("formats date and time in Saudi time with Latin digits", () => {
+    const text = formatDateTime(new Date("2026-10-14T12:05:00Z"));
+    expect(text).toContain("3:05");
+    expect(text).toMatch(latinOnly);
   });
 
   it("converts Arabic-Indic and Persian digits to Latin", () => {

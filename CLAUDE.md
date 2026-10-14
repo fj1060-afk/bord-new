@@ -20,3 +20,5 @@ The build plan and its status live in `src/config/phases.ts` (shown on the home 
 - Schema changes go in `supabase/migrations/` (see its README). Authorization is enforced in the database with RLS, not only in the UI.
 - Keep files small and focused (aim for under 400 lines). Pure logic goes in `src/lib` with a `*.test.ts` next to it.
 - Cache Components is deliberately off: pages depend on the signed-in user.
+- Page access: guard every page with `requirePage(href, level)` from `src/lib/auth.ts` and every server action with the level it needs; the database enforces the same rules through `page_level()` in RLS policies.
+- The Supabase MCP `apply_migration` times out on statements it treats as destructive (`revoke`, `delete`); put those in a migration the user runs from the SQL editor.
