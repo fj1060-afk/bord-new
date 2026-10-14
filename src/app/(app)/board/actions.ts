@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
-import { BOARD_CATEGORIES, BOARD_POSITIONS, isOneOf, membershipError } from "@/lib/org";
+import { BOARD_CATEGORIES, BOARD_POSITIONS, isOneOf, membershipError, TERM_YEARS, termEnd } from "@/lib/org";
 import { resolvePerson } from "@/lib/people";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -14,9 +14,12 @@ export async function saveBoard(boardId: string | null, _prev: ActionState, form
   await requirePage(PAGE, LEVELS.manage);
   const name = String(form.get("name") ?? "").trim();
   const term_start = String(form.get("term_start") ?? "");
-  const term_end = String(form.get("term_end") ?? "");
-  if (!name || !term_start || !term_end) return { ok: false, message: "الاسم وتاريخا الدورة مطلوبة." };
-  if (term_end <= term_start) return { ok: false, message: "نهاية الدورة يجب أن تكون بعد بدايتها." };
+  const years = Number(form.get("term_years"));
+  if (!name || !term_start) return { ok: false, message: "اسم المجلس وتاريخ بداية الدورة مطلوبان." };
+  if (!TERM_YEARS.includes(years as (typeof TERM_YEARS)[number])) return { ok: false, message: "اختر مدة الدورة." };
+  // The end date is always derived on the server, never taken from the form.
+  const term_end = termEnd(term_start, years);
+  if (!term_end) return { ok: false, message: "تاريخ البداية غير صحيح." };
 
   const supabase = await createClient();
   const row = { name, term_start, term_end };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BOARD_POSITIONS, currentYear, isOneOf, membershipError, sortByPosition } from "./org";
+import { BOARD_POSITIONS, currentYear, isOneOf, membershipError, sortByPosition, termEnd, termYears } from "./org";
 
 describe("org", () => {
   it("sorts chair, vice chair, secretary, then members by name", () => {
@@ -22,6 +22,15 @@ describe("org", () => {
   it("uses the Saudi calendar year", () => {
     expect(currentYear(new Date("2026-12-31T22:00:00Z"))).toBe(2027);
     expect(currentYear(new Date("2026-06-01T00:00:00Z"))).toBe(2026);
+  });
+
+  it("computes the last day of a board term", () => {
+    expect(termEnd("2026-01-01", 3)).toBe("2028-12-31");
+    expect(termEnd("2026-07-15", 4)).toBe("2030-07-14");
+    expect(termEnd("2024-03-01", 1)).toBe("2025-02-28");
+    expect(termEnd("bad", 3)).toBeNull();
+    expect(termEnd("2026-01-01", 0)).toBeNull();
+    expect(termYears("2026-01-01", "2028-12-31")).toBe(3);
   });
 
   it("explains membership constraint errors", () => {

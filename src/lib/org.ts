@@ -23,6 +23,23 @@ export function isOneOf<T extends string>(value: unknown, options: Record<T, str
   return typeof value === "string" && Object.hasOwn(options, value);
 }
 
+export const TERM_YEARS = [1, 2, 3, 4, 5] as const;
+
+/** Last day of a board term: start date plus N years, minus one day (YYYY-MM-DD in, out). */
+export function termEnd(start: string, years: number): string | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(start);
+  if (!match || !Number.isInteger(years) || years < 1) return null;
+  const date = new Date(Date.UTC(Number(match[1]) + years, Number(match[2]) - 1, Number(match[3])));
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Whole years between a term's start and end (the inverse of termEnd), for editing. */
+export function termYears(start: string, end: string): number {
+  for (const years of TERM_YEARS) if (termEnd(start, years) === end) return years;
+  return 3;
+}
+
 /** The current year in Saudi time; disclosures are filed per calendar year. */
 export function currentYear(now = new Date()): number {
   return Number(new Intl.DateTimeFormat("en-u-nu-latn", { year: "numeric", timeZone: "Asia/Riyadh" }).format(now));
