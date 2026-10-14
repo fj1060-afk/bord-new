@@ -12,7 +12,7 @@ const problems = [];
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || undefined,
   // Chromium ignores HTTPS_PROXY unless it is passed in explicitly.
-  proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY } : undefined,
+  proxy: process.env.HTTPS_PROXY && !base.includes("localhost") ? { server: process.env.HTTPS_PROXY } : undefined,
 });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 page.on("dialog", (d) => (d.type() === "prompt" ? d.accept("يرجى التحديث") : d.accept()));
