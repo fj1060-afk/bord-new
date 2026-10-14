@@ -9,7 +9,7 @@ import { addBoardMember, saveBoard } from "./actions";
 
 type Board = { id: string; name: string; term_start: string; term_end: string };
 
-export function BoardForm({ board }: { board?: Board }) {
+export function BoardForm({ board, maxYears = 4 }: { board?: Board; maxYears?: number }) {
   const [state, action] = useActionState(saveBoard.bind(null, board?.id ?? null), null);
   const [start, setStart] = useState(board?.term_start ?? "");
   const [years, setYears] = useState(board ? termYears(board.term_start, board.term_end) : 3);
@@ -32,7 +32,7 @@ export function BoardForm({ board }: { board?: Board }) {
       </Field>
       <Field label="مدة الدورة">
         <select name="term_years" value={years} onChange={(e) => setYears(Number(e.target.value))} className={inputClass}>
-          {TERM_YEARS.map((n) => (
+          {TERM_YEARS.filter((n) => n <= maxYears).map((n) => (
             <option key={n} value={n}>
               {n === 1 ? "سنة واحدة" : n === 2 ? "سنتان" : `${n} سنوات`}
             </option>

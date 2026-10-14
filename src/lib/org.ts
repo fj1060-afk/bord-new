@@ -23,7 +23,7 @@ export function isOneOf<T extends string>(value: unknown, options: Record<T, str
   return typeof value === "string" && Object.hasOwn(options, value);
 }
 
-export const TERM_YEARS = [1, 2, 3, 4, 5] as const;
+export const TERM_YEARS = [1, 2, 3, 4] as const; // Companies Law art. 68: at most four years
 
 /** Last day of a board term: start date plus N years, minus one day (YYYY-MM-DD in, out). */
 export function termEnd(start: string, years: number): string | null {

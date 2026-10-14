@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
 import { BOARD_CATEGORIES, BOARD_POSITIONS, isOneOf, membershipError, TERM_YEARS, termEnd } from "@/lib/org";
+import { companyProfile } from "@/lib/live-server";
 import { resolvePerson } from "@/lib/people";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -17,6 +18,8 @@ export async function saveBoard(boardId: string | null, _prev: ActionState, form
   const years = Number(form.get("term_years"));
   if (!name || !term_start) return { ok: false, message: "اسم المجلس وتاريخ بداية الدورة مطلوبان." };
   if (!TERM_YEARS.includes(years as (typeof TERM_YEARS)[number])) return { ok: false, message: "اختر مدة الدورة." };
+  const maxYears = (await companyProfile(await createClient()))?.max_term_years ?? 4;
+  if (years > maxYears) return { ok: false, message: `نظام الشركة الأساس يحدد الدورة بـ ${maxYears} سنوات كحد أقصى.` };
   // The end date is always derived on the server, never taken from the form.
   const term_end = termEnd(term_start, years);
   if (!term_end) return { ok: false, message: "تاريخ البداية غير صحيح." };

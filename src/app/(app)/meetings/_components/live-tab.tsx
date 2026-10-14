@@ -4,6 +4,7 @@ import { Printer } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { buttonClass } from "@/components/ui/styles";
 import { ATTENDANCE, ITEM_STATUS, LIVE_STATUS, quorum, type AttendanceStatus } from "@/lib/live";
+import type { QuorumRule } from "@/lib/company";
 import { ITEM_KINDS } from "@/lib/meetings";
 import { endMeeting, openItem, toggleBreak } from "../_actions/live";
 import { AttendanceSelect, CloseItemForm, MeetingTimer, ProxySelect, QuorumOverrideForm, StartMeetingButton } from "./live-controls";
@@ -22,6 +23,8 @@ export type LiveData = {
   attendance: { person_id: string; status: AttendanceStatus }[];
   proxies: { grantor_person_id: string; holder_person_id: string }[];
   breaks: { started_at: string; ended_at: string | null }[];
+  rule: QuorumRule;
+  proxyAllowed: boolean;
   items: { id: string; position: number; title: string; kind: keyof typeof ITEM_KINDS; status: keyof typeof ITEM_STATUS; outcome: string | null; duration_minutes: number | null }[];
 };
 
@@ -35,6 +38,7 @@ export function LiveTab({ data, canRun }: { data: LiveData; canRun: boolean }) {
     attendance: status,
     proxies: proxies.map((p) => ({ grantor: p.grantor_person_id, holder: p.holder_person_id })),
     required: meeting.quorum_required,
+    rule: data.rule,
   });
   const live = meeting.live_status === "in_progress" || meeting.live_status === "paused";
   const ended = meeting.live_status === "ended";
@@ -111,7 +115,8 @@ export function LiveTab({ data, canRun }: { data: LiveData; canRun: boolean }) {
                   {canRun && !ended ? (
                     <>
                       <AttendanceSelect meetingId={meeting.id} personId={i.person_id} value={status[i.person_id]} disabled={false} />
-                      {status[i.person_id] === "proxy" && i.kind === "member" && (
+                      {status[i.person_id] === "proxy" && i.kind === "member" && !data.proxyAllowed && <span className="text-xs text-danger">الإنابة غير مسموحة في نظام الشركة الأساس</span>}
+                      {status[i.person_id] === "proxy" && i.kind === "member" && data.proxyAllowed && (
                         <ProxySelect meetingId={meeting.id} grantorId={i.person_id} value={holderOf[i.person_id]} holders={holders} disabled={false} />
                       )}
                     </>

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
 import { ATTENDANCE, nextPendingItem } from "@/lib/live";
-import { meetingQuorum } from "@/lib/live-server";
+import { companyProfile, meetingQuorum } from "@/lib/live-server";
 import { isOneOf } from "@/lib/org";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -32,6 +32,7 @@ export async function setProxy(meetingId: string, grantorId: string, holderId: s
     refresh(meetingId);
     return null;
   }
+  if ((await companyProfile(supabase))?.proxy_allowed === false) return { ok: false, message: "الإنابة غير مسموحة في نظام الشركة الأساس." };
   const { error } = await supabase
     .from("meeting_proxies")
     .upsert({ meeting_id: meetingId, grantor_person_id: grantorId, holder_person_id: holderId });

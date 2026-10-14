@@ -13,6 +13,8 @@ import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
 import { InviteesTab } from "../_components/invitees-tab";
 import { LiveTab, type LiveData } from "../_components/live-tab";
+import { quorumRule } from "@/lib/company";
+import { companyProfile } from "@/lib/live-server";
 import { MinutesTab } from "../_components/minutes-tab";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MeetingDetailsForm, RsvpForm } from "../_components/meeting-forms";
@@ -178,7 +180,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
               meeting,
               invitees: inviteeRows,
               items: agenda as unknown as LiveData["items"],
-              ...(await loadLive(supabase, meetingId)),
+              ...(await loadLive(supabase, meetingId, !!meeting.board_id)),
             }}
           />
         ) : (
@@ -190,15 +192,18 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   );
 }
 
-async function loadLive(supabase: SupabaseClient, meetingId: string) {
-  const [{ data: attendance }, { data: proxies }, { data: breaks }] = await Promise.all([
+async function loadLive(supabase: SupabaseClient, meetingId: string, isBoard: boolean) {
+  const [{ data: attendance }, { data: proxies }, { data: breaks }, profile] = await Promise.all([
     supabase.from("meeting_attendance").select("person_id, status").eq("meeting_id", meetingId),
     supabase.from("meeting_proxies").select("grantor_person_id, holder_person_id").eq("meeting_id", meetingId),
     supabase.from("meeting_breaks").select("started_at, ended_at").eq("meeting_id", meetingId).order("started_at"),
+    companyProfile(supabase),
   ]);
   return {
     attendance: (attendance ?? []) as LiveData["attendance"],
     proxies: proxies ?? [],
     breaks: breaks ?? [],
+    rule: quorumRule(profile, isBoard),
+    proxyAllowed: profile?.proxy_allowed ?? true,
   };
 }

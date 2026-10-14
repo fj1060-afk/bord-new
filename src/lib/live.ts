@@ -1,5 +1,7 @@
 // Pure rules for holding a meeting: attendance, quorum, timing.
 
+import { quorumNeeded, type QuorumRule } from "./company";
+
 export const ATTENDANCE = {
   present: "حاضر",
   remote: "حاضر عن بُعد",
@@ -19,13 +21,14 @@ export type QuorumInput = {
   attendance: Record<string, AttendanceStatus | undefined>;
   proxies: { grantor: string; holder: string }[];
   required?: number | null;
+  rule?: QuorumRule;
 };
 
 /**
  * Members count toward quorum when attending in person or remotely, or when
  * represented by a proxy whose holder attends. Default quorum: at least half.
  */
-export function quorum({ members, attendance, proxies, required }: QuorumInput) {
+export function quorum({ members, attendance, proxies, required, rule }: QuorumInput) {
   const attends = (id: string) => ATTENDING.includes(attendance[id] as AttendanceStatus);
   const holderOf = new Map(proxies.map((p) => [p.grantor, p.holder]));
   const counted = members.filter((id) => {
@@ -33,7 +36,7 @@ export function quorum({ members, attendance, proxies, required }: QuorumInput) 
     const holder = holderOf.get(id);
     return attendance[id] === "proxy" && holder !== undefined && attends(holder);
   }).length;
-  const needed = required ?? Math.max(1, Math.ceil(members.length / 2));
+  const needed = required ?? quorumNeeded(members.length, rule);
   return { members: members.length, counted, required: needed, met: members.length > 0 && counted >= needed };
 }
 

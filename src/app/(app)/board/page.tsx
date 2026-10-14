@@ -7,6 +7,7 @@ import { formatGregorianDate } from "@/lib/format";
 import { BOARD_CATEGORIES, BOARD_POSITIONS, currentYear, sortByPosition } from "@/lib/org";
 import { listPeople } from "@/lib/people";
 import { can, LEVELS } from "@/lib/permissions";
+import { companyProfile } from "@/lib/live-server";
 import { createClient } from "@/lib/supabase/server";
 import { endBoardMembership } from "./actions";
 import { AddBoardMemberForm, BoardForm } from "./board-forms";
@@ -26,6 +27,7 @@ export default async function BoardPage() {
   const canEdit = can(viewer.permissions, "/board", LEVELS.edit);
   const canManage = can(viewer.permissions, "/board", LEVELS.manage);
   const supabase = await createClient();
+  const maxYears = (await companyProfile(supabase))?.max_term_years ?? 4;
 
   const { data: board } = await supabase
     .from("boards")
@@ -43,7 +45,7 @@ export default async function BoardPage() {
           {canManage ? (
             <>
               <p className="mb-5 font-display text-lg font-bold">أنشئ المجلس وحدد دورته للبدء.</p>
-              <BoardForm />
+              <BoardForm maxYears={maxYears} />
             </>
           ) : (
             <p className="text-center text-ink-muted">لم يُنشأ المجلس بعد.</p>
@@ -143,7 +145,7 @@ export default async function BoardPage() {
         <details className="mt-8 rounded-lg border border-rule bg-surface">
           <summary className="cursor-pointer px-5 py-4 text-sm font-medium">تعديل بيانات المجلس ودورته</summary>
           <div className="border-t border-rule p-5">
-            <BoardForm board={board} />
+            <BoardForm board={board} maxYears={maxYears} />
           </div>
         </details>
       )}

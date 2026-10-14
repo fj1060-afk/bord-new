@@ -4,6 +4,8 @@ import { BrandSeal } from "@/components/shell/brand-seal";
 import { formatDateTime, formatGregorianDate, formatHijriDate } from "@/lib/format";
 import { ATTENDANCE, quorum, type AttendanceStatus } from "@/lib/live";
 import { meetingReference } from "@/lib/meetings";
+import { quorumRule } from "@/lib/company";
+import { companyProfile } from "@/lib/live-server";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "./print-button";
 
@@ -16,15 +18,16 @@ export default async function AttendanceSheet({ params }: PageProps<"/print/meet
   const supabase = await createClient();
   const { data: meeting } = await supabase
     .from("meetings")
-    .select("title, number, starts_at, started_at, ended_at, location, quorum_required, board:boards(name), committee:committees(name)")
+    .select("title, number, starts_at, started_at, ended_at, location, quorum_required, board_id, board:boards(name), committee:committees(name)")
     .eq("id", meetingId)
     .maybeSingle();
   if (!meeting) notFound();
 
-  const [{ data: invitees }, { data: attendance }, { data: proxies }] = await Promise.all([
+  const [{ data: invitees }, { data: attendance }, { data: proxies }, profile] = await Promise.all([
     supabase.from("meeting_invitees").select("person_id, kind, person:people(full_name)").eq("meeting_id", meetingId),
     supabase.from("meeting_attendance").select("person_id, status").eq("meeting_id", meetingId),
     supabase.from("meeting_proxies").select("grantor_person_id, holder_person_id").eq("meeting_id", meetingId),
+    companyProfile(supabase),
   ]);
   const rows = ((invitees ?? []) as unknown as Invitee[]).sort((a, b) => a.kind.localeCompare(b.kind) || a.person.full_name.localeCompare(b.person.full_name, "ar"));
   const status: Record<string, AttendanceStatus> = Object.fromEntries((attendance ?? []).map((a) => [a.person_id, a.status as AttendanceStatus]));
@@ -35,6 +38,7 @@ export default async function AttendanceSheet({ params }: PageProps<"/print/meet
     attendance: status,
     proxies: (proxies ?? []).map((p) => ({ grantor: p.grantor_person_id, holder: p.holder_person_id })),
     required: meeting.quorum_required,
+    rule: quorumRule(profile, !!meeting.board_id),
   });
   const body = (meeting.board ?? meeting.committee) as unknown as { name: string } | null;
   const date = new Date(meeting.starts_at);

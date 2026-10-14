@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BookOpenCheck,
   Briefcase,
+  Building,
   Building2,
   CalendarDays,
   FileText,
@@ -140,6 +141,13 @@ export const navigation: NavGroup[] = [
         icon: Building2,
         phase: 2,
         summary: "الإدارات والمخوّلون بالرفع والمتابعة نيابة عنها.",
+      },
+      {
+        href: "/admin/company",
+        label: "ملف الشركة",
+        icon: Building,
+        phase: 9,
+        summary: "نوع الشركة وأحكام نظامها الأساس وأمين سر المجلس.",
       },
       {
         href: "/admin/settings",
