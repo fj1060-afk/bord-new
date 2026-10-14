@@ -8,6 +8,7 @@ import { requirePage } from "@/lib/auth";
 import { formatGregorianDate } from "@/lib/format";
 import { BOARD_CATEGORIES, BOARD_POSITIONS, currentYear, sortByPosition } from "@/lib/org";
 import { listPeople } from "@/lib/people";
+import { Executives } from "./executives";
 import { can, LEVELS } from "@/lib/permissions";
 import { companyProfile } from "@/lib/live-server";
 import { createClient } from "@/lib/supabase/server";
@@ -143,6 +144,8 @@ export default async function BoardPage() {
           </tbody>
         </table>
       </div>
+
+      <Executives year={year} canEdit={canEdit} people={people} />
 
       {canManage && (
         <details className="mt-8 rounded-lg border border-rule bg-surface">

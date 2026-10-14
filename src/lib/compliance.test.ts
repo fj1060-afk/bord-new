@@ -11,6 +11,8 @@ const base: Snapshot = {
   meetings: ["2026-01-10", "2026-04-10", "2026-07-10", "2026-09-20"].map((d, i) => ({ id: `m${i}`, body: "board", starts_at: `${d}T07:00:00Z`, ended: true, extraordinary: false, pack_published_at: `${d.slice(0, 8)}01T07:00:00Z` })),
   attendance: [],
   disclosed: ["a", "b", "c", "d", "e"],
+  executives: [],
+  circulars: [],
 };
 const find = (s: Snapshot, id: string) => evaluate(s).find((f) => f.id.startsWith(id));
 
@@ -42,6 +44,13 @@ describe("compliance", () => {
     const future = [...base.meetings, { ...base.meetings[0], id: "f", starts_at: "2026-12-20T07:00:00Z" }];
     expect(find({ ...base, meetings: future }, "board.quarterly")?.detail).toContain("24");
     expect(find({ ...base, attendance }, "board.absence")?.detail).toContain("d");
+  });
+
+  it("flags unratified circular resolutions and executive disclosures", () => {
+    const circulars = [{ id: "c", title: "عقد", body: "board", closed_at: "2026-02-01T00:00:00Z", ratified: false }];
+    expect(find({ ...base, circulars }, "circular.ratified")?.status).toBe("violation");
+    expect(find({ ...base, circulars: [{ ...circulars[0], closed_at: "2026-10-01T00:00:00Z" }] }, "circular.ratified")?.status).toBe("warning");
+    expect(find({ ...base, executives: [{ person_id: "x", name: "الرئيس التنفيذي" }] }, "disclosures.executives")?.status).toBe("warning");
   });
 
   it("checks the audit committee", () => {

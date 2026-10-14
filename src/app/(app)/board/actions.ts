@@ -68,3 +68,25 @@ export async function endBoardMembership(membershipId: string) {
   if (error) throw new Error("Could not end membership");
   revalidatePath(PAGE);
 }
+
+/** Adds a person (existing or new) to executive management, for the disclosures register. */
+export async function addExecutive(_prev: ActionState, form: FormData): Promise<ActionState> {
+  await requirePage(PAGE, LEVELS.edit);
+  const title = String(form.get("executive_title") ?? "").trim().slice(0, 120);
+  if (!title) return { ok: false, message: "اكتب المسمى التنفيذي." };
+  const supabase = await createClient();
+  const person = await resolvePerson(supabase, form);
+  if ("error" in person) return { ok: false, message: person.error };
+  const { error } = await supabase.from("people").update({ executive_title: title }).eq("id", person.id);
+  if (error) return { ok: false, message: "تعذّر الحفظ." };
+  revalidatePath(PAGE);
+  return { ok: true, message: "أُضيف إلى الإدارة التنفيذية." };
+}
+
+export async function removeExecutive(personId: string) {
+  await requirePage(PAGE, LEVELS.edit);
+  const supabase = await createClient();
+  const { error } = await supabase.from("people").update({ executive_title: null }).eq("id", personId);
+  if (error) throw new Error("Could not update person");
+  revalidatePath(PAGE);
+}

@@ -36,6 +36,10 @@ export type Snapshot = {
   attendance: { meeting_id: string; person_id: string; status: string }[];
   /** People who filed this year's disclosure. */
   disclosed: string[];
+  /** Executive management (disclosures register). */
+  executives: Person[];
+  /** Passed circular resolutions; `body` as in meetings. */
+  circulars: { id: string; title: string; body: string; closed_at: string | null; ratified: boolean }[];
 };
 
 export type Finding = {
@@ -237,8 +241,31 @@ function committeeChecks(s: Snapshot): Check[] {
   return checks;
 }
 
+function circularChecks(s: Snapshot): Check[] {
+  const pending = s.circulars.filter((c) => !c.ratified);
+  // Overdue once a meeting of the same body has been held since voting closed.
+  const overdue = pending.filter((c) => s.meetings.some((m) => m.body === c.body && m.ended && c.closed_at && m.starts_at > c.closed_at && dayOf(m.starts_at) <= s.today));
+  if (!s.circulars.length) return [];
+  return [
+    {
+      id: "circular.ratified",
+      title: "إثبات القرارات بالتمرير في محضر أول اجتماع تالٍ",
+      source: "law",
+      article: "م82",
+      href: "/resolutions/circular",
+      status: overdue.length ? "violation" : pending.length ? "warning" : "ok",
+      detail: overdue.length
+        ? `عُقد اجتماع ولم تُثبت: ${overdue.map((c) => c.title).join("، ")}.`
+        : pending.length
+          ? `بانتظار الاجتماع القادم: ${pending.map((c) => c.title).join("، ")}.`
+          : "كل القرارات بالتمرير مثبتة.",
+    },
+  ];
+}
+
 function disclosureChecks(s: Snapshot): Check[] {
   const missing = s.boardMembers.filter((m) => !s.disclosed.includes(m.person_id));
+  const missingExec = s.executives.filter((m) => !s.disclosed.includes(m.person_id));
   return [
     {
       id: "disclosures.annual",
@@ -249,12 +276,21 @@ function disclosureChecks(s: Snapshot): Check[] {
       status: !s.board ? null : missing.length ? "warning" : "ok",
       detail: missing.length ? `لم يُفصح: ${missing.map((m) => m.name).join("، ")}.` : "أفصح جميع الأعضاء.",
     },
+    {
+      id: "disclosures.executives",
+      title: "سجل إفصاحات الإدارة التنفيذية لهذه السنة",
+      source: "guide",
+      article: "تنظيم سجل الإفصاحات",
+      href: "/board",
+      status: !s.executives.length ? null : missingExec.length ? "warning" : "ok",
+      detail: missingExec.length ? `لم يُفصح: ${missingExec.map((m) => m.name).join("، ")}.` : "أفصح جميع التنفيذيين.",
+    },
   ];
 }
 
 /** Every applicable rule with its result; guidance never counts as a violation. */
 export function evaluate(s: Snapshot): Finding[] {
-  return [...boardChecks(s), ...absenceChecks(s), ...committeeChecks(s), ...disclosureChecks(s)]
+  return [...boardChecks(s), ...absenceChecks(s), ...committeeChecks(s), ...circularChecks(s), ...disclosureChecks(s)]
     .filter((c): c is Check & { status: Status } => c.status !== null)
     .map((c) => {
       const level = bindingLevel(c.source, s.profile.company_type);

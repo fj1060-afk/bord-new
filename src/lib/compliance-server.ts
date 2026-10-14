@@ -12,12 +12,14 @@ const named = <T extends Named>(rows: T[] | null) => (rows ?? []).map(({ person,
 export async function complianceFindings(supabase: SupabaseClient) {
   const today = riyadhToday();
   const since = `${Number(today.slice(0, 4)) - 1}-01-01T00:00:00+03:00`;
-  const [profile, { data: board }, { data: committees }, { data: meetings }, { data: disclosures }] = await Promise.all([
+  const [profile, { data: board }, { data: committees }, { data: meetings }, { data: disclosures }, { data: executives }, { data: circulars }] = await Promise.all([
     companyProfile(supabase),
     supabase.from("boards").select("id, term_end").eq("status", "active").order("term_start", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("committees").select("id, name, kind, committee_members(person_id, position, status, person:people(full_name))").eq("status", "active"),
     supabase.from("meetings").select("id, board_id, committee_id, starts_at, live_status, meeting_type, pack_published_at").neq("status", "cancelled").gte("starts_at", since),
     supabase.from("disclosures").select("person_id").eq("year", currentYear()),
+    supabase.from("people").select("id, full_name").not("executive_title", "is", null),
+    supabase.from("circular_resolutions").select("id, title, board_id, committee_id, closed_at, ratified_meeting_id").eq("status", "passed"),
   ]);
   if (!profile) return null;
   const { data: members } = board
@@ -49,6 +51,8 @@ export async function complianceFindings(supabase: SupabaseClient) {
     })),
     attendance: attendance ?? [],
     disclosed: (disclosures ?? []).map((d) => d.person_id),
+    executives: (executives ?? []).map((e) => ({ person_id: e.id, name: e.full_name })),
+    circulars: (circulars ?? []).map((c) => ({ id: c.id, title: c.title, body: c.board_id ? "board" : c.committee_id!, closed_at: c.closed_at, ratified: !!c.ratified_meeting_id })),
   };
   return evaluate(snapshot);
 }

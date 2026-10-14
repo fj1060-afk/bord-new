@@ -29,12 +29,13 @@ function List({ title, rows, empty }: { title: string; rows: Row[]; empty: strin
 const day = (d: string) => formatGregorianDate(new Date(`${d.slice(0, 10)}T12:00:00Z`));
 
 export async function WorkTab({ supabase, today }: { supabase: Supabase; today: string }) {
-  const [{ data: agenda }, { data: docs }, { data: minutes }, { data: tasks }, { data: ended }] = await Promise.all([
+  const [{ data: agenda }, { data: docs }, { data: minutes }, { data: tasks }, { data: ended }, { data: info }] = await Promise.all([
     supabase.from("agenda_requests").select("id, title, created_at, department:departments(name)").eq("status", "pending").order("created_at"),
     supabase.from("document_requests").select("id, title, status, due_date, department:departments(name), item:agenda_items(meeting_id)").in("status", ["requested", "submitted", "returned"]).order("due_date"),
     supabase.from("minutes").select("id, status, meeting:meetings(id, title)").in("status", ["draft", "review"]),
     supabase.from("resolution_tasks").select("id, title, due_date, resolution_id, department:departments(name)").in("status", ["open", "in_progress"]).lt("due_date", today).order("due_date"),
     supabase.from("meetings").select("id, title, minutes(id)").eq("live_status", "ended"),
+    supabase.from("agenda_info_requests").select("id, question, meeting_id, created_at, requester:people(full_name)").is("response", null).order("created_at"),
   ]);
   type Doc = { id: string; title: string; status: string; due_date: string | null; department: { name: string } | null; item: { meeting_id: string } | null };
   const docRows = ((docs ?? []) as unknown as Doc[]).filter((d) => d.item);
@@ -65,6 +66,11 @@ export async function WorkTab({ supabase, today }: { supabase: Supabase; today: 
         <List title="طلبات بنود بانتظار المراجعة" rows={rows.agenda} empty="لا توجد طلبات معلّقة." />
         <List title="مستندات مُسلّمة بانتظار الاعتماد" rows={rows.review} empty="لا توجد مستندات بانتظار الاعتماد." />
         <List title="المحاضر" rows={rows.minutes} empty="كل المحاضر معتمدة." />
+        <List
+          title="طلبات معلومات من الأعضاء"
+          rows={((info ?? []) as unknown as { id: string; question: string; meeting_id: string; created_at: string; requester: { full_name: string } | null }[]).map((r) => ({ key: r.id, title: r.question.slice(0, 80), meta: `${r.requester?.full_name ?? ""} · ${day(r.created_at)}`, href: `/meetings/${r.meeting_id}?tab=agenda` }))}
+          empty="لا توجد طلبات بانتظار الرد."
+        />
         <List title="متأخرات" rows={[...rows.tasks, ...rows.lateDocs]} empty="لا توجد متأخرات." />
       </div>
     </div>

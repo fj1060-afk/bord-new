@@ -5,7 +5,7 @@ import { PersonPicker } from "@/components/org/person-picker";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { formatGregorianDate } from "@/lib/format";
 import { BOARD_CATEGORIES, BOARD_POSITIONS, TERM_YEARS, termEnd, termYears } from "@/lib/org";
-import { addBoardMember, saveBoard } from "./actions";
+import { addBoardMember, addExecutive, saveBoard } from "./actions";
 
 type Board = { id: string; name: string; term_start: string; term_end: string };
 
@@ -91,6 +91,25 @@ export function AddBoardMemberForm({ boardId, people }: { boardId: string; peopl
         <FormMessage state={state} />
         <SubmitButton pendingLabel="جارٍ الإضافة…" className="w-fit">
           إضافة العضو
+        </SubmitButton>
+      </form>
+    </details>
+  );
+}
+
+export function AddExecutiveForm({ people }: { people: { id: string; full_name: string }[] }) {
+  const [state, action] = useActionState(addExecutive, null);
+  return (
+    <details>
+      <summary className={buttonClass("secondary", "m-4 w-fit cursor-pointer list-none")}>إضافة تنفيذي</summary>
+      <form action={action} className="flex flex-col gap-4 border-t border-rule p-5">
+        <PersonPicker people={people} />
+        <Field label="المسمى التنفيذي">
+          <input name="executive_title" required placeholder="الرئيس التنفيذي، المدير المالي…" className={inputClass} />
+        </Field>
+        <FormMessage state={state} />
+        <SubmitButton pendingLabel="…" className="w-fit">
+          إضافة
         </SubmitButton>
       </form>
     </details>

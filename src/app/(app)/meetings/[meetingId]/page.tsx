@@ -11,6 +11,7 @@ import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
+import { InfoRequests } from "../_components/info-requests";
 import { InviteesTab } from "../_components/invitees-tab";
 import { LiveTab, type LiveData } from "../_components/live-tab";
 import { quorumRule } from "@/lib/company";
@@ -166,6 +167,9 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           packPublished={Boolean(meeting.pack_published_at)}
           myDepartmentIds={(delegations ?? []).map((d) => d.department_id)}
         />
+      )}
+      {tab === "agenda" && (
+        <InfoRequests meetingId={meetingId} items={agenda} organizer={organizer} invitee={Boolean(meeting.pack_published_at) && inviteeRows.some((i) => i.person_id === viewer.personId)} />
       )}
 
       {tab === "invitees" && <InviteesTab meetingId={meetingId} invitees={inviteeRows} people={people} editable={editable} />}

@@ -69,6 +69,50 @@ await step("تبويب المحضر يعرض الملاحظات والتحفظا
   await has("الملاحظات والتحفظات");
 });
 
+await step("إضافة تنفيذي يظهر في سجل الإفصاحات والامتثال", async () => {
+  await go("/board");
+  await page.click("summary:has-text('إضافة تنفيذي')");
+  const form = page.locator("form", { has: page.locator("input[name=executive_title]") });
+  await form.locator("select[name=person_id]").selectOption("new");
+  await form.locator("input[name=new_full_name]").fill(`مدير تنفيذي ${stamp}`);
+  await form.locator("input[name=executive_title]").fill("الرئيس التنفيذي");
+  await form.locator("button[type=submit]").click();
+  await has("أُضيف إلى الإدارة التنفيذية");
+  await go("/governance-office");
+  await has("سجل إفصاحات الإدارة التنفيذية");
+});
+
+let meetingHref;
+await step("العضو يطلب معلومات على بند", async () => {
+  await as("MEMBER");
+  await go("/meetings");
+  const links = await page.locator("a[href^='/meetings/']").evaluateAll((as) => as.map((a) => a.getAttribute("href")).filter((h) => /^\/meetings\/[0-9a-f-]{36}$/.test(h)));
+  for (const href of links) {
+    await go(`${href}?tab=agenda`);
+    if (await page.locator("summary:has-text('طلب معلومات أو وثيقة')").count()) {
+      meetingHref = href;
+      break;
+    }
+  }
+  if (!meetingHref) throw new Error("no published meeting for this member");
+  await page.click("summary:has-text('طلب معلومات أو وثيقة')");
+  await page.locator("select[name=agenda_item_id]").selectOption({ index: 1 });
+  await page.fill("textarea[name=question]", `أرجو تزويدي بالعقد ${stamp}`);
+  await page.click("button:has-text('إرسال')");
+  await has("أُرسل الطلب إلى أمين السر");
+});
+
+await step("أمين السر يرى الطلب في مركز العمل ويرد", async () => {
+  await as("ADMIN");
+  await go("/governance-office?tab=work");
+  await has(`أرجو تزويدي بالعقد ${stamp}`);
+  await go(`${meetingHref}?tab=agenda`);
+  const item = page.locator("li", { hasText: `أرجو تزويدي بالعقد ${stamp}` });
+  await item.locator("textarea[name=response]").fill("أُرفق العقد على البند.");
+  await item.locator("button:has-text('إرسال الرد')").click();
+  await has("أُرفق العقد على البند.");
+});
+
 await browser.close();
 console.log(results.join("\n"));
 console.log(problems.length ? `\nProblems:\n${[...new Set(problems)].join("\n")}` : "\nNo page errors.");
