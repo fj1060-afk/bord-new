@@ -56,7 +56,7 @@ export const phases: Phase[] = [
     title: "المستندات ولوحة القيادة",
     scope: "مكتبة المستندات، ولوحة رئيس المجلس، والتقارير.",
     doneWhen: "تعرض اللوحة أرقاماً حقيقية من البيانات.",
-    status: "active",
+    status: "done",
   },
   {
     number: 7,
