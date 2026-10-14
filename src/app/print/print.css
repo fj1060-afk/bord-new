@@ -1,0 +1,83 @@
+/* Printed governance documents (agenda, attendance sheet, minutes): A4 paper.
+   Paper is always light, so .doc pins the light palette from globals.css. */
+@page {
+  size: A4;
+  margin: 14mm 14mm 18mm;
+  @bottom-left { content: "صفحة " counter(page) " من " counter(pages); font: 8pt var(--font-body); color: #5b6763; }
+}
+.doc {
+  --ink: #17211f; --ink-muted: #5b6763; --rule: #dce2de; --primary: #1f4d45; --primary-soft: #e6efec;
+  --on-primary: #ffffff; --brass: #a8823a; --brass-soft: #f4ecdc; --danger: #a33a2f; --paper: #f6f7f5;
+  color: var(--ink); background: #fff; font-size: 10.5pt; line-height: 1.8;
+  max-width: 182mm; margin: 0 auto; padding: 10mm 0;
+}
+@media print { .doc { padding: 0; } .no-print { display: none !important; } }
+.doc .num { font-family: var(--font-mono-latin), monospace; }
+.doc h1, .doc h2 { font-family: var(--font-naskh), serif; margin: 0; }
+.doc-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2.5px solid var(--primary); padding-bottom: 10px; }
+.doc-head .org b { display: block; font-family: var(--font-naskh), serif; font-size: 16pt; color: var(--primary); }
+.doc-head .org span { font-weight: 600; font-size: 9.5pt; }
+.doc-meta { text-align: left; font-size: 9pt; color: var(--ink-muted); }
+.doc-meta b { color: var(--ink); }
+.doc-badges { display: flex; gap: 6px; justify-content: flex-end; margin-bottom: 4px; }
+.doc-badge { border: 1.5px solid; border-radius: 4px; padding: 0 8px; font-size: 8.5pt; font-weight: 700; }
+.doc-badge.c { color: var(--danger); background: #fbf1f1; }
+.doc-badge.s { color: var(--brass); background: var(--brass-soft); }
+.doc-badge.ok { color: var(--primary); background: var(--primary-soft); }
+.doc-title { text-align: center; margin: 14px 0 12px; }
+.doc-title h1 { font-size: 20pt; }
+.doc-title p { margin: 0; font-weight: 600; color: var(--ink-muted); }
+.doc-title hr { width: 70px; border: 0; border-top: 3px solid var(--brass); margin: 8px auto 0; }
+.doc-card { display: grid; grid-template-columns: 95px 1fr; border: 1.5px solid var(--rule); border-radius: 10px; overflow: hidden; margin-bottom: 12px; break-inside: avoid; }
+.doc-date { background: var(--primary); color: var(--on-primary); text-align: center; padding: 8px 4px; display: flex; flex-direction: column; justify-content: center; }
+.doc-date .d { font-size: 22pt; font-weight: 700; line-height: 1.2; font-family: var(--font-mono-latin), monospace; }
+.doc-date small { display: block; font-size: 7.5pt; opacity: .85; border-top: 1px solid rgb(255 255 255 / .3); margin-top: 4px; padding-top: 2px; }
+.doc-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+.doc-grid div { padding: 6px 12px; border-inline-start: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.doc-grid div:nth-last-child(-n+3) { border-bottom: 0; }
+.doc-grid span { display: block; font-size: 8pt; color: var(--ink-muted); }
+.doc-grid b { font-size: 10.5pt; }
+.doc h2 { font-size: 13pt; margin: 14px 0 6px; padding-inline-start: 8px; border-inline-start: 4px solid var(--primary); line-height: 1.3; break-after: avoid; }
+.doc p { margin: 0 0 6px; }
+.doc table { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 9.8pt; }
+.doc tr { break-inside: avoid; }
+.doc th { background: var(--primary); color: var(--on-primary); font-weight: 600; padding: 6px 8px; text-align: start; }
+.doc td { padding: 5px 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+.doc tr:nth-child(even) td { background: #fbfbf9; }
+.doc td small { display: block; color: var(--ink-muted); font-size: 8.5pt; line-height: 1.3; }
+.doc td.sign { height: 34px; min-width: 90px; }
+.pill { display: inline-block; border-radius: 99px; padding: 0 9px; font-size: 8.5pt; font-weight: 600; background: var(--primary-soft); color: var(--primary); }
+.pill.r { background: #f7e6e6; color: var(--danger); }
+.pill.b { background: var(--brass-soft); color: var(--brass); }
+.pill.m { background: var(--paper); color: var(--ink-muted); }
+.doc-quorum { display: grid; grid-template-columns: repeat(5, 1fr); border: 1.5px solid var(--rule); border-radius: 8px; overflow: hidden; margin: 6px 0 8px; text-align: center; break-inside: avoid; }
+.doc-quorum div { padding: 5px; border-inline-start: 1px solid var(--rule); }
+.doc-quorum div:first-child { border: 0; }
+.doc-quorum span { display: block; font-size: 8pt; color: var(--ink-muted); }
+.doc-quorum b { font-size: 13pt; font-family: var(--font-mono-latin), monospace; }
+.doc-quorum .met { background: var(--primary-soft); color: var(--primary); }
+.doc-quorum .unmet { background: #f7e6e6; color: var(--danger); }
+.doc-quorum .met b, .doc-quorum .unmet b { font-family: inherit; font-size: 11pt; }
+.doc .ref { font-size: 8.5pt; color: var(--ink-muted); }
+.doc-box { border: 1.5px solid var(--rule); border-inline-start: 4px solid var(--brass); border-radius: 6px; padding: 6px 12px; margin: 8px 0; font-size: 9.5pt; break-inside: avoid; }
+.doc-box ol { margin: 0; padding-inline-start: 18px; }
+.doc ol.agenda { margin: 0 0 6px; padding-inline-start: 22px; }
+.doc-item { border: 1.5px solid var(--rule); border-radius: 10px; margin-bottom: 10px; overflow: hidden; break-inside: avoid; }
+.doc-item > header { background: var(--paper); border-bottom: 1px solid var(--rule); padding: 6px 12px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+.doc-item > div { padding: 8px 12px; }
+.doc .label { font-size: 8.5pt; font-weight: 700; color: var(--ink-muted); }
+.doc-result { background: var(--primary-soft); border-inline-start: 4px solid var(--primary); border-radius: 4px; padding: 6px 12px; margin-top: 6px; }
+.doc-result .no { font-weight: 700; color: var(--primary); }
+.doc-votes { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 9pt; margin-top: 4px; }
+.doc-votes b { font-family: var(--font-mono-latin), monospace; }
+.doc-remark { margin-top: 6px; font-size: 9pt; border-inline-start: 3px solid var(--brass); padding-inline-start: 8px; }
+.doc-lead { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; text-align: center; margin: 14px 0 6px; break-inside: avoid; }
+.doc-lead span { color: var(--primary); font-weight: 700; display: block; }
+.doc-lead .line { border-bottom: 2px solid var(--primary); height: 46px; margin: 0 20px 2px; }
+.doc-lead small { color: var(--ink-muted); font-size: 8pt; }
+.doc-members { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.doc-sig { border: 1.5px solid var(--rule); border-radius: 10px; text-align: center; padding: 6px 8px 4px; break-inside: avoid; }
+.doc-sig b { display: block; }
+.doc-sig span { font-size: 8.5pt; color: var(--ink-muted); }
+.doc-sig .box { border: 1.5px dashed #bfc5c1; border-radius: 6px; height: 54px; margin: 4px 0 2px; display: grid; place-items: center; font-size: 8pt; color: var(--primary); }
+.doc-sig small { font-size: 7.5pt; color: var(--ink-muted); }

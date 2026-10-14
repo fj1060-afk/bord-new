@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, FileText } from "lucide-react";
+import { ArrowDown, ArrowUp, FileText, Printer } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { buttonClass } from "@/components/ui/styles";
 import { DOC_REQUEST_STATUS, ITEM_KINDS } from "@/lib/meetings";
@@ -51,6 +51,11 @@ export function AgendaTab({
 
   return (
     <div className="flex flex-col gap-6">
+      {items.length > 0 && (
+        <a href={`/print/meetings/${meetingId}/agenda`} target="_blank" className={buttonClass("secondary", "w-fit")}>
+          <Printer size={16} aria-hidden="true" /> طباعة الدعوة وجدول الأعمال
+        </a>
+      )}
       {!editable && !packPublished && documents.length === 0 && (
         <p className="rounded-md bg-brass-soft px-4 py-3 text-sm text-brass">تظهر مستندات الاجتماع هنا بعد نشر حزمة المجلس.</p>
       )}
