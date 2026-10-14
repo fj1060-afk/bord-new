@@ -13,6 +13,7 @@ import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
 import { InfoRequests } from "../_components/info-requests";
 import { PrintDocs } from "../_components/print-docs";
+import { DocIntroForm } from "../_components/doc-intro-form";
 import { InviteesTab } from "../_components/invitees-tab";
 import { LiveTab, type LiveData } from "../_components/live-tab";
 import { quorumRule } from "@/lib/company";
@@ -159,6 +160,11 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
         </div>
       )}
 
+      {tab === "agenda" && organizer && (
+        <div className="mb-6">
+          <DocIntroForm meetingId={meetingId} doc="agenda" intro={meeting.agenda_intro} introEn={meeting.agenda_intro_en} />
+        </div>
+      )}
       {tab === "agenda" && (
         <AgendaTab
           meetingId={meetingId}
@@ -179,6 +185,11 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
 
       {tab === "minutes" && <MinutesTab meeting={meeting} items={agenda} viewerId={viewer.id} organizer={organizer} />}
 
+      {tab === "live" && organizer && (
+        <div className="mb-6">
+          <DocIntroForm meetingId={meetingId} doc="attendance" intro={meeting.attendance_intro} introEn={meeting.attendance_intro_en} />
+        </div>
+      )}
       {tab === "live" &&
         (status === "scheduled" ? (
           <LiveTab

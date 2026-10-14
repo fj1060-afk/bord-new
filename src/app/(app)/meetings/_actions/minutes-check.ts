@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { companyProfile, meetingQuorum } from "@/lib/live-server";
 import { resolutionReference } from "@/lib/minutes";
+import { plainText } from "@/lib/rich-text";
 import { minutesGaps } from "@/lib/secretary";
 
 /** Loads what the completeness check needs for a meeting's minutes. */
@@ -27,7 +28,7 @@ export async function loadMinutesGaps(supabase: SupabaseClient, meetingId: strin
     members: (members ?? []).map((m) => m.person_id),
     attendance: Object.fromEntries((attendance ?? []).map((a) => [a.person_id, a.status])),
     items: items ?? [],
-    deliberation: Object.fromEntries((rows ?? []).map((r) => [r.agenda_item_id, r.deliberation])),
+    deliberation: Object.fromEntries((rows ?? []).map((r) => [r.agenda_item_id, plainText(r.deliberation)])),
     resolutions: (resolutions ?? []).map((r) => ({
       ...r,
       number: resolutionReference(r.number, r.year),
@@ -38,7 +39,7 @@ export async function loadMinutesGaps(supabase: SupabaseClient, meetingId: strin
     secretary: meeting.board_id ? !!profile?.secretary_person_id : true,
     english:
       profile?.document_language === "bilingual"
-        ? { intro: minutes?.intro_en ?? null, closing: minutes?.closing_en ?? null, deliberation: Object.fromEntries((rows ?? []).map((r) => [r.agenda_item_id, r.deliberation_en])) }
+        ? { intro: plainText(minutes?.intro_en), closing: plainText(minutes?.closing_en), deliberation: Object.fromEntries((rows ?? []).map((r) => [r.agenda_item_id, plainText(r.deliberation_en)])) }
         : undefined,
   });
 }

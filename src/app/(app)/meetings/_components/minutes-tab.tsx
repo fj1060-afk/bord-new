@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Printer } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
+import { RichText } from "@/components/ui/rich-text";
 import { buttonClass } from "@/components/ui/styles";
 import { formatDateTime } from "@/lib/format";
 import { MINUTES_STATUS, RESOLUTION_STATUS, resolutionReference, signatureProgress, type MinutesStatus } from "@/lib/minutes";
@@ -76,16 +77,16 @@ export async function MinutesTab({ meeting, items, viewerId, organizer }: Props)
           </section>
         ) : (
           <article className="flex flex-col gap-4 rounded-lg border border-rule bg-surface p-6 leading-8">
-            <p className="whitespace-pre-line">{minutes.intro}</p>
+            <RichText value={minutes.intro} />
             {items.map((i) => (
               <section key={i.id}>
                 <h3 className="font-display font-bold">
                   <span className="font-mono text-brass">{i.position}.</span> {i.title}
                 </h3>
-                <p className="whitespace-pre-line text-sm">{deliberation[i.id] || "—"}</p>
+                <RichText value={deliberation[i.id]} className="text-sm" />
               </section>
             ))}
-            <p className="whitespace-pre-line">{minutes.closing}</p>
+            <RichText value={minutes.closing} />
           </article>
         )}
 

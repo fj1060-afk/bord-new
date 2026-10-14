@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CATEGORIES_EN } from "@/lib/doc-labels";
 import { BOARD_CATEGORIES } from "@/lib/org";
-import { DocChrome, InfoCard, L, PersonCell, reference, Signatures } from "../../../doc";
+import { BiText, DocChrome, InfoCard, L, PersonCell, reference, Signatures } from "../../../doc";
 import { loadMeeting } from "../_meeting";
 import { Capacity, H2, heldCells, heldDay, MeetingHead, Method, QuorumBox } from "../parts";
 
@@ -28,6 +28,7 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
       <DocChrome bi={bi} footer={`${ref} · كشف الحضور`} fileName={`${ref}-كشف-الحضور`} />
       <MeetingHead m={m} title="كشف حضور اجتماع" titleEn="Meeting Attendance Sheet" badges={[{ ar: "سري", en: "Confidential", tone: "c" }]} />
       <InfoCard bi={bi} day={heldDay(m)} cells={heldCells(m)} />
+      {meeting.attendance_intro && <BiText bi={bi} ar={meeting.attendance_intro} en={meeting.attendance_intro_en} />}
 
       <H2 ar={m.isBoard ? "أعضاء المجلس" : "أعضاء اللجنة"} en={m.isBoard ? "Board Members" : "Committee Members"} bi={bi} />
       <table>

@@ -2,6 +2,7 @@
 
 import { useActionState, useDeferredValue, useState } from "react";
 import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { EnglishRichField, RichTextField } from "@/components/ui/rich-text-field";
 import { draftingHints } from "@/lib/drafting";
 import { RESOLUTION_STATUS } from "@/lib/minutes";
 import { createMinutes, saveMinutes, saveResolution, signMinutes } from "../_actions/minutes";
@@ -23,18 +24,18 @@ export function MinutesEditor({ meetingId, minutesId, intro, closing, introEn, c
   return (
     <form action={action} className="flex flex-col gap-5">
       <Field label="الافتتاحية">
-        <textarea spellCheck lang="ar" name="intro" rows={4} defaultValue={intro ?? ""} className={inputClass} />
-        <EnglishField name="intro_en" rows={3} defaultValue={introEn} />
+        <RichTextField name="intro" defaultValue={intro} label="الافتتاحية" />
+        <EnglishRichField name="intro_en" defaultValue={introEn} />
       </Field>
       {items.map((item) => (
         <Field key={item.id} label={`${item.position}. ${item.title}`} hint="ما دار من نقاش وما انتهى إليه البند.">
-          <textarea spellCheck lang="ar" name={`item:${item.id}`} rows={4} defaultValue={item.deliberation ?? ""} className={inputClass} />
-          <EnglishField name={`item_en:${item.id}`} rows={3} defaultValue={item.deliberation_en} />
+          <RichTextField name={`item:${item.id}`} defaultValue={item.deliberation} label={item.title} />
+          <EnglishRichField name={`item_en:${item.id}`} defaultValue={item.deliberation_en} />
         </Field>
       ))}
       <Field label="الختام">
-        <textarea spellCheck lang="ar" name="closing" rows={2} defaultValue={closing ?? ""} className={inputClass} />
-        <EnglishField name="closing_en" rows={2} defaultValue={closingEn} />
+        <RichTextField name="closing" defaultValue={closing} minHeight={64} label="الختام" />
+        <EnglishRichField name="closing_en" defaultValue={closingEn} />
       </Field>
       <FormMessage state={state} />
       <SubmitButton pendingLabel="جارٍ الحفظ…" className="w-fit">

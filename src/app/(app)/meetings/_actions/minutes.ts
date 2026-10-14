@@ -7,6 +7,7 @@ import { dateParts } from "@/lib/format";
 import { companyProfile, meetingQuorum } from "@/lib/live-server";
 import { loadMinutesGaps } from "./minutes-check";
 import { englishDate, englishTime } from "@/lib/doc-labels";
+import { cleanRich } from "@/lib/rich-text";
 import { defaultClosing, defaultIntro } from "@/lib/minutes";
 import { isOneOf } from "@/lib/org";
 import { LEVELS } from "@/lib/permissions";
@@ -80,7 +81,7 @@ export async function createMinutes(meetingId: string): Promise<ActionState> {
 export async function saveMinutes(meetingId: string, minutesId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   await requirePage("/meetings", LEVELS.edit);
   const supabase = await createClient();
-  const { error } = await supabase.from("minutes").update({ intro: text(form, "intro"), closing: text(form, "closing"), intro_en: text(form, "intro_en"), closing_en: text(form, "closing_en") }).eq("id", minutesId).eq("status", "draft");
+  const { error } = await supabase.from("minutes").update({ intro: cleanRich(form.get("intro")), closing: cleanRich(form.get("closing")), intro_en: cleanRich(form.get("intro_en")), closing_en: cleanRich(form.get("closing_en")) }).eq("id", minutesId).eq("status", "draft");
   if (error) return { ok: false, message: "تعذّر حفظ المحضر." };
   for (const [key, value] of form.entries()) {
     if (!key.startsWith("item:")) continue;
@@ -88,8 +89,8 @@ export async function saveMinutes(meetingId: string, minutesId: string, _prev: A
     await supabase.from("minutes_items").upsert({
       minutes_id: minutesId,
       agenda_item_id: itemId,
-      deliberation: String(value).trim() || null,
-      deliberation_en: String(form.get(`item_en:${itemId}`) ?? "").trim() || null,
+      deliberation: cleanRich(value),
+      deliberation_en: cleanRich(form.get(`item_en:${itemId}`)),
     });
   }
   refresh(meetingId);

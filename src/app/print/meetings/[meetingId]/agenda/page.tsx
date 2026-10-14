@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { englishDate, englishTime, ITEM_KINDS_EN, MEETING_MODES_EN, MEETING_TYPES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
 import { ITEM_KINDS, MEETING_MODES, MEETING_TYPES } from "@/lib/meetings";
-import { DocChrome, InfoCard, L, reference, Signatures } from "../../../doc";
+import { BiText, DocChrome, InfoCard, L, reference, Signatures } from "../../../doc";
 import { loadMeeting } from "../_meeting";
 import { H2, MeetingHead } from "../parts";
 
@@ -53,6 +53,7 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
           { ar: "إرسال الدعوة", en: "Invitation sent", value: sent ? `${dateParts(sent).long} (قبل ${notice} أيام)` : "لم تُرسل", valueEn: sent ? `${englishDate(sent)} (${notice} days before)` : "Not sent" },
         ]}
       />
+      {meeting.agenda_intro && <BiText bi={bi} ar={meeting.agenda_intro} en={meeting.agenda_intro_en} />}
       {meeting.virtual_link && meeting.mode !== "in_person" && (
         <p className="ref">
           {bi ? "رابط الاتصال · Link" : "رابط الاتصال"}: <span className="num" dir="ltr">{meeting.virtual_link}</span>

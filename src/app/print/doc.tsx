@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { RichText } from "@/components/ui/rich-text";
+import { plainText } from "@/lib/rich-text";
 import { PrintButton } from "./print-button";
 
 // Building blocks of printed governance documents. In bilingual mode every
@@ -21,11 +23,12 @@ const MISSING = <span className="missing">English translation not provided.</spa
 
 /** Long text: Arabic, and in bilingual mode its English translation beside it. */
 export function BiText({ ar, en, bi }: { ar: ReactNode; en?: string | null; bi: boolean }) {
-  if (!bi) return <p className="pre">{ar}</p>;
+  const arabic = typeof ar === "string" ? <RichText value={ar} /> : <p className="pre">{ar}</p>;
+  if (!bi) return arabic;
   return (
     <div className="doc-bi">
-      <p className="pre">{ar}</p>
-      <p className="en pre">{en?.trim() ? en : MISSING}</p>
+      {arabic}
+      <div className="en">{plainText(en) ? <RichText value={en} dir="ltr" lang="en" /> : <p>{MISSING}</p>}</div>
     </div>
   );
 }

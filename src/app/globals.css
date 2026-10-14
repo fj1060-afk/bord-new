@@ -84,3 +84,9 @@ body {
     animation-duration: 0ms !important;
   }
 }
+
+/* Rich text written in the editor and shown in the app and printed documents. */
+.rich-text p { margin: 0 0 0.4em; }
+.rich-text ul { list-style: disc; padding-inline-start: 1.4em; margin: 0 0 0.4em; }
+.rich-text ol { list-style: decimal; padding-inline-start: 1.4em; margin: 0 0 0.4em; }
+.rich-text > :last-child { margin-bottom: 0; }
