@@ -6,6 +6,8 @@ import { formatDateTime } from "@/lib/format";
 import { MINUTES_STATUS, RESOLUTION_STATUS, resolutionReference, signatureProgress, type MinutesStatus } from "@/lib/minutes";
 import { createClient } from "@/lib/supabase/server";
 import { recordManualSignature, reopenMinutes, sendForSignature } from "../_actions/minutes";
+import { loadMinutesGaps } from "../_actions/minutes-check";
+import { MinutesRemarks } from "./minutes-remarks";
 import { CreateMinutesButton, MinutesEditor, ResolutionForm, SignMinutesButton } from "./minutes-forms";
 
 type Props = {
@@ -54,6 +56,7 @@ export async function MinutesTab({ meeting, items, viewerId, organizer }: Props)
   const manual = new Set((signatures ?? []).filter((s) => s.method === "manual").map((s) => s.person_id));
   const mySigner = signerList.find((s) => s.user_id === viewerId);
   const editable = organizer && status === "draft";
+  const gaps = editable ? await loadMinutesGaps(supabase, meeting.id, minutes.id) : [];
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_18rem]">
@@ -120,6 +123,16 @@ export async function MinutesTab({ meeting, items, viewerId, organizer }: Props)
             {!editable && (resolutions ?? []).length === 0 && <li className="text-sm text-ink-muted">لا توجد قرارات.</li>}
           </ul>
         </section>
+
+        <MinutesRemarks
+          meetingId={meeting.id}
+          minutesId={minutes.id}
+          status={status}
+          organizer={organizer}
+          canComment={!!mySigner}
+          resolutions={(resolutions ?? []).map((r) => ({ id: r.id, label: `قرار ${resolutionReference(r.number, r.year)}` }))}
+          people={signerList.map((s) => ({ id: s.person_id, name: s.full_name }))}
+        />
       </div>
 
       <aside className="flex flex-col gap-4">
@@ -132,7 +145,18 @@ export async function MinutesTab({ meeting, items, viewerId, organizer }: Props)
           <Link href={`/print/meetings/${meeting.id}/minutes`} target="_blank" className={buttonClass("secondary", "w-full")}>
             <Printer size={16} aria-hidden="true" /> طباعة المحضر
           </Link>
-          {organizer && status === "draft" && (
+          {editable && gaps.length > 0 && (
+            <div role="alert" className="rounded-md bg-danger/5 p-3 text-danger">
+              <p className="mb-1 font-medium">قبل الإرسال للتوقيع:</p>
+              <ul className="list-disc ps-5">
+                {gaps.map((g) => (
+                  <li key={g}>{g}</li>
+                ))}
+              </ul>
+              <p className="mt-1 text-xs text-ink-muted">الحد الأدنى لمحتوى المحضر حسب الدليل الاسترشادي لأمين السر.</p>
+            </div>
+          )}
+          {organizer && status === "draft" && gaps.length === 0 && (
             <ConfirmButton
               action={sendForSignature.bind(null, meeting.id, minutes.id)}
               label="إرسال للتوقيع"

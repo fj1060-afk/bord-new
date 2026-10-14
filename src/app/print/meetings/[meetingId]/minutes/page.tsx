@@ -4,6 +4,7 @@ import { BrandSeal } from "@/components/shell/brand-seal";
 import { formatDateTime, formatGregorianDate, formatHijriDate } from "@/lib/format";
 import { meetingReference } from "@/lib/meetings";
 import { MINUTES_STATUS, RESOLUTION_STATUS, resolutionReference, type MinutesStatus } from "@/lib/minutes";
+import { REMARK_KINDS, type RemarkKind } from "@/lib/secretary";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "./print-button";
 
@@ -18,12 +19,13 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
   ]);
   if (!meeting || !minutes) notFound();
 
-  const [{ data: items }, { data: rows }, { data: resolutions }, { data: signers }, { data: signatures }] = await Promise.all([
+  const [{ data: items }, { data: rows }, { data: resolutions }, { data: signers }, { data: signatures }, { data: remarks }] = await Promise.all([
     supabase.from("agenda_items").select("id, position, title").eq("meeting_id", meetingId).order("position"),
     supabase.from("minutes_items").select("agenda_item_id, deliberation").eq("minutes_id", minutes.id),
     supabase.from("resolutions").select("agenda_item_id, number, year, text, status").eq("meeting_id", meetingId).order("number"),
     supabase.rpc("minutes_signers", { p_minutes: minutes.id }),
     supabase.from("minutes_signatures").select("person_id, signed_at, method").eq("minutes_id", minutes.id).eq("version", minutes.version),
+    supabase.from("minutes_remarks").select("id, kind, note, person:people(full_name)").eq("minutes_id", minutes.id).neq("kind", "comment").order("created_at"),
   ]);
   const deliberation = Object.fromEntries((rows ?? []).map((r) => [r.agenda_item_id, r.deliberation]));
   const signedAt = Object.fromEntries((signatures ?? []).map((s) => [s.person_id, s.signed_at]));
@@ -57,6 +59,18 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
           ))}
         </section>
       ))}
+      {(remarks ?? []).length > 0 && (
+        <section className="mb-6">
+          <h2 className="mb-2 font-bold">التحفظات والآراء المخالفة وتعارض المصالح</h2>
+          <ul className="list-disc ps-6">
+            {((remarks ?? []) as unknown as { id: string; kind: RemarkKind; note: string; person: { full_name: string } | null }[]).map((r) => (
+              <li key={r.id}>
+                {REMARK_KINDS[r.kind]}: {r.person?.full_name} — {r.note}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <p className="mb-10 whitespace-pre-line">{minutes.closing}</p>
       <section>
         <h2 className="mb-3 font-bold">التوقيعات{minutes.version > 0 && ` (النسخة ${minutes.version})`}</h2>

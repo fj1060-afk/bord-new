@@ -34,6 +34,9 @@ export default async function ResolutionsPage({ searchParams }: PageProps<"/reso
   return (
     <>
       <PageHeader section="الحوكمة" title="سجل القرارات" description="قرارات المجلس واللجان ومتابعة تنفيذ المهام المترتبة عليها." />
+      <Link href="/resolutions/circular" className="mb-4 inline-block text-sm text-primary hover:underline">
+        القرارات بالتمرير ←
+      </Link>
       <nav className="mb-4 flex flex-wrap gap-2 text-sm" aria-label="تصفية حسب الحالة">
         {[["", "الكل"], ...Object.entries(RESOLUTION_STATUS)].map(([value, label]) => (
           <Link

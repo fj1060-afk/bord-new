@@ -5,6 +5,7 @@ import type { ActionState } from "@/components/ui/form";
 import { getViewer, requirePage } from "@/lib/auth";
 import { formatGregorianDate } from "@/lib/format";
 import { meetingQuorum } from "@/lib/live-server";
+import { loadMinutesGaps } from "./minutes-check";
 import { meetingReference, riyadhParts } from "@/lib/meetings";
 import { defaultIntro } from "@/lib/minutes";
 import { isOneOf } from "@/lib/org";
@@ -85,6 +86,7 @@ export async function sendForSignature(meetingId: string, minutesId: string) {
     supabase.from("resolutions").select("number, text, status, votes_for, votes_against, votes_abstain").eq("meeting_id", meetingId),
   ]);
   if (!minutes || minutes.status !== "draft") throw new Error("Minutes are not a draft");
+  if ((await loadMinutesGaps(supabase, meetingId, minutesId)).length) throw new Error("Minutes are incomplete");
   const version = minutes.version + 1;
   await supabase.from("minutes_versions").insert({ minutes_id: minutesId, version, snapshot: { intro: minutes.intro, closing: minutes.closing, items, resolutions } });
   await supabase.from("minutes").update({ status: "review", version }).eq("id", minutesId);
