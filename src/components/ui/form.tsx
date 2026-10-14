@@ -3,7 +3,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import clsx from "clsx";
-import { buttonClass, type ButtonVariant } from "./styles";
+import { buttonClass, inputClass, type ButtonVariant } from "./styles";
 
 export { buttonClass, inputClass } from "./styles";
 
@@ -42,3 +42,17 @@ export function FormMessage({ state }: { state: ActionState }) {
 }
 
 export type ActionState = { ok: boolean; message: string } | null;
+
+/** Optional English counterpart for bilingual printed documents; collapsed until it has a value. */
+export function EnglishField({ name, defaultValue, rows }: { name: string; defaultValue?: string | null; rows?: number }) {
+  return (
+    <details open={!!defaultValue} className="text-sm">
+      <summary className="cursor-pointer text-xs text-ink-muted">English · للمستندات ثنائية اللغة</summary>
+      {rows ? (
+        <textarea name={name} rows={rows} dir="ltr" lang="en" spellCheck defaultValue={defaultValue ?? ""} className={clsx(inputClass, "mt-1")} />
+      ) : (
+        <input name={name} dir="ltr" lang="en" defaultValue={defaultValue ?? ""} className={clsx(inputClass, "mt-1")} />
+      )}
+    </details>
+  );
+}

@@ -1,87 +1,117 @@
 import type { Metadata } from "next";
+import { CATEGORIES_EN, englishDate, MEETING_MODES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
 import { MEETING_MODES } from "@/lib/meetings";
 import { BOARD_CATEGORIES } from "@/lib/org";
-import { DocChrome, DocHead, DocTitle, InfoCard, reference } from "../../../doc";
+import { DocChrome, InfoCard, L, reference } from "../../../doc";
 import { loadMeeting } from "../_meeting";
-import { AttendancePill, QuorumBox } from "../parts";
+import { AttendancePill, H2, MeetingHead, QuorumBox } from "../parts";
 
 export const metadata: Metadata = { title: "كشف الحضور" };
 
 export default async function AttendancePrint({ params }: PageProps<"/print/meetings/[meetingId]/attendance">) {
   const { meetingId } = await params;
   const m = await loadMeeting(meetingId);
-  const { meeting } = m;
+  const { meeting, bi } = m;
   const start = new Date(meeting.starts_at);
   const ref = reference(m.isBoard, meeting.number, meeting.starts_at);
-  const proxyNote = (id: string) => {
-    if (m.status[id] === "proxy" && m.holderOf[id]) return `أناب: ${m.names[m.holderOf[id]]}`;
+  const mode = meeting.mode as keyof typeof MEETING_MODES;
+  const proxyNote = (id: string): [string, string] => {
+    if (m.status[id] === "proxy" && m.holderOf[id]) return [`أناب: ${m.names[m.holderOf[id]]}`, `Proxy: ${m.namesEn[m.holderOf[id]] || m.names[m.holderOf[id]]}`];
     const granted = Object.entries(m.holderOf).find(([, holder]) => holder === id);
-    return granted ? `يحمل إنابة: ${m.names[granted[0]]}` : "";
+    return granted ? [`يحمل إنابة: ${m.names[granted[0]]}`, `Holds proxy: ${m.namesEn[granted[0]] || m.names[granted[0]]}`] : ["", ""];
   };
 
   return (
     <main className="doc">
-      <DocChrome footer={`كشف حضور الاجتماع ${ref}`} />
-      <DocHead company={m.company} issuer={m.isBoard ? "أمانة سر مجلس الإدارة" : `أمانة سر ${m.body}`} reference={ref} date={start} badges={[{ label: "سري", tone: "c" }]} />
-      <DocTitle title="كشف حضور اجتماع" subtitle={<>{m.body} - الاجتماع رقم (<span className="num">{meeting.number}</span>) لعام <span className="num">{meeting.starts_at.slice(0, 4)}</span></>} />
+      <DocChrome bi={bi} footer={`كشف حضور الاجتماع ${ref}`} />
+      <MeetingHead m={m} reference={ref} title="كشف حضور اجتماع" titleEn="Meeting Attendance Sheet" date={start} badges={[{ label: "سري · Confidential", tone: "c" }]} />
       <InfoCard
+        bi={bi}
         date={start}
+        dateEn={bi ? englishDate(start) : undefined}
         cells={[
-          ["المكان", meeting.mode === "virtual" ? "اتصال مرئي" : meeting.location],
-          ["بدأ الاجتماع فعلياً", meeting.started_at ? dateParts(new Date(meeting.started_at)).time : null],
-          ["انتهى الاجتماع فعلياً", meeting.ended_at ? dateParts(new Date(meeting.ended_at)).time : null],
-          ["طريقة الانعقاد", MEETING_MODES[meeting.mode as keyof typeof MEETING_MODES]],
-          ["رئيس الاجتماع", m.chair],
-          ["أمين السر", m.secretary],
+          ["المكان", mode === "virtual" ? "اتصال مرئي" : meeting.location, "Venue", mode === "virtual" ? "Video conference" : meeting.location_en],
+          ["بدأ الاجتماع فعلياً", meeting.started_at ? dateParts(new Date(meeting.started_at)).time : null, "Started"],
+          ["انتهى الاجتماع فعلياً", meeting.ended_at ? dateParts(new Date(meeting.ended_at)).time : null, "Ended"],
+          ["طريقة الانعقاد", MEETING_MODES[mode], "Format", MEETING_MODES_EN[mode]],
+          ["رئيس الاجتماع", m.chair, "Chair", m.chairEn],
+          ["أمين السر", m.secretary, "Secretary", m.secretaryEn],
         ]}
       />
 
-      <h2>{m.isBoard ? "أعضاء المجلس" : "أعضاء اللجنة"}</h2>
+      <H2 ar={m.isBoard ? "أعضاء المجلس" : "أعضاء اللجنة"} en={m.isBoard ? "Board Members" : "Committee Members"} bi={bi} />
       <table>
         <thead>
           <tr>
             <th style={{ width: "5%" }}>م</th>
             <th>الاسم</th>
-            {m.isBoard && <th style={{ width: "13%" }}>الصفة</th>}
-            <th style={{ width: "13%" }}>الحضور</th>
-            <th style={{ width: "22%" }}>ملاحظة</th>
-            <th style={{ width: "17%" }}>التوقيع</th>
+            {bi && <th className="en">Name</th>}
+            {m.isBoard && !bi && <th style={{ width: "13%" }}>الصفة</th>}
+            <th style={{ width: "14%" }}>
+              <L as="div" ar="الحضور" en="Status" bi={bi} />
+            </th>
+            <th style={{ width: bi ? "17%" : "22%" }}>
+              <L as="div" ar="ملاحظة" en="Note" bi={bi} />
+            </th>
+            <th style={{ width: "14%" }}>
+              <L as="div" ar="التوقيع" en="Signature" bi={bi} />
+            </th>
           </tr>
         </thead>
         <tbody>
-          {m.members.map((p, i) => (
-            <tr key={p.person_id}>
-              <td className="num">{i + 1}</td>
-              <td>
-                <b>{p.name}</b>
-                <small>{p.role}</small>
-              </td>
-              {m.isBoard && <td>{p.category ? BOARD_CATEGORIES[p.category as keyof typeof BOARD_CATEGORIES] : "—"}</td>}
-              <td>
-                <AttendancePill status={m.status[p.person_id]} />
-              </td>
-              <td>{proxyNote(p.person_id)}</td>
-              <td className="sign" />
-            </tr>
-          ))}
+          {m.members.map((p, i) => {
+            const category = p.category as keyof typeof BOARD_CATEGORIES | null;
+            const [note, noteEn] = proxyNote(p.person_id);
+            return (
+              <tr key={p.person_id}>
+                <td className="num">{i + 1}</td>
+                <td>
+                  <b>{p.name}</b>
+                  <small>{bi && category ? `${p.role} · ${BOARD_CATEGORIES[category]}` : p.role}</small>
+                </td>
+                {bi && (
+                  <td className="en">
+                    <b>{p.nameEn}</b>
+                    <small className="en">{category ? `${p.roleEn} · ${CATEGORIES_EN[category]}` : p.roleEn}</small>
+                  </td>
+                )}
+                {m.isBoard && !bi && <td>{category ? BOARD_CATEGORIES[category] : "—"}</td>}
+                <td>
+                  <AttendancePill status={m.status[p.person_id]} bi={bi} />
+                </td>
+                <td>
+                  {note}
+                  {bi && note && <span className="note-en">{noteEn}</span>}
+                </td>
+                <td className="sign" />
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
-      <h2>التحقق من النصاب</h2>
-      <QuorumBox q={m.quorum} />
+      <H2 ar="التحقق من النصاب" en="Quorum" bi={bi} />
+      <QuorumBox q={m.quorum} bi={bi} />
 
       {m.guests.length > 0 && (
         <>
-          <h2>المدعوون من غير الأعضاء</h2>
+          <H2 ar="المدعوون من غير الأعضاء" en="Invited Guests" bi={bi} />
           <table>
             <thead>
               <tr>
                 <th style={{ width: "5%" }}>م</th>
                 <th>الاسم</th>
-                <th style={{ width: "34%" }}>الجهة / الصفة</th>
-                <th style={{ width: "13%" }}>الحضور</th>
-                <th style={{ width: "17%" }}>التوقيع</th>
+                {bi && <th className="en">Name</th>}
+                <th style={{ width: "28%" }}>
+                  <L as="div" ar="الجهة / الصفة" en="Title" bi={bi} />
+                </th>
+                <th style={{ width: "14%" }}>
+                  <L as="div" ar="الحضور" en="Status" bi={bi} />
+                </th>
+                <th style={{ width: "14%" }}>
+                  <L as="div" ar="التوقيع" en="Signature" bi={bi} />
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -91,9 +121,14 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
                   <td>
                     <b>{p.name}</b>
                   </td>
+                  {bi && (
+                    <td className="en">
+                      <b>{p.nameEn}</b>
+                    </td>
+                  )}
                   <td>{p.job ?? "—"}</td>
                   <td>
-                    <AttendancePill status={m.status[p.person_id]} />
+                    <AttendancePill status={m.status[p.person_id]} bi={bi} />
                   </td>
                   <td className="sign" />
                 </tr>
@@ -105,19 +140,18 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
 
       <div className="doc-lead">
         <div>
-          <span>رئيس الاجتماع</span>
+          <L ar="رئيس الاجتماع" en="Chair" bi={bi} />
           <b>{m.chair || "—"}</b>
           <div className="line" />
-          <small>التوقيع</small>
+          <small>{bi ? "التوقيع · Signature" : "التوقيع"}</small>
         </div>
         <div>
-          <span>أمين السر</span>
+          <L ar="أمين السر" en="Secretary" bi={bi} />
           <b>{m.secretary || "—"}</b>
           <div className="line" />
-          <small>التوقيع</small>
+          <small>{bi ? "التوقيع · Signature" : "التوقيع"}</small>
         </div>
       </div>
     </main>
   );
 }
-

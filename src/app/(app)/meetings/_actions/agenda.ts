@@ -20,6 +20,7 @@ function readItem(form: FormData) {
   return {
     row: {
       title,
+      title_en: text(form, "title_en"),
       kind,
       duration_minutes: duration,
       description: text(form, "description"),

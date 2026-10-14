@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { fileDisclosure, savePerson } from "./actions";
 
 export type PersonDetails = {
   id: string;
   full_name: string;
+  full_name_en: string | null;
   email: string | null;
   phone: string | null;
   job_title: string | null;
@@ -29,6 +30,7 @@ export function PersonForm({
     <form action={action} className="grid gap-4 sm:grid-cols-2">
       <Field label="الاسم الكامل">
         <input name="full_name" defaultValue={person.full_name} required className={inputClass} />
+        <EnglishField name="full_name_en" defaultValue={person.full_name_en} />
       </Field>
       <Field label="المسمى الوظيفي">
         <input name="job_title" defaultValue={person.job_title ?? ""} className={inputClass} />

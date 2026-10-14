@@ -12,6 +12,8 @@ export type CompanyType = keyof typeof COMPANY_TYPES;
 
 export type CompanyProfile = {
   name: string;
+  name_en: string | null;
+  document_language: "ar" | "bilingual";
   company_type: CompanyType;
   fiscal_year_end_month: number;
   min_board_meetings: number;

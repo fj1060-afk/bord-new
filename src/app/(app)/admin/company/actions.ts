@@ -33,6 +33,8 @@ export async function saveCompanyProfile(_: ActionState, fd: FormData): Promise<
     .from("company_profile")
     .update({
       name: text(fd, "name") ?? "",
+      name_en: text(fd, "name_en"),
+      document_language: fd.get("document_language") === "bilingual" ? "bilingual" : "ar",
       company_type: type,
       ...numbers,
       proxy_allowed: fd.get("proxy_allowed") === "on",

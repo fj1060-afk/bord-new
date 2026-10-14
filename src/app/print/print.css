@@ -81,3 +81,31 @@
 .doc-sig span { font-size: 8.5pt; color: var(--ink-muted); }
 .doc-sig .box { border: 1.5px dashed #bfc5c1; border-radius: 6px; height: 54px; margin: 4px 0 2px; display: grid; place-items: center; font-size: 8pt; color: var(--primary); }
 .doc-sig small { font-size: 7.5pt; color: var(--ink-muted); }
+
+/* Bilingual documents: Arabic on the start (right), English on the end (left). */
+.doc .en { font-family: var(--font-body), sans-serif; direction: ltr; text-align: left; }
+.pair { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.doc-bi { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.doc-bi > .en { border-right: 1px solid var(--rule); padding-right: 14px; }
+.doc-head3 { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; border-bottom: 2.5px solid var(--primary); padding-bottom: 10px; }
+.doc-head3 b { display: block; font-size: 15pt; color: var(--primary); }
+.doc-head3 .ar b { font-family: var(--font-naskh), serif; }
+.doc-head3 span { font-weight: 600; font-size: 9pt; }
+.doc-seal { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--brass); color: var(--brass); display: grid; place-items: center; font: 700 22pt var(--font-naskh), serif; margin: 0 16px; }
+.doc-strip { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 9pt; color: var(--ink-muted); margin-top: 6px; }
+.doc-strip b { color: var(--ink); }
+.doc-title .en { text-align: center; font-size: 12.5pt; color: var(--primary); font-weight: 600; }
+.doc-title .sub { display: flex; justify-content: center; gap: 14px; }
+.doc h2.pair { display: flex; }
+.doc h2 .en { font-size: 11pt; font-weight: 600; color: var(--primary); }
+.doc th .pair .en { font-weight: 500; font-size: 8.5pt; }
+.doc td .pair .en, .doc td small.en { color: var(--ink-muted); }
+.doc-grid .pair { display: flex; }
+.doc-grid .pair .en { display: inline; font-size: 8pt; }
+.doc-grid b.stack { display: flex; flex-direction: column; }
+.doc-grid b.stack .en { font-size: 8.5pt; color: var(--ink-muted); font-weight: 500; }
+.doc-quorum .pair { padding: 0 4px; }
+.doc .pill { white-space: nowrap; }
+.doc-lead .pair { justify-content: center; }
+.doc-strip > span, .doc-badge { white-space: nowrap; }
+.doc td small.en, .doc td .note-en { display: block; color: var(--ink-muted); font-size: 8.5pt; direction: ltr; text-align: left; }

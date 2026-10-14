@@ -24,7 +24,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[personI
   // RLS returns the person only to themself or to people who can see members.
   const { data: person } = await supabase
     .from("people")
-    .select("id, full_name, email, phone, job_title, organization, qualifications, experience, user_id")
+    .select("id, full_name, full_name_en, email, phone, job_title, organization, qualifications, experience, user_id")
     .eq("id", personId)
     .maybeSingle<PersonDetails>();
   if (!person) notFound();

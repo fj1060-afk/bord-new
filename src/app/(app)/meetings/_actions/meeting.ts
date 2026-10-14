@@ -33,6 +33,7 @@ function readDetails(form: FormData) {
       starts_at: startsAt,
       duration_minutes: duration,
       location: mode === "virtual" ? null : location,
+      location_en: mode === "virtual" ? null : text(form, "location_en"),
       virtual_link: mode === "in_person" ? null : virtualLink,
     },
   };

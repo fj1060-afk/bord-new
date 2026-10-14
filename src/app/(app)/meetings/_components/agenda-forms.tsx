@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { EnglishField, buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
 
@@ -10,6 +10,7 @@ export type AgendaItem = {
   id: string;
   position: number;
   title: string;
+  title_en?: string | null;
   description: string | null;
   kind: keyof typeof ITEM_KINDS;
   duration_minutes: number | null;
@@ -29,6 +30,7 @@ export function AgendaItemForm({ meetingId, item, departments, onDone }: { meeti
       <div className="sm:col-span-2">
         <Field label="عنوان البند">
           <input name="title" defaultValue={item?.title} required className={inputClass} />
+          <EnglishField name="title_en" defaultValue={item?.title_en} />
         </Field>
       </div>
       <Field label="الغرض">

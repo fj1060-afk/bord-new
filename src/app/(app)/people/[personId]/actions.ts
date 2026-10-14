@@ -25,6 +25,7 @@ export async function savePerson(personId: string, _prev: ActionState, form: For
 
   const update: Record<string, string | null> = {
     full_name: fullName,
+    full_name_en: text(form, "full_name_en"),
     email: text(form, "email"),
     phone: text(form, "phone"),
     job_title: text(form, "job_title"),

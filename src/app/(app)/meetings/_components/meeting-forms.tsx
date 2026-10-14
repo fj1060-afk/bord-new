@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { ITEM_KINDS, MEETING_MODES, MEETING_TYPES, RSVP, riyadhParts } from "@/lib/meetings";
 import { addGuest, createMeeting, respondRsvp, updateMeeting } from "../_actions/meeting";
 import { reviewAgendaRequest, submitAgendaRequest } from "../_actions/requests";
@@ -16,6 +16,7 @@ type Meeting = {
   duration_minutes: number;
   mode: string;
   location: string | null;
+  location_en?: string | null;
   virtual_link: string | null;
 };
 
@@ -77,6 +78,7 @@ export function MeetingDetailsForm({ meeting, bodies }: { meeting?: Meeting; bod
       {mode !== "virtual" && (
         <Field label="المكان">
           <input name="location" defaultValue={meeting?.location ?? ""} required className={inputClass} />
+          <EnglishField name="location_en" defaultValue={meeting?.location_en} />
         </Field>
       )}
       {mode !== "in_person" && (

@@ -64,13 +64,17 @@ export async function createMinutes(meetingId: string): Promise<ActionState> {
 export async function saveMinutes(meetingId: string, minutesId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   await requirePage("/meetings", LEVELS.edit);
   const supabase = await createClient();
-  const { error } = await supabase.from("minutes").update({ intro: text(form, "intro"), closing: text(form, "closing") }).eq("id", minutesId).eq("status", "draft");
+  const { error } = await supabase.from("minutes").update({ intro: text(form, "intro"), closing: text(form, "closing"), intro_en: text(form, "intro_en"), closing_en: text(form, "closing_en") }).eq("id", minutesId).eq("status", "draft");
   if (error) return { ok: false, message: "تعذّر حفظ المحضر." };
   for (const [key, value] of form.entries()) {
     if (!key.startsWith("item:")) continue;
-    await supabase
-      .from("minutes_items")
-      .upsert({ minutes_id: minutesId, agenda_item_id: key.slice(5), deliberation: String(value).trim() || null });
+    const itemId = key.slice(5);
+    await supabase.from("minutes_items").upsert({
+      minutes_id: minutesId,
+      agenda_item_id: itemId,
+      deliberation: String(value).trim() || null,
+      deliberation_en: String(form.get(`item_en:${itemId}`) ?? "").trim() || null,
+    });
   }
   refresh(meetingId);
   return { ok: true, message: "حُفظ المحضر." };
@@ -126,7 +130,7 @@ export async function saveResolution(meetingId: string, agendaItemId: string | n
   if (!body) return { ok: false, message: "نص القرار مطلوب." };
   if (!isOneOf(status, RESOLUTION_STATUS)) return { ok: false, message: "اختر حالة القرار." };
   const vote = (key: string) => (form.get(key) === "" || form.get(key) === null ? null : Number(form.get(key)));
-  const row = { text: body, status, votes_for: vote("votes_for"), votes_against: vote("votes_against"), votes_abstain: vote("votes_abstain") };
+  const row = { text: body, text_en: text(form, "text_en"), status, votes_for: vote("votes_for"), votes_against: vote("votes_against"), votes_abstain: vote("votes_abstain") };
   if (Object.values(row).some((v) => typeof v === "number" && (!Number.isInteger(v) || v < 0))) return { ok: false, message: "أعداد التصويت غير صحيحة." };
 
   const supabase = await createClient();

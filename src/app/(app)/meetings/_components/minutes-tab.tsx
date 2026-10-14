@@ -21,7 +21,7 @@ export async function MinutesTab({ meeting, items, viewerId, organizer }: Props)
   const supabase = await createClient();
   const { data: minutes } = await supabase
     .from("minutes")
-    .select("id, status, intro, closing, version, approved_at")
+    .select("id, status, intro, closing, intro_en, closing_en, version, approved_at")
     .eq("meeting_id", meeting.id)
     .maybeSingle();
 
@@ -43,13 +43,14 @@ export async function MinutesTab({ meeting, items, viewerId, organizer }: Props)
   }
 
   const [{ data: rows }, { data: resolutions }, { data: signers }, { data: signatures }] = await Promise.all([
-    supabase.from("minutes_items").select("agenda_item_id, deliberation").eq("minutes_id", minutes.id),
-    supabase.from("resolutions").select("id, agenda_item_id, number, year, text, status, votes_for, votes_against, votes_abstain").eq("meeting_id", meeting.id).order("number"),
+    supabase.from("minutes_items").select("agenda_item_id, deliberation, deliberation_en").eq("minutes_id", minutes.id),
+    supabase.from("resolutions").select("id, agenda_item_id, number, year, text, text_en, status, votes_for, votes_against, votes_abstain").eq("meeting_id", meeting.id).order("number"),
     supabase.rpc("minutes_signers", { p_minutes: minutes.id }),
     supabase.from("minutes_signatures").select("person_id, signed_at, method").eq("minutes_id", minutes.id).eq("version", minutes.version),
   ]);
   const status = minutes.status as MinutesStatus;
   const deliberation = Object.fromEntries((rows ?? []).map((r) => [r.agenda_item_id, r.deliberation]));
+  const deliberationEn = Object.fromEntries((rows ?? []).map((r) => [r.agenda_item_id, r.deliberation_en]));
   const signerList = (signers ?? []) as { person_id: string; user_id: string | null; full_name: string }[];
   const progress = signatureProgress(signerList, signatures ?? []);
   const signedAt = Object.fromEntries((signatures ?? []).map((s) => [s.person_id, s.signed_at]));
@@ -68,7 +69,9 @@ export async function MinutesTab({ meeting, items, viewerId, organizer }: Props)
               minutesId={minutes.id}
               intro={minutes.intro}
               closing={minutes.closing}
-              items={items.map((i) => ({ ...i, deliberation: deliberation[i.id] ?? null }))}
+              introEn={minutes.intro_en}
+              closingEn={minutes.closing_en}
+              items={items.map((i) => ({ ...i, deliberation: deliberation[i.id] ?? null, deliberation_en: deliberationEn[i.id] ?? null }))}
             />
           </section>
         ) : (

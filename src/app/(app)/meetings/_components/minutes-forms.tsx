@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useDeferredValue, useState } from "react";
-import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { draftingHints } from "@/lib/drafting";
 import { RESOLUTION_STATUS } from "@/lib/minutes";
 import { createMinutes, saveMinutes, saveResolution, signMinutes } from "../_actions/minutes";
@@ -16,22 +16,25 @@ export function CreateMinutesButton({ meetingId }: { meetingId: string }) {
   );
 }
 
-type Item = { id: string; position: number; title: string; deliberation: string | null };
+type Item = { id: string; position: number; title: string; deliberation: string | null; deliberation_en?: string | null };
 
-export function MinutesEditor({ meetingId, minutesId, intro, closing, items }: { meetingId: string; minutesId: string; intro: string | null; closing: string | null; items: Item[] }) {
+export function MinutesEditor({ meetingId, minutesId, intro, closing, introEn, closingEn, items }: { meetingId: string; minutesId: string; intro: string | null; closing: string | null; introEn?: string | null; closingEn?: string | null; items: Item[] }) {
   const [state, action] = useActionState(saveMinutes.bind(null, meetingId, minutesId), null);
   return (
     <form action={action} className="flex flex-col gap-5">
       <Field label="الافتتاحية">
         <textarea spellCheck lang="ar" name="intro" rows={4} defaultValue={intro ?? ""} className={inputClass} />
+        <EnglishField name="intro_en" rows={3} defaultValue={introEn} />
       </Field>
       {items.map((item) => (
         <Field key={item.id} label={`${item.position}. ${item.title}`} hint="ما دار من نقاش وما انتهى إليه البند.">
           <textarea spellCheck lang="ar" name={`item:${item.id}`} rows={4} defaultValue={item.deliberation ?? ""} className={inputClass} />
+          <EnglishField name={`item_en:${item.id}`} rows={3} defaultValue={item.deliberation_en} />
         </Field>
       ))}
       <Field label="الختام">
         <textarea spellCheck lang="ar" name="closing" rows={2} defaultValue={closing ?? ""} className={inputClass} />
+        <EnglishField name="closing_en" rows={2} defaultValue={closingEn} />
       </Field>
       <FormMessage state={state} />
       <SubmitButton pendingLabel="جارٍ الحفظ…" className="w-fit">
@@ -41,7 +44,7 @@ export function MinutesEditor({ meetingId, minutesId, intro, closing, items }: {
   );
 }
 
-type Resolution = { id: string; text: string; status: string; votes_for: number | null; votes_against: number | null; votes_abstain: number | null };
+type Resolution = { id: string; text: string; text_en?: string | null; status: string; votes_for: number | null; votes_against: number | null; votes_abstain: number | null };
 
 export function ResolutionForm({ meetingId, agendaItemId, resolution }: { meetingId: string; agendaItemId: string | null; resolution?: Resolution }) {
   const [state, action] = useActionState(saveResolution.bind(null, meetingId, agendaItemId, resolution?.id ?? null), null);
@@ -52,6 +55,7 @@ export function ResolutionForm({ meetingId, agendaItemId, resolution }: { meetin
       <Field label="نص القرار">
         <textarea name="text" rows={3} value={text} onChange={(e) => setText(e.target.value)} required spellCheck lang="ar" className={inputClass} />
       </Field>
+      <EnglishField name="text_en" rows={2} defaultValue={resolution?.text_en} />
       {hints.length > 0 && (
         <ul aria-live="polite" className="flex list-disc flex-col gap-1 rounded-md bg-brass-soft/50 py-2 pe-3 ps-7 text-xs text-brass">
           {hints.map((h) => (

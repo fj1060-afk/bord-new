@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { COMPANY_TYPES, type CompanyProfile } from "@/lib/company";
 import { saveCompanyProfile } from "./actions";
 
@@ -29,6 +29,13 @@ export function CompanyForm({ profile, people, canEdit }: { profile: CompanyProf
         <Section title="الشركة">
           <Field label="اسم الشركة">
             <input name="name" defaultValue={profile.name} className={inputClass} />
+            <EnglishField name="name_en" defaultValue={profile.name_en} />
+          </Field>
+          <Field label="لغة المستندات المطبوعة" hint="جدول الأعمال وكشف الحضور والمحضر.">
+            <select name="document_language" defaultValue={profile.document_language} className={inputClass}>
+              <option value="ar">عربي</option>
+              <option value="bilingual">عربي وإنجليزي</option>
+            </select>
           </Field>
           <Field label="نوع الشركة" hint="يحدد الأنظمة واللوائح التي تُطبّق قواعدها.">
             <select name="company_type" defaultValue={profile.company_type} className={inputClass}>
