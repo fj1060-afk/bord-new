@@ -54,7 +54,7 @@ export function RemarkForm({ meetingId, minutesId, mode, people, resolutions }: 
         )}
         <div className="sm:col-span-3">
           <Field label="النص">
-            <textarea name="note" rows={2} required className={inputClass} />
+            <textarea spellCheck lang="ar" name="note" rows={2} required className={inputClass} />
           </Field>
         </div>
         <div className="flex flex-col gap-2 sm:col-span-3">

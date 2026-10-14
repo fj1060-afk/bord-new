@@ -55,10 +55,10 @@ export function PersonForm({
         </Field>
       )}
       <Field label="المؤهلات">
-        <textarea name="qualifications" rows={3} defaultValue={person.qualifications ?? ""} className={inputClass} />
+        <textarea spellCheck lang="ar" name="qualifications" rows={3} defaultValue={person.qualifications ?? ""} className={inputClass} />
       </Field>
       <Field label="الخبرات">
-        <textarea name="experience" rows={3} defaultValue={person.experience ?? ""} className={inputClass} />
+        <textarea spellCheck lang="ar" name="experience" rows={3} defaultValue={person.experience ?? ""} className={inputClass} />
       </Field>
       <div className="flex flex-col gap-3 sm:col-span-2">
         <FormMessage state={state} />
@@ -99,7 +99,7 @@ export function DisclosureForm({ personId, year }: { personId: string; year: num
       </fieldset>
       {conflict === "yes" && (
         <Field label="التفاصيل" hint="الجهة، وطبيعة المصلحة، ونسبة الملكية أو المنصب إن وجد.">
-          <textarea name="details" rows={4} required className={inputClass} />
+          <textarea spellCheck lang="ar" name="details" rows={4} required className={inputClass} />
         </Field>
       )}
       <FormMessage state={state} />

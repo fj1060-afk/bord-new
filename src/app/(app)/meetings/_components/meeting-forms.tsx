@@ -176,7 +176,7 @@ export function AgendaRequestForm({ departments, bodies }: { departments: Option
       </Field>
       <div className="sm:col-span-2">
         <Field label="الوصف والمبررات">
-          <textarea name="description" rows={3} className={inputClass} />
+          <textarea spellCheck lang="ar" name="description" rows={3} className={inputClass} />
         </Field>
       </div>
       <div className="flex flex-col gap-3 sm:col-span-2">

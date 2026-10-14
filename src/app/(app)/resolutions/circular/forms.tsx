@@ -32,7 +32,7 @@ export function CircularForm({ bodies }: { bodies: { value: string; label: strin
         </div>
         <div className="sm:col-span-2">
           <Field label="نص القرار">
-            <textarea name="text" rows={4} required className={inputClass} />
+            <textarea spellCheck lang="ar" name="text" rows={4} required className={inputClass} />
           </Field>
         </div>
         <div className="flex flex-col gap-2 sm:col-span-2">

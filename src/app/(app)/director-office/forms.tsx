@@ -43,7 +43,7 @@ export function CorrespondenceForm({ direction, contacts, letter, label }: { dir
         </Field>
         <div className="sm:col-span-2">
           <Field label={incoming ? "الملخص" : "النص"}>
-            <textarea name="body" rows={incoming ? 3 : 8} defaultValue={letter?.body ?? ""} className={inputClass} />
+            <textarea spellCheck lang="ar" name="body" rows={incoming ? 3 : 8} defaultValue={letter?.body ?? ""} className={inputClass} />
           </Field>
         </div>
         <div className="flex flex-col gap-2 sm:col-span-2">

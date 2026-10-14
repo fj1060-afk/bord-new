@@ -23,7 +23,7 @@ export function CommitteeForm({ committee }: { committee?: { id: string; name: s
         </select>
       </Field>
       <Field label="مهام اللجنة واختصاصاتها">
-        <textarea name="mandate" rows={4} defaultValue={committee?.mandate ?? ""} className={inputClass} />
+        <textarea spellCheck lang="ar" name="mandate" rows={4} defaultValue={committee?.mandate ?? ""} className={inputClass} />
       </Field>
       <FormMessage state={state} />
       <SubmitButton pendingLabel="جارٍ الحفظ…" className="w-fit">

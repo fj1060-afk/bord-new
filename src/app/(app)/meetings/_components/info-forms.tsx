@@ -23,7 +23,7 @@ export function RequestInfoForm({ meetingId, items }: { meetingId: string; items
           </select>
         </Field>
         <Field label="المطلوب">
-          <textarea name="question" rows={2} required className={inputClass} />
+          <textarea spellCheck lang="ar" name="question" rows={2} required className={inputClass} />
         </Field>
         <FormMessage state={state} />
         <SubmitButton pendingLabel="…" className="w-fit">
@@ -38,7 +38,7 @@ export function AnswerInfoForm({ meetingId, requestId }: { meetingId: string; re
   const [state, action] = useActionState(answerInfo.bind(null, meetingId, requestId), null);
   return (
     <form action={action} className="mt-2 flex flex-col gap-2">
-      <textarea name="response" rows={2} required placeholder="الرد، ويمكن رفع الوثيقة على البند" className={inputClass} />
+      <textarea spellCheck lang="ar" name="response" rows={2} required placeholder="الرد، ويمكن رفع الوثيقة على البند" className={inputClass} />
       <FormMessage state={state} />
       <SubmitButton pendingLabel="…" variant="secondary" className="w-fit px-3 py-1 text-xs">
         إرسال الرد

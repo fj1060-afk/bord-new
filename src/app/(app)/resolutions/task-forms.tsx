@@ -51,7 +51,7 @@ export function AddTaskForm({
         </Field>
         <div className="sm:col-span-2">
           <Field label="التفاصيل">
-            <textarea name="description" rows={2} className={inputClass} />
+            <textarea spellCheck lang="ar" name="description" rows={2} className={inputClass} />
           </Field>
         </div>
         <div className="flex flex-col gap-2 sm:col-span-2">
@@ -112,7 +112,7 @@ export function ProgressForm({ taskId, current }: { taskId: string; current: str
           </label>
         ))}
       </div>
-      <textarea name="note" rows={2} placeholder="ما الذي تم؟" className={inputClass} />
+      <textarea spellCheck lang="ar" name="note" rows={2} placeholder="ما الذي تم؟" className={inputClass} />
       <input type="file" name="file" aria-label="دليل الإنجاز" className="text-sm file:me-3 file:rounded-md file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:text-primary" />
       <FormMessage state={state} />
       <button disabled={busy} className={buttonClass("secondary", "w-fit")}>

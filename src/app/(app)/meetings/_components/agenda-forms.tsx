@@ -58,7 +58,7 @@ export function AgendaItemForm({ meetingId, item, departments, onDone }: { meeti
       </Field>
       <div className="sm:col-span-2">
         <Field label="الوصف">
-          <textarea name="description" rows={3} defaultValue={item?.description ?? ""} className={inputClass} />
+          <textarea spellCheck lang="ar" name="description" rows={3} defaultValue={item?.description ?? ""} className={inputClass} />
         </Field>
       </div>
       <div className="flex flex-col gap-3 sm:col-span-2">

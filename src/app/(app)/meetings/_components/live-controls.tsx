@@ -129,7 +129,7 @@ export function CloseItemForm({ meetingId, itemId }: { meetingId: string; itemId
   const [state, action] = useActionState(closeItem.bind(null, meetingId, itemId), null);
   return (
     <form action={action} className="flex flex-col gap-3">
-      <textarea name="outcome" rows={3} placeholder="ملخص ما انتهى إليه البند (يُنقل لاحقاً إلى المحضر)" className={inputClass} />
+      <textarea spellCheck lang="ar" name="outcome" rows={3} placeholder="ملخص ما انتهى إليه البند (يُنقل لاحقاً إلى المحضر)" className={inputClass} />
       <div className="flex flex-wrap gap-2">
         <SubmitButton name="status" value="discussed" pendingLabel="…">
           تمت مناقشته · التالي

@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useDeferredValue, useState } from "react";
 import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { draftingHints } from "@/lib/drafting";
 import { RESOLUTION_STATUS } from "@/lib/minutes";
 import { createMinutes, saveMinutes, saveResolution, signMinutes } from "../_actions/minutes";
 
@@ -22,15 +23,15 @@ export function MinutesEditor({ meetingId, minutesId, intro, closing, items }: {
   return (
     <form action={action} className="flex flex-col gap-5">
       <Field label="الافتتاحية">
-        <textarea name="intro" rows={4} defaultValue={intro ?? ""} className={inputClass} />
+        <textarea spellCheck lang="ar" name="intro" rows={4} defaultValue={intro ?? ""} className={inputClass} />
       </Field>
       {items.map((item) => (
         <Field key={item.id} label={`${item.position}. ${item.title}`} hint="ما دار من نقاش وما انتهى إليه البند.">
-          <textarea name={`item:${item.id}`} rows={4} defaultValue={item.deliberation ?? ""} className={inputClass} />
+          <textarea spellCheck lang="ar" name={`item:${item.id}`} rows={4} defaultValue={item.deliberation ?? ""} className={inputClass} />
         </Field>
       ))}
       <Field label="الختام">
-        <textarea name="closing" rows={2} defaultValue={closing ?? ""} className={inputClass} />
+        <textarea spellCheck lang="ar" name="closing" rows={2} defaultValue={closing ?? ""} className={inputClass} />
       </Field>
       <FormMessage state={state} />
       <SubmitButton pendingLabel="جارٍ الحفظ…" className="w-fit">
@@ -44,11 +45,20 @@ type Resolution = { id: string; text: string; status: string; votes_for: number 
 
 export function ResolutionForm({ meetingId, agendaItemId, resolution }: { meetingId: string; agendaItemId: string | null; resolution?: Resolution }) {
   const [state, action] = useActionState(saveResolution.bind(null, meetingId, agendaItemId, resolution?.id ?? null), null);
+  const [text, setText] = useState(resolution?.text ?? "");
+  const hints = draftingHints(useDeferredValue(text));
   return (
     <form action={action} className="flex flex-col gap-3 rounded-md bg-paper p-4">
       <Field label="نص القرار">
-        <textarea name="text" rows={3} defaultValue={resolution?.text ?? ""} required className={inputClass} />
+        <textarea name="text" rows={3} value={text} onChange={(e) => setText(e.target.value)} required spellCheck lang="ar" className={inputClass} />
       </Field>
+      {hints.length > 0 && (
+        <ul aria-live="polite" className="flex list-disc flex-col gap-1 rounded-md bg-brass-soft/50 py-2 pe-3 ps-7 text-xs text-brass">
+          {hints.map((h) => (
+            <li key={h}>{h}</li>
+          ))}
+        </ul>
+      )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Field label="الحالة">
           <select name="status" defaultValue={resolution?.status ?? "approved"} className={inputClass}>
