@@ -12,12 +12,14 @@ import { createClient } from "@/lib/supabase/server";
 import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
 import { InviteesTab } from "../_components/invitees-tab";
+import { LiveTab, type LiveData } from "../_components/live-tab";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { MeetingDetailsForm, RsvpForm } from "../_components/meeting-forms";
 import type { AgendaItem } from "../_components/agenda-forms";
 
 export const metadata: Metadata = { title: "الاجتماع" };
 
-const TABS = { overview: "نظرة عامة", agenda: "الأجندة والمستندات", invitees: "المدعوون" } as const;
+const TABS = { overview: "نظرة عامة", agenda: "الأجندة والمستندات", invitees: "المدعوون", live: "الانعقاد" } as const;
 
 export default async function MeetingPage({ params, searchParams }: PageProps<"/meetings/[meetingId]">) {
   const viewer = await requirePage("/meetings");
@@ -35,7 +37,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   if (!meeting) notFound();
 
   const [{ data: items }, { data: invitees }, { data: documents }, { data: docRequests }, { data: departments }] = await Promise.all([
-    supabase.from("agenda_items").select("id, position, title, description, kind, duration_minutes, presenter, department_id").eq("meeting_id", meetingId).order("position"),
+    supabase.from("agenda_items").select("id, position, title, description, kind, duration_minutes, presenter, department_id, status, outcome").eq("meeting_id", meetingId).order("position"),
     supabase.from("meeting_invitees").select("person_id, kind, rsvp, rsvp_note, person:people(full_name, user_id)").eq("meeting_id", meetingId),
     supabase.from("meeting_documents").select("id, title, file_name, size_bytes, agenda_item_id, document_request_id, created_at").eq("meeting_id", meetingId).order("created_at"),
     supabase
@@ -164,6 +166,36 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
       )}
 
       {tab === "invitees" && <InviteesTab meetingId={meetingId} invitees={inviteeRows} people={people} editable={editable} />}
+
+      {tab === "live" &&
+        (status === "scheduled" ? (
+          <LiveTab
+            canRun={organizer}
+            data={{
+              meeting,
+              invitees: inviteeRows,
+              items: agenda as unknown as LiveData["items"],
+              ...(await loadLive(supabase, meetingId)),
+            }}
+          />
+        ) : (
+          <p className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">
+            يُعقد الاجتماع بعد اعتماد موعده.
+          </p>
+        ))}
     </>
   );
+}
+
+async function loadLive(supabase: SupabaseClient, meetingId: string) {
+  const [{ data: attendance }, { data: proxies }, { data: breaks }] = await Promise.all([
+    supabase.from("meeting_attendance").select("person_id, status").eq("meeting_id", meetingId),
+    supabase.from("meeting_proxies").select("grantor_person_id, holder_person_id").eq("meeting_id", meetingId),
+    supabase.from("meeting_breaks").select("started_at, ended_at").eq("meeting_id", meetingId).order("started_at"),
+  ]);
+  return {
+    attendance: (attendance ?? []) as LiveData["attendance"],
+    proxies: proxies ?? [],
+    breaks: breaks ?? [],
+  };
 }

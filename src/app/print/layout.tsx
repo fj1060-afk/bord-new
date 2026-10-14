@@ -1,0 +1,8 @@
+import { redirect } from "next/navigation";
+import { getViewer } from "@/lib/auth";
+
+// Printable pages: no app chrome, white paper, signed-in users only (RLS limits the data).
+export default async function PrintLayout({ children }: LayoutProps<"/print">) {
+  if (!(await getViewer())) redirect("/login");
+  return <div className="min-h-dvh bg-white text-black">{children}</div>;
+}
