@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { requirePage } from "@/lib/auth";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
-import { InviteUserForm, UserRow } from "./user-forms";
+import { CreateUserForm, UserRow } from "./user-forms";
 
 export const metadata: Metadata = { title: "المستخدمون" };
 
@@ -14,6 +14,7 @@ export type UserItem = {
   email: string;
   job_title: string | null;
   status: "active" | "disabled";
+  invited_at: string | null;
   roleIds: string[];
 };
 
@@ -24,7 +25,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
 
   let query = supabase
     .from("profiles")
-    .select("id, full_name, email, job_title, status, user_roles(role_id)")
+    .select("id, full_name, email, job_title, status, invited_at, user_roles(role_id)")
     .order("full_name");
   if (status === "active" || status === "disabled") query = query.eq("status", status);
   // Strip characters that have meaning in PostgREST filter syntax.
@@ -45,7 +46,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
   return (
     <>
       <PageHeader section="الإدارة" title="المستخدمون" description="أضف المستخدمين وحدد أدوارهم، وعطّل من لم يعد بحاجة للوصول." />
-      {canManage && <InviteUserForm roles={roles ?? []} />}
+      {canManage && <CreateUserForm roles={roles ?? []} />}
 
       <form className="mb-4 flex flex-wrap gap-2" role="search">
         <input

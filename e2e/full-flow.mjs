@@ -28,9 +28,6 @@ async function step(name, fn) {
 }
 const go = (path) => page.goto(base + path, { waitUntil: "networkidle" });
 const status = async (text) => page.getByRole("status").filter({ hasText: text }).first().waitFor({ timeout: 20000 });
-const noError = async () => {
-  if (await page.locator("p[role=alert]").count()) throw new Error(await page.locator("p[role=alert]").first().innerText());
-};
 
 await step("تسجيل الدخول", async () => {
   await go("/login");

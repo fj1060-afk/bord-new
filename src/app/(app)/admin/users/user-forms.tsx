@@ -2,8 +2,9 @@
 
 import { useActionState, useTransition } from "react";
 import { UserPlus } from "lucide-react";
+import { formatDateTime } from "@/lib/format";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
-import { inviteUser, setUserStatus, updateUserRoles } from "./actions";
+import { createUser, sendInvitation, setUserStatus, updateUserRoles } from "./actions";
 import type { RoleOption, UserItem } from "./page";
 
 function RoleChecklist({ roles, selected }: { roles: RoleOption[]; selected?: string[] }) {
@@ -20,8 +21,8 @@ function RoleChecklist({ roles, selected }: { roles: RoleOption[]; selected?: st
   );
 }
 
-export function InviteUserForm({ roles }: { roles: RoleOption[] }) {
-  const [state, action] = useActionState(inviteUser, null);
+export function CreateUserForm({ roles }: { roles: RoleOption[] }) {
+  const [state, action] = useActionState(createUser, null);
 
   return (
     <details className="group mb-6 rounded-lg border border-rule bg-surface">
@@ -33,7 +34,7 @@ export function InviteUserForm({ roles }: { roles: RoleOption[] }) {
         <Field label="الاسم الكامل">
           <input name="full_name" required className={inputClass} />
         </Field>
-        <Field label="البريد الإلكتروني" hint="تصله دعوة لتعيين كلمة المرور.">
+        <Field label="البريد الإلكتروني" hint="تصل الدعوة لتعيين كلمة المرور على هذا البريد.">
           <input name="email" type="email" dir="ltr" required className={inputClass} />
         </Field>
         <Field label="الجوال">
@@ -47,9 +48,14 @@ export function InviteUserForm({ roles }: { roles: RoleOption[] }) {
         </div>
         <div className="flex flex-col gap-3 sm:col-span-2">
           <FormMessage state={state} />
-          <SubmitButton pendingLabel="جارٍ الإرسال…" className="w-fit">
-            إرسال الدعوة
-          </SubmitButton>
+          <div className="flex flex-wrap gap-2">
+            <SubmitButton name="intent" value="create" pendingLabel="جارٍ الحفظ…">
+              إنشاء المستخدم
+            </SubmitButton>
+            <SubmitButton name="intent" value="invite" variant="secondary" pendingLabel="جارٍ الحفظ…">
+              إنشاء وإرسال الدعوة
+            </SubmitButton>
+          </div>
         </div>
       </form>
     </details>
@@ -71,6 +77,7 @@ export function UserRow({
 }) {
   const [state, action] = useActionState(updateUserRoles.bind(null, user.id), null);
   const [pending, startTransition] = useTransition();
+  const [inviteState, inviteAction] = useActionState(sendInvitation.bind(null, user.id), null);
   const roleNames = roles.filter((r) => user.roleIds.includes(r.id)).map((r) => r.name);
   const disabled = user.status === "disabled";
 
@@ -101,6 +108,17 @@ export function UserRow({
 
         <div className="flex flex-col gap-4 border-t border-rule bg-paper px-5 py-4">
           {user.job_title && <p className="text-sm text-ink-muted">المسمى الوظيفي: {user.job_title}</p>}
+          {canManage && !isSelf && !disabled && (
+            <form action={inviteAction} className="flex flex-col gap-2">
+              <p className="text-sm text-ink-muted">
+                {user.invited_at ? `آخر دعوة: ${formatDateTime(new Date(user.invited_at))}` : "لم تُرسل الدعوة بعد."}
+              </p>
+              <SubmitButton variant="secondary" pendingLabel="جارٍ الإرسال…" className="w-fit">
+                {user.invited_at ? "إعادة إرسال الدعوة" : "إرسال الدعوة"}
+              </SubmitButton>
+              <FormMessage state={inviteState} />
+            </form>
+          )}
           {canManage && !isSelf && (
             <form action={action} className="flex flex-col gap-3">
               <RoleChecklist roles={roles} selected={user.roleIds} />
