@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/* Palette: ink green for authority, brass for the seal, cool paper surfaces. */
+:root {
+  --paper: #f6f7f5;
+  --surface: #ffffff;
+  --ink: #17211f;
+  --ink-muted: #5b6763;
+  --rule: #dce2de;
+  --primary: #1f4d45;
+  --primary-soft: #e6efec;
+  --on-primary: #ffffff;
+  --brass: #a8823a;
+  --brass-soft: #f4ecdc;
+  --danger: #a33a2f;
+  --sidebar: #12302b;
+  --sidebar-ink: #d7e3df;
+  --sidebar-muted: #8fa8a1;
+  --sidebar-active: #1f4d45;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1513;
+    --surface: #161e1c;
+    --ink: #e4ebe8;
+    --ink-muted: #9aa8a3;
+    --rule: #26322f;
+    --primary: #6fb3a5;
+    --primary-soft: #1b2e2a;
+    --on-primary: #0f1513;
+    --brass: #d1ad62;
+    --brass-soft: #2a2416;
+    --danger: #e07b6f;
+    --sidebar: #0b1110;
+    --sidebar-ink: #d7e3df;
+    --sidebar-muted: #7d938d;
+    --sidebar-active: #1b2e2a;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-rule: var(--rule);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-on-primary: var(--on-primary);
+  --color-brass: var(--brass);
+  --color-brass-soft: var(--brass-soft);
+  --color-danger: var(--danger);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-active: var(--sidebar-active);
+
+  --font-sans: var(--font-body);
+  --font-display: var(--font-naskh);
+  --font-mono: var(--font-mono-latin);
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-feature-settings: "tnum";
+}
+
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
