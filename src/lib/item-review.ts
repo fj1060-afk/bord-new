@@ -4,7 +4,8 @@
 
 import { withPhraseFixes } from "./spelling";
 
-export type Finding = { level: "warn" | "tip"; text: string; ref?: string };
+/** `fixes` are complete replacement titles the author can apply with one click. */
+export type Finding = { level: "warn" | "tip"; text: string; ref?: string; fixes?: string[] };
 export type ItemDraft = { title: string; description?: string | null; kind: string };
 export type Disclosure = { name: string; details: string | null };
 
@@ -65,19 +66,36 @@ const PERIOD = /(\d{4}|[٠-٩]{4}|الربع|ربع|النصف|السنه الم
 // A title ending in a preposition or "year of" was cut short.
 const DANGLING = /(?:^|\s)(لعام|عام|لسنه|سنه|للعام|للسنه|عن|علي|في|من|الي|ل|و|حتي|بشان|المنتهيه)\s*$/;
 
-export function reviewItem(item: ItemDraft, disclosures: Disclosure[] = []): Finding[] {
+// The same trailing "year of" words, as typed, so they can be cut from the suggestion.
+const YEAR_WORD = /\s*(لعام|عام|للعام|لسن[ةه]|سن[ةه]|للسن[ةه])\s*$/;
+
+/** `year` is the last completed financial year, used in suggested titles. */
+export function reviewItem(item: ItemDraft, disclosures: Disclosure[] = [], year = new Date().getFullYear() - 1): Finding[] {
   const text = fold(withPhraseFixes(`${item.title} ${item.description ?? ""}`));
-  const title = fold(withPhraseFixes(item.title.trim()));
+  const base = withPhraseFixes(item.title.trim());
+  const title = fold(base);
+  const verbless = item.kind === "decision" && !DECISION_VERBS.some((v) => title.startsWith(fold(v)));
+  const verb = verbless ? "اعتماد " : "";
+  const fullPeriod = `للسنة المالية المنتهية في 31 ديسمبر ${year}`;
   const findings: Finding[] = [];
-  if (DANGLING.test(title)) findings.push({ level: "warn", text: "عنوان البند يبدو ناقصاً؛ أكمله (مثلاً: «… لعام 2025» أو «… للسنة المالية المنتهية في 31 ديسمبر 2025»)." });
-  else if (has(text, PERIODIC) && !PERIOD.test(text)) findings.push({ level: "warn", text: "حدّد الفترة التي يخصها البند (السنة أو الربع أو تاريخ نهاية الفترة)، مثل: «للسنة المالية المنتهية في 31 ديسمبر 2025»." });
+  if (DANGLING.test(title)) {
+    const yearWord = YEAR_WORD.test(base);
+    findings.push({
+      level: "warn",
+      text: "عنوان البند يبدو ناقصاً؛ اختر صيغة مكتملة أو أكمله يدوياً.",
+      fixes: yearWord ? [`${verb}${base} ${year}`, `${verb}${base.replace(YEAR_WORD, "")} ${fullPeriod}`] : undefined,
+    });
+  } else if (has(text, PERIODIC) && !PERIOD.test(text)) {
+    findings.push({ level: "warn", text: "حدّد الفترة التي يخصها البند (السنة أو الربع أو تاريخ نهاية الفترة).", fixes: [`${verb}${base} ${fullPeriod}`, `${verb}${base} لعام ${year}`] });
+  }
   for (const d of disclosures) {
     const hit = keywords(d.details ?? "").find(({ key }) => text.includes(key));
     if (hit) findings.push({ level: "warn", text: `تعارض مصالح محتمل: ${d.name} أفصح عن مصلحة تتصل بـ«${hit.word}». يُبلّغ المجلس ويمتنع عن المداولة والتصويت، ويُثبت ذلك في المحضر.`, ref: "نظام الشركات م71" });
   }
   for (const r of RULES) if (has(text, r.when)) findings.push(r.finding);
   if (item.kind === "decision") {
-    if (!DECISION_VERBS.some((v) => title.startsWith(fold(v)))) findings.push({ level: "tip", text: "صُغ بند القرار بفعل واضح، مثل: «اعتماد …» أو «الموافقة على …»." });
+    // The completed-title suggestions above already start with a verb.
+    if (verbless && !findings.some((f) => f.fixes)) findings.push({ level: "tip", text: "صُغ بند القرار بفعل واضح.", fixes: [`اعتماد ${base}`, `الموافقة على ${base}`] });
     if (!item.description?.trim()) findings.push({ level: "tip", text: "أضف وصفاً يبيّن المطلوب من المجلس وأثر القرار." });
   }
   return findings;

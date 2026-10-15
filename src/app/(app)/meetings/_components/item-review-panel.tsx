@@ -13,7 +13,18 @@ export function ItemReviewPanel({ meetingId, form }: { meetingId: string; form: 
   const field = (name: Field) => form()?.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null;
   const value = (name: string) => (form()?.elements.namedItem(name) as HTMLInputElement | null)?.value ?? "";
 
-  const run = () => start(async () => setReview(await reviewDraft(meetingId, { title: value("title"), description: value("description"), kind: value("kind") })));
+  const draft = () => ({ title: value("title"), description: value("description"), kind: value("kind") });
+  const run = () => start(async () => setReview(await reviewDraft(meetingId, draft())));
+
+  // A suggested title replaces the field; re-check it quickly (offline) and keep the description's spelling results.
+  const useTitle = (title: string) => {
+    const el = field("title");
+    if (el) el.value = title;
+    start(async () => {
+      const next = await reviewDraft(meetingId, draft(), false);
+      setReview((r) => ({ ...next, description: r?.description ?? next.description, online: r?.online ?? true }));
+    });
+  };
 
   const apply = (name: Field, index: number, word: string, fix: string) => {
     const el = field(name);
@@ -48,20 +59,29 @@ export function ItemReviewPanel({ meetingId, form }: { meetingId: string; form: 
               ))}
             </ul>
           )}
-          {review.findings.length > 0 && <ItemFindings findings={review.findings} />}
+          {review.findings.length > 0 && <ItemFindings findings={review.findings} onFix={useTitle} />}
         </div>
       )}
     </div>
   );
 }
 
-export function ItemFindings({ findings }: { findings: DraftReview["findings"] }) {
+export function ItemFindings({ findings, onFix }: { findings: DraftReview["findings"]; onFix?: (title: string) => void }) {
   return (
     <ul className="flex flex-col gap-2">
       {findings.map((f) => (
         <li key={f.text} className={f.level === "warn" ? "border-s-2 border-brass ps-2" : "border-s-2 border-rule ps-2 text-ink-muted"}>
           {f.text}
           {f.ref && <span className="ms-1 text-xs text-ink-muted">({f.ref})</span>}
+          {onFix && f.fixes && (
+            <span className="mt-1 flex flex-col items-start gap-1">
+              {f.fixes.map((fix) => (
+                <button key={fix} type="button" onClick={() => onFix(fix)} className="rounded-md border border-primary px-2 py-1 text-start text-xs text-primary hover:bg-primary-soft">
+                  {fix}
+                </button>
+              ))}
+            </span>
+          )}
         </li>
       ))}
     </ul>

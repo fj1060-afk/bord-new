@@ -76,9 +76,9 @@ export function withPhraseFixes(text: string) {
 }
 
 /** Checks Arabic text; `online` is false when LanguageTool was unreachable (phrase checks still ran). */
-export async function checkSpelling(text: string): Promise<{ matches: Misspelling[]; online: boolean }> {
+export async function checkSpelling(text: string, useOnline = true): Promise<{ matches: Misspelling[]; online: boolean }> {
   const local = phraseSlips(text);
-  const online = await onlineCheck(text);
+  const online = useOnline ? await onlineCheck(text) : [];
   const rest = (online ?? []).filter((m) => !local.some((l) => m.offset < l.offset + l.length && l.offset < m.offset + m.length));
   return { matches: [...local, ...rest].sort((x, y) => x.offset - y.offset), online: online !== null };
 }

@@ -32,4 +32,12 @@ describe("reviewItem", () => {
     expect(reviewItem({ title: "اعتماد القوائم المالية", kind: "decision", description: "x" }).some((f) => f.text.startsWith("حدّد الفترة"))).toBe(true);
     expect(reviewItem({ title: "الميزانية للربع الثالث", kind: "discussion" })).toEqual([]);
   });
+
+  it("suggests complete titles", () => {
+    const [cut] = reviewItem({ title: "القائم المالية لعام", kind: "decision", description: "x" }, [], 2025);
+    expect(cut.fixes).toEqual(["اعتماد القوائم المالية لعام 2025", "اعتماد القوائم المالية للسنة المالية المنتهية في 31 ديسمبر 2025"]);
+    const [period] = reviewItem({ title: "اعتماد الميزانية", kind: "decision", description: "x" }, [], 2025);
+    expect(period.fixes?.[1]).toBe("اعتماد الميزانية لعام 2025");
+    expect(reviewItem({ title: "الميزانية 2025", kind: "decision", description: "x" }, [], 2025)[0].fixes).toEqual(["اعتماد الميزانية 2025", "الموافقة على الميزانية 2025"]);
+  });
 });
