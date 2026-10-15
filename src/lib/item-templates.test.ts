@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { suggestTitles } from "./item-templates";
+import { CATEGORIES, libraryTemplates, suggestTitles, templates } from "./item-templates";
 
 const oct2026 = new Date("2026-10-15T12:00:00+03:00");
 
@@ -33,6 +33,14 @@ describe("suggestTitles", () => {
     expect(found.every((s) => s.title.includes("تعيين"))).toBe(true);
     expect(suggestTitles("تعيين أمين", oct2026)[0].title).toBe("التصويت على تعيين أمين سر مجلس الإدارة وتحديد مكافأته");
     expect(suggestTitles("قوائم مال", oct2026)[0].title).toContain("القوائم المالية");
+  });
+
+  it("covers contracts, financing and the company's own items", () => {
+    expect(suggestTitles("قرض", oct2026).some((s) => s.title.includes("اتفاقية تسهيلات ائتمانية"))).toBe(true);
+    expect(suggestTitles("توقيع عقد", oct2026)[0].title).toContain("توقيع عقد");
+    const own = libraryTemplates([{ title: "التصويت على اعتماد خطة السلامة المهنية", kind: "decision", category: "بنود الشركة", needs: null }]);
+    expect(suggestTitles("السلا", oct2026, 5, own)[0].title).toBe("التصويت على اعتماد خطة السلامة المهنية");
+    expect(templates(oct2026).every((t) => (CATEGORIES as readonly string[]).includes(t.category))).toBe(true);
   });
 
   it("stays quiet when nothing fits", () => {

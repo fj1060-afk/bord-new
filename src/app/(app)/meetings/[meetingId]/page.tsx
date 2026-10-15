@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
 import { meetingDisclosures } from "@/lib/item-review-server";
+import { libraryTemplates } from "@/lib/item-templates";
 import { currentYear } from "@/lib/org";
 import { InfoRequests } from "../_components/info-requests";
 import { PrintDocs } from "../_components/print-docs";
@@ -53,8 +54,15 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
     .maybeSingle();
   if (!meeting) notFound();
 
-  const [{ data: users }, profile, disclosures] =
-    tab === "agenda" && organizer ? await Promise.all([supabase.rpc("list_people_by_department"), companyProfile(supabase), meetingDisclosures(supabase, meetingId)]) : [{ data: [] }, null, []];
+  const [{ data: users }, profile, disclosures, { data: library }] =
+    tab === "agenda" && organizer
+      ? await Promise.all([
+          supabase.rpc("list_people_by_department"),
+          companyProfile(supabase),
+          meetingDisclosures(supabase, meetingId),
+          supabase.from("agenda_item_library").select("title, kind, category, needs"),
+        ])
+      : [{ data: [] }, null, [], { data: [] }];
   const profileDays = profile?.invite_days ?? 5;
   const { data: minutesRow } = tab === "overview" ? await supabase.from("minutes").select("id").eq("meeting_id", meetingId).maybeSingle() : { data: null };
   const [{ data: items }, { data: invitees }, { data: documents }, { data: docRequests }, { data: departments }] = await Promise.all([
@@ -198,6 +206,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           editable={editable}
           packPublished={Boolean(meeting.pack_published_at)}
           myDepartmentIds={(delegations ?? []).map((d) => d.department_id)}
+          library={libraryTemplates(library ?? [])}
           review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1 } : undefined}
         />
       )}

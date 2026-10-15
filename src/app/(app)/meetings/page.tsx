@@ -65,11 +65,16 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/meeting
         section="الحوكمة"
         title="الاجتماعات"
         actions={
-          organizer && (
-            <Link href="/meetings/new" className={buttonClass()}>
-              <Plus size={16} aria-hidden="true" /> اجتماع جديد
+          <div className="flex flex-wrap gap-2">
+            <Link href="/meetings/library" className={buttonClass("secondary")}>
+              مستودع البنود
             </Link>
-          )
+            {organizer && (
+              <Link href="/meetings/new" className={buttonClass()}>
+                <Plus size={16} aria-hidden="true" /> اجتماع جديد
+              </Link>
+            )}
+          </div>
         }
       />
 
