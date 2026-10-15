@@ -34,19 +34,41 @@ function UserGroups({ targets }: { targets: Target[] }) {
   ));
 }
 
-/** The presenter: a registered user (grouped by department) or someone outside the system. */
-function PresenterField({ targets, userId, name }: { targets: Target[]; userId?: string | null; name?: string | null }) {
-  const [choice, setChoice] = useState(userId ? `user:${userId}` : name ? "other" : "");
-  const label = targets.find((t) => t.value === choice)?.label ?? "";
+/** One choice for who owns the item and presents it; a different or outside presenter is optional. */
+function OwnerField({ targets, item }: { targets: Target[]; item?: AgendaItem }) {
+  const [owner, setOwner] = useState(item ? ownerOf(item) : "");
+  const ownerUser = owner.startsWith("user:") ? owner.slice(5) : "";
+  const differs = !!item?.presenter && (item.presenter_user_id ?? "") !== (item.owner_user_id ?? "");
+  const [other, setOther] = useState(differs);
+  const [choice, setChoice] = useState(item?.presenter_user_id ? `user:${item.presenter_user_id}` : item?.presenter ? "other" : "");
+  const presenterUser = other ? (choice.startsWith("user:") ? choice.slice(5) : "") : ownerUser;
+  const presenterLabel = targets.find((t) => t.value === (other ? choice : owner) && t.group === "user")?.label ?? "";
   return (
     <div className="flex flex-col gap-2">
-      <select value={choice} onChange={(e) => setChoice(e.target.value)} className={inputClass} aria-label="مقدّم البند">
+      <select name="owner" value={owner} onChange={(e) => setOwner(e.target.value)} className={inputClass} aria-label="المسؤول عن البند">
         <option value="">—</option>
+        <optgroup label="الإدارات">
+          {targets.filter((t) => t.group === "department").map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </optgroup>
         <UserGroups targets={targets} />
-        <option value="other">شخص من خارج النظام…</option>
       </select>
-      <input type="hidden" name="presenter_user_id" value={choice.startsWith("user:") ? choice.slice(5) : ""} />
-      {choice === "other" ? <input name="presenter" defaultValue={name ?? ""} placeholder="اسم مقدّم البند" required className={inputClass} /> : <input type="hidden" name="presenter" value={label} />}
+      <label className="flex w-fit items-center gap-2 text-xs text-ink-muted">
+        <input type="checkbox" checked={other} onChange={(e) => setOther(e.target.checked)} />
+        يقدّمه شخص آخر
+      </label>
+      {other && (
+        <select value={choice} onChange={(e) => setChoice(e.target.value)} className={inputClass} aria-label="مقدّم البند">
+          <option value="">—</option>
+          <UserGroups targets={targets} />
+          <option value="other">شخص من خارج النظام…</option>
+        </select>
+      )}
+      <input type="hidden" name="presenter_user_id" value={presenterUser} />
+      {other && choice === "other" ? <input name="presenter" defaultValue={item?.presenter ?? ""} placeholder="اسم مقدّم البند" required className={inputClass} /> : <input type="hidden" name="presenter" value={presenterLabel} />}
     </div>
   );
 }
@@ -92,12 +114,11 @@ export function AgendaItemForm({ meetingId, item, targets, onDone }: { meetingId
       <Field label="المدة (دقائق)">
         <input name="duration_minutes" type="number" min={1} max={480} defaultValue={item?.duration_minutes ?? ""} className={inputClass} />
       </Field>
-      <Field label="مقدّم البند">
-        <PresenterField targets={targets} userId={item?.presenter_user_id} name={item?.presenter} />
-      </Field>
-      <Field label="المسؤول عن البند" hint="إلزامي لبنود القرار؛ تُرسل إليه طلبات المستندات.">
-        <TargetSelect name="owner" targets={targets} defaultValue={item ? ownerOf(item) : ""} placeholder="—" />
-      </Field>
+      <div className="sm:col-span-2">
+        <Field label="المسؤول عن البند ومقدّمه" hint="إلزامي لبنود القرار؛ تُرسل إليه طلبات المستندات.">
+          <OwnerField targets={targets} item={item} />
+        </Field>
+      </div>
       <div className="sm:col-span-2">
         <Field label="الوصف">
           <textarea spellCheck lang="ar" name="description" rows={3} defaultValue={item?.description ?? ""} className={inputClass} />

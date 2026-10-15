@@ -84,8 +84,8 @@ export function AgendaTab({
               {(ownerLabel(item) || item.presenter) && (
                 <p className="text-sm text-ink-muted">
                   {ownerLabel(item) && <>المسؤول: <strong className="text-ink">{ownerLabel(item)}</strong></>}
-                  {ownerLabel(item) && item.presenter && " · "}
-                  {item.presenter && <>يقدّمه: {item.presenter}</>}
+                  {ownerLabel(item) && item.presenter && item.presenter !== ownerLabel(item) && " · "}
+                  {item.presenter && item.presenter !== ownerLabel(item) && <>يقدّمه: {item.presenter}</>}
                 </p>
               )}
               {item.description && <p className="whitespace-pre-line text-sm leading-7">{item.description}</p>}
