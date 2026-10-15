@@ -27,6 +27,14 @@ describe("suggestTitles", () => {
     expect(suggestTitles("رئيس لجنة المراجعة", oct2026)[0].title).toBe("التصويت على تعيين (…) رئيساً للجنة المراجعة");
   });
 
+  it("searches as you type", () => {
+    const found = suggestTitles("تعي", oct2026);
+    expect(found).toHaveLength(5);
+    expect(found.every((s) => s.title.includes("تعيين"))).toBe(true);
+    expect(suggestTitles("تعيين أمين", oct2026)[0].title).toBe("التصويت على تعيين أمين سر مجلس الإدارة وتحديد مكافأته");
+    expect(suggestTitles("قوائم مال", oct2026)[0].title).toContain("القوائم المالية");
+  });
+
   it("stays quiet when nothing fits", () => {
     expect(suggestTitles("زيارة ميدانية للمصنع", oct2026)).toEqual([]);
   });

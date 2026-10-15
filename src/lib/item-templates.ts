@@ -75,19 +75,28 @@ function templates(today: Date): Template[] {
   ];
 }
 
-/** Up to `limit` standard titles matching what has been typed (spelling slips in known phrases are forgiven). */
-export function suggestTitles(input: string, today = new Date(), limit = 3): TitleSuggestion[] {
+const bareWord = (w: string) => w.replace(/^(وال|بال|فال|لل|ال|و|ب|ل)/, "");
+
+/**
+ * Search-as-you-type over the standard titles: every typed word, including the
+ * one still being typed, must start a word of the title or its keywords
+ * ("تعي" finds "تعيين"). Spelling slips in known phrases are forgiven.
+ */
+export function suggestTitles(input: string, today = new Date(), limit = 5): TitleSuggestion[] {
   const text = fold(withPhraseFixes(input.trim()));
-  if (text.length < 3) return [];
-  const words = text.split(/\s+/).filter((w) => w.length >= 3);
+  const words = text.split(/\s+/).filter((w) => w.length >= 2 && bareWord(w).length >= 2);
+  if (text.length < 3 || !words.length) return [];
   return templates(today)
     .map((t) => {
+      const title = fold(t.title);
       const keys = t.keys.map(fold);
-      const score = keys.filter((k) => text.includes(k)).reduce((n, k) => n + k.length, 0) + (keys.some((k) => k.startsWith(text) || k.includes(text)) ? 1 : 0) + words.filter((w) => fold(t.title).includes(w)).length;
-      return { title: t.title, kind: t.kind, needs: t.needs, score, exact: fold(t.title) === text };
+      const tokens = `${title} ${keys.join(" ")}`.split(/[^\p{L}\p{N}]+/u).flatMap((tk) => [tk, bareWord(tk)]);
+      const all = words.every((w) => tokens.some((tk) => tk.startsWith(w) || tk.startsWith(bareWord(w))));
+      const score = (title.includes(text) ? 20 : 0) + keys.filter((k) => text.includes(k)).reduce((n, k) => n + k.length, 0);
+      return { title: t.title, kind: t.kind, needs: t.needs, all, score, exact: title === text };
     })
-    .filter((t) => t.score > 1 && !t.exact)
-    .sort((a, b) => b.score - a.score)
+    .filter((t) => t.all && !t.exact)
+    .sort((a, b) => b.score - a.score || a.title.length - b.title.length)
     .slice(0, limit)
     .map(({ title, kind, needs }) => ({ title, kind, ...(needs ? { needs } : {}) }));
 }
