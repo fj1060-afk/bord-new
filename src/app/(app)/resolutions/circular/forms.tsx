@@ -27,7 +27,7 @@ export function CircularForm({ bodies }: { bodies: { value: string; label: strin
         </Field>
         <div className="sm:col-span-2">
           <Field label="العنوان">
-            <input name="title" required className={inputClass} />
+            <input name="title" spellCheck lang="ar" required className={inputClass} />
           </Field>
         </div>
         <div className="sm:col-span-2">

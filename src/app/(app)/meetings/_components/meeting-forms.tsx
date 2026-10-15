@@ -56,7 +56,7 @@ export function MeetingDetailsForm({ meeting, bodies }: { meeting?: Meeting; bod
         </Field>
       )}
       <Field label="عنوان الاجتماع">
-        <input name="title" defaultValue={meeting?.title} required className={inputClass} />
+        <input name="title" spellCheck lang="ar" defaultValue={meeting?.title} required className={inputClass} />
       </Field>
       <Field label="نوع الاجتماع">
         <Select name="meeting_type" options={MEETING_TYPES} defaultValue={meeting?.meeting_type ?? "regular"} />
@@ -171,7 +171,7 @@ export function AgendaRequestForm({ departments, bodies }: { departments: Option
         </select>
       </Field>
       <Field label="عنوان البند المقترح">
-        <input name="title" required className={inputClass} />
+        <input name="title" spellCheck lang="ar" required className={inputClass} />
       </Field>
       <Field label="الغرض">
         <Select name="kind" options={ITEM_KINDS} defaultValue="decision" />

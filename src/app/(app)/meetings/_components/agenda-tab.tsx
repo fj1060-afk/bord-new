@@ -6,6 +6,8 @@ import { moveAgendaItem, removeAgendaItem } from "../_actions/agenda";
 import { AgendaItemForm, DocumentRequestForm, EditableAgendaItem, ReviewDocumentButtons, type AgendaItem } from "./agenda-forms";
 import { ownerOf, type Target } from "./agenda-targets";
 import { UploadDocument } from "./upload-document";
+import { ItemFindings } from "./item-review-panel";
+import { reviewItem, type Disclosure } from "@/lib/item-review";
 
 type Doc = { id: string; title: string; file_name: string; size_bytes: number | null; agenda_item_id: string | null; document_request_id: string | null };
 type DocRequest = {
@@ -41,7 +43,9 @@ export function AgendaTab({
   editable,
   packPublished,
   myDepartmentIds,
+  disclosures,
 }: {
+  disclosures?: Disclosure[];
   meetingId: string;
   items: AgendaItem[];
   documents: Doc[];
@@ -89,6 +93,14 @@ export function AgendaTab({
                 </p>
               )}
               {item.description && <p className="whitespace-pre-line text-sm leading-7">{item.description}</p>}
+              {disclosures && reviewItem(item, disclosures).length > 0 && (
+                <details className="text-sm">
+                  <summary className="w-fit cursor-pointer text-brass">ملاحظات نظامية ({reviewItem(item, disclosures).length})</summary>
+                  <div className="mt-2">
+                    <ItemFindings findings={reviewItem(item, disclosures)} />
+                  </div>
+                </details>
+              )}
             </>
           );
 

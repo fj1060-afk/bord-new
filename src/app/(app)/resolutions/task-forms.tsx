@@ -22,7 +22,7 @@ export function AddTaskForm({
       <form action={action} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field label="المهمة">
-            <input name="title" required className={inputClass} />
+            <input name="title" spellCheck lang="ar" required className={inputClass} />
           </Field>
         </div>
         <Field label="المسؤول">

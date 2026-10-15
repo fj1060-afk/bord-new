@@ -11,6 +11,7 @@ import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
+import { meetingDisclosures } from "@/lib/item-review-server";
 import { InfoRequests } from "../_components/info-requests";
 import { PrintDocs } from "../_components/print-docs";
 import { JourneyBar } from "../_components/journey-bar";
@@ -51,7 +52,8 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
     .maybeSingle();
   if (!meeting) notFound();
 
-  const [{ data: users }, profileDays] = tab === "agenda" && organizer ? await Promise.all([supabase.rpc("list_people_by_department"), companyProfile(supabase).then((p) => p?.invite_days)]) : [{ data: [] }, 5];
+  const [{ data: users }, profileDays, disclosures] =
+    tab === "agenda" && organizer ? await Promise.all([supabase.rpc("list_people_by_department"), companyProfile(supabase).then((p) => p?.invite_days), meetingDisclosures(supabase, meetingId)]) : [{ data: [] }, 5, []];
   const { data: minutesRow } = tab === "overview" ? await supabase.from("minutes").select("id").eq("meeting_id", meetingId).maybeSingle() : { data: null };
   const [{ data: items }, { data: invitees }, { data: documents }, { data: docRequests }, { data: departments }] = await Promise.all([
     supabase.from("agenda_items").select("id, position, title, title_en, description, kind, duration_minutes, presenter, presenter_user_id, department_id, owner_user_id, status, outcome").eq("meeting_id", meetingId).order("position"),
@@ -194,6 +196,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           editable={editable}
           packPublished={Boolean(meeting.pack_published_at)}
           myDepartmentIds={(delegations ?? []).map((d) => d.department_id)}
+          disclosures={organizer ? disclosures : undefined}
         />
       )}
       {tab === "agenda" && (

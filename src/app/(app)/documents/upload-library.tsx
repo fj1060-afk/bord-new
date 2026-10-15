@@ -43,7 +43,7 @@ export function UploadLibraryDocument() {
       </summary>
       <form ref={formRef} action={submit} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-3">
         <Field label="العنوان">
-          <input name="title" placeholder="يُستخدم اسم الملف إن تُرك فارغاً" className={inputClass} />
+          <input name="title" spellCheck lang="ar" placeholder="يُستخدم اسم الملف إن تُرك فارغاً" className={inputClass} />
         </Field>
         <Field label="التصنيف">
           <select name="category" defaultValue="policy" className={inputClass}>

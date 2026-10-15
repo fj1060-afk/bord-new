@@ -16,7 +16,7 @@ export function CorrespondenceForm({ direction, contacts, letter, label }: { dir
       <form action={action} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field label="الموضوع">
-            <input name="subject" required defaultValue={letter?.subject} className={inputClass} />
+            <input name="subject" spellCheck lang="ar" required defaultValue={letter?.subject} className={inputClass} />
           </Field>
         </div>
         <Field label={incoming ? "الجهة المرسلة" : "الجهة المرسل إليها"}>
