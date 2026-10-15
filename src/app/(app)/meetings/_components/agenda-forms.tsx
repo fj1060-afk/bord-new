@@ -4,22 +4,50 @@ import { useActionState, useState, useTransition } from "react";
 import { EnglishField, buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
-import { ownerOf, type Target } from "./agenda-targets";
+import { byDepartment, ownerOf, type Target } from "./agenda-targets";
 
 function TargetSelect({ name, targets, defaultValue, required, placeholder }: { name: string; targets: Target[]; defaultValue?: string; required?: boolean; placeholder: string }) {
   return (
     <select name={name} defaultValue={defaultValue ?? ""} required={required} className={inputClass}>
       <option value="">{placeholder}</option>
-      {(["department", "user"] as const).map((g) => (
-        <optgroup key={g} label={g === "department" ? "الإدارات" : "الأشخاص"}>
-          {targets.filter((t) => t.group === g).map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </optgroup>
-      ))}
+      <optgroup label="الإدارات">
+        {targets.filter((t) => t.group === "department").map((t) => (
+          <option key={t.value} value={t.value}>
+            {t.label}
+          </option>
+        ))}
+      </optgroup>
+      <UserGroups targets={targets} />
     </select>
+  );
+}
+
+function UserGroups({ targets }: { targets: Target[] }) {
+  return byDepartment(targets).map(([dept, users]) => (
+    <optgroup key={dept || "-"} label={dept ? `أشخاص · ${dept}` : "أشخاص آخرون"}>
+      {users.map((u) => (
+        <option key={u.value + dept} value={u.value}>
+          {u.label}
+        </option>
+      ))}
+    </optgroup>
+  ));
+}
+
+/** The presenter: a registered user (grouped by department) or someone outside the system. */
+function PresenterField({ targets, userId, name }: { targets: Target[]; userId?: string | null; name?: string | null }) {
+  const [choice, setChoice] = useState(userId ? `user:${userId}` : name ? "other" : "");
+  const label = targets.find((t) => t.value === choice)?.label ?? "";
+  return (
+    <div className="flex flex-col gap-2">
+      <select value={choice} onChange={(e) => setChoice(e.target.value)} className={inputClass} aria-label="مقدّم البند">
+        <option value="">—</option>
+        <UserGroups targets={targets} />
+        <option value="other">شخص من خارج النظام…</option>
+      </select>
+      <input type="hidden" name="presenter_user_id" value={choice.startsWith("user:") ? choice.slice(5) : ""} />
+      {choice === "other" ? <input name="presenter" defaultValue={name ?? ""} placeholder="اسم مقدّم البند" required className={inputClass} /> : <input type="hidden" name="presenter" value={label} />}
+    </div>
   );
 }
 
@@ -32,6 +60,7 @@ export type AgendaItem = {
   kind: keyof typeof ITEM_KINDS;
   duration_minutes: number | null;
   presenter: string | null;
+  presenter_user_id?: string | null;
   department_id: string | null;
   owner_user_id?: string | null;
 };
@@ -64,7 +93,7 @@ export function AgendaItemForm({ meetingId, item, targets, onDone }: { meetingId
         <input name="duration_minutes" type="number" min={1} max={480} defaultValue={item?.duration_minutes ?? ""} className={inputClass} />
       </Field>
       <Field label="مقدّم البند">
-        <input name="presenter" defaultValue={item?.presenter ?? ""} className={inputClass} />
+        <PresenterField targets={targets} userId={item?.presenter_user_id} name={item?.presenter} />
       </Field>
       <Field label="المسؤول عن البند" hint="إلزامي لبنود القرار؛ تُرسل إليه طلبات المستندات.">
         <TargetSelect name="owner" targets={targets} defaultValue={item ? ownerOf(item) : ""} placeholder="—" />

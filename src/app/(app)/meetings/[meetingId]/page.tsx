@@ -51,10 +51,10 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
     .maybeSingle();
   if (!meeting) notFound();
 
-  const [{ data: users }, profileDays] = tab === "agenda" && organizer ? await Promise.all([supabase.rpc("list_active_users"), companyProfile(supabase).then((p) => p?.invite_days)]) : [{ data: [] }, 5];
+  const [{ data: users }, profileDays] = tab === "agenda" && organizer ? await Promise.all([supabase.rpc("list_people_by_department"), companyProfile(supabase).then((p) => p?.invite_days)]) : [{ data: [] }, 5];
   const { data: minutesRow } = tab === "overview" ? await supabase.from("minutes").select("id").eq("meeting_id", meetingId).maybeSingle() : { data: null };
   const [{ data: items }, { data: invitees }, { data: documents }, { data: docRequests }, { data: departments }] = await Promise.all([
-    supabase.from("agenda_items").select("id, position, title, title_en, description, kind, duration_minutes, presenter, department_id, owner_user_id, status, outcome").eq("meeting_id", meetingId).order("position"),
+    supabase.from("agenda_items").select("id, position, title, title_en, description, kind, duration_minutes, presenter, presenter_user_id, department_id, owner_user_id, status, outcome").eq("meeting_id", meetingId).order("position"),
     supabase.from("meeting_invitees").select("person_id, kind, rsvp, rsvp_note, person:people(full_name, user_id)").eq("meeting_id", meetingId),
     supabase.from("meeting_documents").select("id, title, file_name, size_bytes, agenda_item_id, document_request_id, created_at").eq("meeting_id", meetingId).order("created_at"),
     supabase
@@ -187,7 +187,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           docRequests={(docRequests ?? []) as never}
           targets={[
             ...(departments ?? []).map((d) => ({ value: `department:${d.id}`, label: d.name, group: "department" as const })),
-            ...((users ?? []) as { id: string; full_name: string; email: string }[]).map((u) => ({ value: `user:${u.id}`, label: u.full_name || u.email, group: "user" as const })),
+            ...((users ?? []) as { user_id: string; full_name: string; department_name: string | null }[]).map((u) => ({ value: `user:${u.user_id}`, label: u.full_name, group: "user" as const, dept: u.department_name ?? undefined })),
           ]}
           viewerId={viewer.id}
           dueDefault={new Date(Date.parse(meeting.starts_at) - ((profileDays ?? 5) + 2) * 86400000).toISOString().slice(0, 10)}
