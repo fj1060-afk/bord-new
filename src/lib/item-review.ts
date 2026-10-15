@@ -2,6 +2,8 @@
 // governance regulations and members' conflict-of-interest disclosures.
 // Advisory only: findings never block the meeting journey.
 
+import { withPhraseFixes } from "./spelling";
+
 export type Finding = { level: "warn" | "tip"; text: string; ref?: string };
 export type ItemDraft = { title: string; description?: string | null; kind: string };
 export type Disclosure = { name: string; details: string | null };
@@ -57,16 +59,24 @@ const RULES: { when: string[]; finding: Finding }[] = [
 
 const DECISION_VERBS = ["اعتماد", "الموافقه", "الموافقه علي", "تعيين", "اقرار", "التوصيه", "ترشيح", "تشكيل", "تفويض", "المصادقه", "منح", "انهاء", "تجديد", "اختيار", "انتخاب", "تحديد", "صرف", "الغاء", "تعديل", "اصدار"];
 
+// Items about a financial or reporting period must name it (year, quarter or period end).
+const PERIODIC = ["القوائم الماليه", "البيانات الماليه", "الميزانيه", "الموازنه", "الحسابات الختاميه", "التقرير السنوي", "تقرير مجلس الاداره", "الخطه السنويه", "توزيع الارباح", "الارباح المرحليه", "النتائج الماليه"];
+const PERIOD = /(\d{4}|[٠-٩]{4}|الربع|ربع|النصف|السنه الماليه المنتهيه|الفتره المنتهيه|المنتهيه في)/;
+// A title ending in a preposition or "year of" was cut short.
+const DANGLING = /(?:^|\s)(لعام|عام|لسنه|سنه|للعام|للسنه|عن|علي|في|من|الي|ل|و|حتي|بشان|المنتهيه)\s*$/;
+
 export function reviewItem(item: ItemDraft, disclosures: Disclosure[] = []): Finding[] {
-  const text = fold(`${item.title} ${item.description ?? ""}`);
+  const text = fold(withPhraseFixes(`${item.title} ${item.description ?? ""}`));
+  const title = fold(withPhraseFixes(item.title.trim()));
   const findings: Finding[] = [];
+  if (DANGLING.test(title)) findings.push({ level: "warn", text: "عنوان البند يبدو ناقصاً؛ أكمله (مثلاً: «… لعام 2025» أو «… للسنة المالية المنتهية في 31 ديسمبر 2025»)." });
+  else if (has(text, PERIODIC) && !PERIOD.test(text)) findings.push({ level: "warn", text: "حدّد الفترة التي يخصها البند (السنة أو الربع أو تاريخ نهاية الفترة)، مثل: «للسنة المالية المنتهية في 31 ديسمبر 2025»." });
   for (const d of disclosures) {
     const hit = keywords(d.details ?? "").find(({ key }) => text.includes(key));
     if (hit) findings.push({ level: "warn", text: `تعارض مصالح محتمل: ${d.name} أفصح عن مصلحة تتصل بـ«${hit.word}». يُبلّغ المجلس ويمتنع عن المداولة والتصويت، ويُثبت ذلك في المحضر.`, ref: "نظام الشركات م71" });
   }
   for (const r of RULES) if (has(text, r.when)) findings.push(r.finding);
   if (item.kind === "decision") {
-    const title = fold(item.title.trim());
     if (!DECISION_VERBS.some((v) => title.startsWith(fold(v)))) findings.push({ level: "tip", text: "صُغ بند القرار بفعل واضح، مثل: «اعتماد …» أو «الموافقة على …»." });
     if (!item.description?.trim()) findings.push({ level: "tip", text: "أضف وصفاً يبيّن المطلوب من المجلس وأثر القرار." });
   }

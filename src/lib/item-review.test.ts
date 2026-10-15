@@ -15,15 +15,21 @@ describe("reviewItem", () => {
 
   it("marks general assembly matters and financial statements", () => {
     expect(reviewItem({ title: "زيادة رأس المال", kind: "decision", description: "x" })[0].text).toContain("الجمعية العامة");
-    expect(reviewItem({ title: "اعتماد القوائم المالية", kind: "decision", description: "x" })).toHaveLength(1);
+    expect(reviewItem({ title: "اعتماد القوائم المالية لعام 2025", kind: "decision", description: "x" })).toHaveLength(1);
   });
 
   it("asks for decision wording and a description", () => {
-    expect(reviewItem({ title: "الميزانية", kind: "decision" })).toHaveLength(2);
-    expect(reviewItem({ title: "الميزانية", kind: "discussion" })).toEqual([]);
+    expect(reviewItem({ title: "الميزانية 2025", kind: "decision" })).toHaveLength(2);
+    expect(reviewItem({ title: "الميزانية 2025", kind: "discussion" })).toEqual([]);
   });
 
   it("folds Arabic spelling variants", () => {
     expect(fold("الشَّركة إدارة")).toBe("الشركه اداره");
+  });
+
+  it("asks for the period and flags cut-short titles", () => {
+    expect(reviewItem({ title: "القائم المالية لعام", kind: "discussion" }).map((f) => f.text)[0]).toContain("ناقص");
+    expect(reviewItem({ title: "اعتماد القوائم المالية", kind: "decision", description: "x" }).some((f) => f.text.startsWith("حدّد الفترة"))).toBe(true);
+    expect(reviewItem({ title: "الميزانية للربع الثالث", kind: "discussion" })).toEqual([]);
   });
 });

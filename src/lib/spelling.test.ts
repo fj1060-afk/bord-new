@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distance, glossaryMatches } from "./spelling";
+import { distance, glossaryMatches, phraseSlips, withPhraseFixes } from "./spelling";
 
 describe("spelling", () => {
   it("measures edit distance", () => {
@@ -11,5 +11,11 @@ describe("spelling", () => {
     expect(glossaryMatches("القايم")[0]).toBe("القوائم");
     expect(glossaryMatches("الماليه")).toContain("المالية");
     expect(glossaryMatches("القوائم")).toEqual([]);
+  });
+
+  it("catches real words in the wrong governance phrase", () => {
+    expect(phraseSlips("القائم المالية لعام")).toEqual([{ offset: 0, length: 6, word: "القائم", suggestions: ["القوائم"] }]);
+    expect(phraseSlips("اعتماد القوائم المالية ومجلس الادارة وبالقوائم المالية")).toEqual([]);
+    expect(withPhraseFixes("اعتماد القايم المالية")).toBe("اعتماد القوائم المالية");
   });
 });

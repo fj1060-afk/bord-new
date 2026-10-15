@@ -1,5 +1,6 @@
-// Arabic spelling suggestions: LanguageTool's free public checker, with
-// governance terms it does not know ranked first.
+// Arabic spelling suggestions: governance phrases checked locally (catches
+// real words in the wrong place, like "القائم المالية"), plus LanguageTool's
+// free public checker with governance terms ranked first.
 
 export type Misspelling = { offset: number; length: number; word: string; suggestions: string[] };
 
@@ -37,8 +38,52 @@ export function glossaryMatches(word: string) {
 
 type LtMatch = { offset: number; length: number; replacements: { value: string }[]; rule?: { issueType?: string } };
 
-/** Checks Arabic text; returns nothing when the service is unreachable. */
-export async function checkSpelling(text: string): Promise<Misspelling[]> {
+const PHRASES = [
+  "القوائم المالية", "البيانات المالية", "السنة المالية", "الجمعية العامة", "الجمعية العمومية", "مجلس الإدارة", "رأس المال", "مراجع الحسابات",
+  "لجنة المراجعة", "لجنة المكافآت", "لجنة الترشيحات", "اللجنة التنفيذية", "النظام الأساس", "الأطراف ذات العلاقة", "تعارض المصالح",
+  "الإدارة التنفيذية", "الرئيس التنفيذي", "المدير المالي", "الموازنة التقديرية", "الخطة الاستراتيجية", "التقرير السنوي", "توزيع الأرباح",
+];
+
+const bare = (w: string) => w.replace(/[\u064B-\u0652\u0640]/g, "");
+const loose = (w: string) => bare(w).replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+const close = (w: string, target: string) => {
+  const d = distance(bare(w), target);
+  // "ومجلس" or "بالقوائم" is the right word with a prefix, not a slip.
+  const prefixed = [w.replace(/^[وفبل]/, ""), w.replace(/^[وف]?(ال|بال|كال|لل)/, "ال")].some((c) => loose(c) === loose(target));
+  return d > 0 && d <= (target.length > 5 ? 2 : 1) && loose(w) !== loose(target) && !prefixed;
+};
+
+/** Known two-word governance phrases where one word is right and its neighbour is a near miss. */
+export function phraseSlips(text: string): Misspelling[] {
+  const words = [...text.matchAll(/[\p{L}\u064B-\u0652\u0640]+/gu)].map((m) => ({ word: m[0], offset: m.index! }));
+  const slips: Misspelling[] = [];
+  for (let i = 0; i + 1 < words.length; i++) {
+    const [a, b] = [words[i], words[i + 1]];
+    for (const phrase of PHRASES) {
+      const [pa, pb] = phrase.split(" ");
+      const miss = loose(b.word) === loose(pb) && close(a.word, pa) ? { ...a, fix: pa } : loose(a.word) === loose(pa) && close(b.word, pb) ? { ...b, fix: pb } : null;
+      if (miss && !slips.some((s) => s.offset === miss.offset)) slips.push({ offset: miss.offset, length: miss.word.length, word: miss.word, suggestions: [miss.fix] });
+    }
+  }
+  return slips;
+}
+
+/** Applies the phrase fixes, so rules match what the author meant. */
+export function withPhraseFixes(text: string) {
+  return phraseSlips(text)
+    .sort((x, y) => y.offset - x.offset)
+    .reduce((t, s) => t.slice(0, s.offset) + s.suggestions[0] + t.slice(s.offset + s.length), text);
+}
+
+/** Checks Arabic text; `online` is false when LanguageTool was unreachable (phrase checks still ran). */
+export async function checkSpelling(text: string): Promise<{ matches: Misspelling[]; online: boolean }> {
+  const local = phraseSlips(text);
+  const online = await onlineCheck(text);
+  const rest = (online ?? []).filter((m) => !local.some((l) => m.offset < l.offset + l.length && l.offset < m.offset + m.length));
+  return { matches: [...local, ...rest].sort((x, y) => x.offset - y.offset), online: online !== null };
+}
+
+async function onlineCheck(text: string): Promise<Misspelling[] | null> {
   if (!text.trim()) return [];
   try {
     const res = await fetch("https://api.languagetool.org/v2/check", {
@@ -47,7 +92,7 @@ export async function checkSpelling(text: string): Promise<Misspelling[]> {
       signal: AbortSignal.timeout(15000),
       cache: "no-store",
     });
-    if (!res.ok) return [];
+    if (!res.ok) return null;
     const { matches } = (await res.json()) as { matches: LtMatch[] };
     return matches.flatMap((m) => {
       const word = text.slice(m.offset, m.offset + m.length);
@@ -57,6 +102,6 @@ export async function checkSpelling(text: string): Promise<Misspelling[]> {
     });
   } catch (e) {
     console.warn("spelling check failed", e);
-    return [];
+    return null;
   }
 }
