@@ -3,14 +3,14 @@ import { fold, reviewItem } from "./item-review";
 
 describe("reviewItem", () => {
   it("flags a member whose disclosure matches the item", () => {
-    const f = reviewItem({ title: "ترسية عقد الصيانة على شركة النخبة", kind: "decision" }, [{ name: "خالد", details: "أملك حصة في شركة النخبة للمقاولات" }, { name: "سارة", details: null }]);
+    const f = reviewItem({ title: "ترسية عقد الصيانة على شركة النخبة", kind: "decision" }, { disclosures: [{ name: "خالد", details: "أملك حصة في شركة النخبة للمقاولات" }, { name: "سارة", details: null }] });
     expect(f.some((x) => x.text.includes("خالد") && x.text.includes("النخبة"))).toBe(true);
     expect(f.some((x) => x.text.includes("سارة"))).toBe(false);
-    expect(f.some((x) => x.ref === "نظام الشركات م71" && x.text.startsWith("إن كان"))).toBe(true);
+    expect(f.some((x) => x.ref?.startsWith("نظام الشركات م27") && x.text.startsWith("إن كان"))).toBe(true);
   });
 
   it("does not match generic words", () => {
-    expect(reviewItem({ title: "خطة الشركة", kind: "discussion" }, [{ name: "خالد", details: "عضو مجلس إدارة شركة" }])).toEqual([]);
+    expect(reviewItem({ title: "خطة الشركة", kind: "discussion" }, { disclosures: [{ name: "خالد", details: "عضو مجلس إدارة شركة" }] })).toEqual([]);
   });
 
   it("marks general assembly matters and financial statements", () => {
@@ -34,10 +34,22 @@ describe("reviewItem", () => {
   });
 
   it("suggests complete titles", () => {
-    const [cut] = reviewItem({ title: "القائم المالية لعام", kind: "decision", description: "x" }, [], 2025);
+    const [cut] = reviewItem({ title: "القائم المالية لعام", kind: "decision", description: "x" }, { disclosures: [], year: 2025 });
     expect(cut.fixes).toEqual(["التصويت على اعتماد القوائم المالية لعام 2025", "التصويت على اعتماد القوائم المالية للسنة المالية المنتهية في 31 ديسمبر 2025"]);
-    const [period] = reviewItem({ title: "اعتماد الميزانية", kind: "decision", description: "x" }, [], 2025);
+    const [period] = reviewItem({ title: "اعتماد الميزانية", kind: "decision", description: "x" }, { disclosures: [], year: 2025 });
     expect(period.fixes?.[1]).toBe("اعتماد الميزانية لعام 2025");
-    expect(reviewItem({ title: "الميزانية 2025", kind: "decision", description: "x" }, [], 2025)[0].fixes).toEqual(["التصويت على اعتماد الميزانية 2025", "التصويت على الميزانية 2025"]);
+    expect(reviewItem({ title: "الميزانية 2025", kind: "decision", description: "x" }, { disclosures: [], year: 2025 })[0].fixes).toEqual(["التصويت على اعتماد الميزانية 2025", "التصويت على الميزانية 2025"]);
+  });
+});
+
+describe("reviewItem rules", () => {
+  it("skips assembly-reserved warnings once worded as a recommendation", () => {
+    expect(reviewItem({ title: "زيادة رأس المال", kind: "discussion" }).some((f) => f.ref === "نظام الشركات م85")).toBe(true);
+    expect(reviewItem({ title: "التوصية للجمعية العامة غير العادية بزيادة رأس المال", kind: "discussion" }).some((f) => f.ref === "نظام الشركات م85")).toBe(false);
+  });
+
+  it("adds CMA rules only for listed companies", () => {
+    const item = { title: "اعتماد القوائم المالية لعام 2025", kind: "discussion" };
+    expect(reviewItem(item, { listed: true }).length).toBe(reviewItem(item).length + 1);
   });
 });

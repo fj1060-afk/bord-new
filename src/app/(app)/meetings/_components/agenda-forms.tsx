@@ -86,6 +86,8 @@ function TitleField({ defaultValue }: { defaultValue?: string }) {
     input.value = s.title;
     const kind = input.form?.elements.namedItem("kind") as HTMLSelectElement | null;
     if (kind) kind.value = s.kind;
+    const description = input.form?.elements.namedItem("description") as HTMLTextAreaElement | null;
+    if (description && !description.value.trim() && s.needs) description.value = `المستندات الداعمة: ${s.needs}`;
     setTyped("");
   };
   return (
@@ -95,8 +97,9 @@ function TitleField({ defaultValue }: { defaultValue?: string }) {
         <div className="flex flex-col gap-1">
           <span className="text-xs text-ink-muted">صيغ مقترحة:</span>
           {suggestions.map((s) => (
-            <button key={s.title} type="button" onClick={() => pick(s)} className="rounded-md border border-primary px-2 py-1 text-start text-sm text-primary hover:bg-primary-soft">
+            <button key={s.title} type="button" onClick={() => pick(s)} className="flex flex-col rounded-md border border-primary px-2 py-1 text-start text-sm text-primary hover:bg-primary-soft">
               {s.title}
+              {s.needs && <span className="text-xs text-ink-muted">يتطلب: {s.needs}</span>}
             </button>
           ))}
         </div>

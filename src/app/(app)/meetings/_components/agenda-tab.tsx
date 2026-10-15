@@ -43,9 +43,9 @@ export function AgendaTab({
   editable,
   packPublished,
   myDepartmentIds,
-  disclosures,
+  review,
 }: {
-  disclosures?: Disclosure[];
+  review?: { disclosures: Disclosure[]; listed: boolean; year: number };
   meetingId: string;
   items: AgendaItem[];
   documents: Doc[];
@@ -93,14 +93,7 @@ export function AgendaTab({
                 </p>
               )}
               {item.description && <p className="whitespace-pre-line text-sm leading-7">{item.description}</p>}
-              {disclosures && reviewItem(item, disclosures).length > 0 && (
-                <details className="text-sm">
-                  <summary className="w-fit cursor-pointer text-brass">ملاحظات نظامية ({reviewItem(item, disclosures).length})</summary>
-                  <div className="mt-2">
-                    <ItemFindings findings={reviewItem(item, disclosures)} />
-                  </div>
-                </details>
-              )}
+              {review && <ItemNotes findings={reviewItem(item, review)} />}
             </>
           );
 
@@ -197,5 +190,17 @@ export function AgendaTab({
         </section>
       )}
     </div>
+  );
+}
+
+function ItemNotes({ findings }: { findings: ReturnType<typeof reviewItem> }) {
+  if (!findings.length) return null;
+  return (
+    <details className="text-sm">
+      <summary className="w-fit cursor-pointer text-brass">ملاحظات نظامية ({findings.length})</summary>
+      <div className="mt-2">
+        <ItemFindings findings={findings} />
+      </div>
+    </details>
   );
 }
