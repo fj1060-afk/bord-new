@@ -58,7 +58,7 @@ const RULES: { when: string[]; finding: Finding }[] = [
   },
 ];
 
-const DECISION_VERBS = ["اعتماد", "الموافقه", "الموافقه علي", "تعيين", "اقرار", "التوصيه", "ترشيح", "تشكيل", "تفويض", "المصادقه", "منح", "انهاء", "تجديد", "اختيار", "انتخاب", "تحديد", "صرف", "الغاء", "تعديل", "اصدار"];
+const DECISION_VERBS = ["التصويت", "اعتماد", "الموافقه", "الموافقه علي", "تعيين", "اقرار", "التوصيه", "ترشيح", "تشكيل", "تفويض", "المصادقه", "منح", "انهاء", "تجديد", "اختيار", "انتخاب", "تحديد", "صرف", "الغاء", "تعديل", "اصدار"];
 
 // Items about a financial or reporting period must name it (year, quarter or period end).
 const PERIODIC = ["القوائم الماليه", "البيانات الماليه", "الميزانيه", "الموازنه", "الحسابات الختاميه", "التقرير السنوي", "تقرير مجلس الاداره", "الخطه السنويه", "توزيع الارباح", "الارباح المرحليه", "النتائج الماليه"];
@@ -75,7 +75,7 @@ export function reviewItem(item: ItemDraft, disclosures: Disclosure[] = [], year
   const base = withPhraseFixes(item.title.trim());
   const title = fold(base);
   const verbless = item.kind === "decision" && !DECISION_VERBS.some((v) => title.startsWith(fold(v)));
-  const verb = verbless ? "اعتماد " : "";
+  const verb = verbless ? "التصويت على اعتماد " : "";
   const fullPeriod = `للسنة المالية المنتهية في 31 ديسمبر ${year}`;
   const findings: Finding[] = [];
   if (DANGLING.test(title)) {
@@ -95,7 +95,7 @@ export function reviewItem(item: ItemDraft, disclosures: Disclosure[] = [], year
   for (const r of RULES) if (has(text, r.when)) findings.push(r.finding);
   if (item.kind === "decision") {
     // The completed-title suggestions above already start with a verb.
-    if (verbless && !findings.some((f) => f.fixes)) findings.push({ level: "tip", text: "صُغ بند القرار بفعل واضح.", fixes: [`اعتماد ${base}`, `الموافقة على ${base}`] });
+    if (verbless && !findings.some((f) => f.fixes)) findings.push({ level: "tip", text: "صُغ بند القرار بفعل واضح.", fixes: [`التصويت على اعتماد ${base}`, `التصويت على ${base}`] });
     if (!item.description?.trim()) findings.push({ level: "tip", text: "أضف وصفاً يبيّن المطلوب من المجلس وأثر القرار." });
   }
   return findings;

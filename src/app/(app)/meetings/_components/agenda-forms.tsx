@@ -6,6 +6,7 @@ import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
 import { byDepartment, ownerOf, type Target } from "./agenda-targets";
 import { ItemReviewPanel } from "./item-review-panel";
+import { suggestTitles, type TitleSuggestion } from "@/lib/item-templates";
 
 function TargetSelect({ name, targets, defaultValue, required, placeholder }: { name: string; targets: Target[]; defaultValue?: string; required?: boolean; placeholder: string }) {
   return (
@@ -74,6 +75,36 @@ function OwnerField({ targets, item }: { targets: Target[]; item?: AgendaItem })
   );
 }
 
+/** Title input that offers standard wordings as you type; picking one also sets the item's purpose. */
+function TitleField({ defaultValue }: { defaultValue?: string }) {
+  const [typed, setTyped] = useState("");
+  const ref = useRef<HTMLInputElement>(null);
+  const suggestions = typed ? suggestTitles(typed) : [];
+  const pick = (s: TitleSuggestion) => {
+    const input = ref.current;
+    if (!input) return;
+    input.value = s.title;
+    const kind = input.form?.elements.namedItem("kind") as HTMLSelectElement | null;
+    if (kind) kind.value = s.kind;
+    setTyped("");
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <input ref={ref} name="title" spellCheck lang="ar" defaultValue={defaultValue} required autoComplete="off" onInput={(e) => setTyped(e.currentTarget.value)} className={inputClass} />
+      {suggestions.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-ink-muted">صيغ مقترحة:</span>
+          {suggestions.map((s) => (
+            <button key={s.title} type="button" onClick={() => pick(s)} className="rounded-md border border-primary px-2 py-1 text-start text-sm text-primary hover:bg-primary-soft">
+              {s.title}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export type AgendaItem = {
   id: string;
   position: number;
@@ -100,7 +131,7 @@ export function AgendaItemForm({ meetingId, item, targets, onDone }: { meetingId
     <form ref={ref} action={action} className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <Field label="عنوان البند">
-          <input name="title" spellCheck lang="ar" defaultValue={item?.title} required className={inputClass} />
+          <TitleField defaultValue={item?.title} />
           <EnglishField name="title_en" defaultValue={item?.title_en} />
         </Field>
       </div>
