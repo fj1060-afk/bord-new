@@ -1,0 +1,83 @@
+// The meeting journey: four stages, each with checks that gate the next one.
+// "block" checks must pass; "warn" checks pass with a written reason
+// (an override); "info" never blocks.
+
+import type { CompanyType } from "./company";
+
+export const STAGES = [
+  { n: 1, title: "التحضير", tabs: ["overview", "agenda", "invitees"] },
+  { n: 2, title: "الدعوة", tabs: ["overview", "agenda"] },
+  { n: 3, title: "الانعقاد", tabs: ["live"] },
+  { n: 4, title: "المحضر والمتابعة", tabs: ["minutes"] },
+] as const;
+
+export type Level = "block" | "warn" | "info";
+export type Check = { id: string; stage: 1 | 2 | 3 | 4; label: string; ok: boolean; level: Level; ref?: string; detail?: string; tab: string; overridden?: string };
+
+export type JourneyInput = {
+  today: string;
+  companyType: CompanyType;
+  inviteDays: number;
+  isBoard: boolean;
+  boardTermEnd: string | null;
+  secretary: boolean;
+  meeting: { status: string; live_status: string; starts_at: string; mode: string; location: string | null; virtual_link: string | null; pack_published_at: string | null; meeting_type: string };
+  items: { title: string; kind: string; owned: boolean }[];
+  requests: { title: string; status: string }[];
+  invitedMembers: number;
+  quorumNeeded: number;
+  minutes: { status: string; gaps: string[] } | null;
+  unratifiedCirculars: number;
+  resolutionsWithoutTasks: number;
+  overrides: Record<string, string>;
+};
+
+const day = (iso: string) => new Date(new Date(iso).getTime() + 3 * 3600000).toISOString().slice(0, 10);
+
+export function journeyChecks(j: JourneyInput): Check[] {
+  const listed = j.companyType === "listed_jsc";
+  const jsc = listed || j.companyType === "unlisted_jsc";
+  const m = j.meeting;
+  const pending = j.requests.filter((r) => r.status !== "accepted");
+  const notice = m.pack_published_at ? Math.floor((Date.parse(m.starts_at) - Date.parse(m.pack_published_at)) / 86400000) : null;
+  const unowned = j.items.filter((i) => i.kind === "decision" && !i.owned);
+  const checks: Check[] = [
+    { id: "details", stage: 1, tab: "overview", label: "بيانات الاجتماع: التاريخ والوقت والمكان أو الرابط", level: "block", ok: !!m.starts_at && (m.mode === "virtual" ? !!m.virtual_link : !!m.location) && (m.mode === "in_person" || !!m.virtual_link) },
+    ...(j.isBoard ? [{ id: "term", stage: 1 as const, tab: "overview", label: "دورة المجلس سارية في تاريخ الاجتماع", level: (jsc ? "block" : "warn") as Level, ref: "نظام الشركات م68", ok: !!j.boardTermEnd && day(m.starts_at) <= j.boardTermEnd }] : []),
+    ...(j.isBoard ? [{ id: "secretary", stage: 1 as const, tab: "overview", label: "أمين سر المجلس معيّن", level: "warn" as Level, ref: "نظام الشركات م78/4", ok: j.secretary }] : []),
+    { id: "items", stage: 1, tab: "agenda", label: "جدول الأعمال: بند واحد على الأقل", level: "block", ok: j.items.length > 0, detail: `${j.items.length} بند` },
+    { id: "owners", stage: 1, tab: "agenda", label: "كل بند للقرار له مسؤول", level: "block", ok: unowned.length === 0, detail: unowned.length ? `بلا مسؤول: ${unowned.map((i) => i.title).join("، ")}` : undefined },
+    { id: "docs", stage: 1, tab: "agenda", label: "المستندات المطلوبة مسلّمة ومعتمدة", level: "warn", ok: pending.length === 0, detail: pending.length ? `بانتظار: ${pending.map((r) => r.title).join("، ")}` : undefined },
+    { id: "quorum-possible", stage: 1, tab: "invitees", label: "الأعضاء المدعوون يكفون لاكتمال النصاب", level: "block", ref: "نظام الشركات م80/2", ok: j.invitedMembers >= j.quorumNeeded, detail: `مدعوون ${j.invitedMembers}، والنصاب ${j.quorumNeeded}` },
+    { id: "scheduled", stage: 2, tab: "overview", label: "اعتماد موعد الاجتماع", level: "block", ok: m.status === "scheduled" },
+    { id: "pack", stage: 2, tab: "overview", label: "نشر حزمة المجلس (جدول الأعمال والمستندات) للأعضاء", level: "block", ref: "لائحة الحوكمة م30/ج", ok: !!m.pack_published_at },
+    {
+      id: "notice",
+      stage: 2,
+      tab: "overview",
+      label: `الدعوة قبل الاجتماع بـ ${j.inviteDays} أيام على الأقل`,
+      level: m.meeting_type === "extraordinary" ? "info" : listed ? "warn" : "info",
+      ref: "لائحة الحوكمة م30/ج",
+      ok: notice !== null && notice >= j.inviteDays,
+      detail: notice === null ? "لم تُنشر الحزمة بعد" : `نُشرت قبل ${notice} أيام${m.meeting_type === "extraordinary" ? " (اجتماع استثنائي)" : ""}`,
+    },
+    { id: "held", stage: 3, tab: "live", label: "عقد الاجتماع بنصاب مكتمل وإنهاؤه", level: "block", ref: "نظام الشركات م80/2", ok: m.live_status === "ended", detail: m.live_status === "ended" ? undefined : day(m.starts_at) > j.today ? "يُفتح يوم الاجتماع" : "سجّل الحضور وابدأ الاجتماع" },
+    { id: "minutes", stage: 4, tab: "minutes", label: "إعداد المحضر", level: "block", ok: !!j.minutes },
+    { id: "minutes-complete", stage: 4, tab: "minutes", label: "المحضر مكتمل (الحد الأدنى، والأصوات، والتوقيع)", level: "block", ref: "دليل أمين السر؛ نظام الشركات م83", ok: !!j.minutes && j.minutes.gaps.length === 0, detail: j.minutes?.gaps.join(" ") || undefined },
+    { id: "approved", stage: 4, tab: "minutes", label: "توقيع المحضر واعتماده", level: "block", ref: "نظام الشركات م83", ok: j.minutes?.status === "approved" },
+    { id: "circulars", stage: 4, tab: "minutes", label: "إثبات القرارات الصادرة بالتمرير", level: "warn", ref: "نظام الشركات م82", ok: j.unratifiedCirculars === 0, detail: j.unratifiedCirculars ? `${j.unratifiedCirculars} قرار بانتظار الإثبات` : undefined },
+    { id: "tasks", stage: 4, tab: "minutes", label: "مهام تنفيذ لكل قرار", level: "info", ok: j.resolutionsWithoutTasks === 0, detail: j.resolutionsWithoutTasks ? `${j.resolutionsWithoutTasks} قرار بلا مهام` : undefined },
+  ];
+  return checks.map((c) => (j.overrides[c.id] && !c.ok ? { ...c, overridden: j.overrides[c.id] } : c));
+}
+
+/** A check stands in the way when it must pass and has not (warnings can be overridden with a reason). */
+export const blocking = (c: Check) => !c.ok && (c.level === "block" || (c.level === "warn" && !c.overridden));
+
+/** The stage the meeting is in: the first with an unmet check (4 when everything is done). */
+export function currentStage(checks: Check[]): 1 | 2 | 3 | 4 {
+  for (const n of [1, 2, 3, 4] as const) if (checks.some((c) => c.stage === n && blocking(c))) return n;
+  return 4;
+}
+
+export const stageDone = (checks: Check[], n: number) => !checks.some((c) => c.stage === n && blocking(c));

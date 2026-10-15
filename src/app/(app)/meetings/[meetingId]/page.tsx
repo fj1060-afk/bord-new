@@ -13,6 +13,9 @@ import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
 import { InfoRequests } from "../_components/info-requests";
 import { PrintDocs } from "../_components/print-docs";
+import { JourneyBar } from "../_components/journey-bar";
+import { loadJourney } from "../_actions/journey-data";
+import { currentStage, stageDone, STAGES } from "@/lib/journey";
 import { DocIntroForm } from "../_components/doc-intro-form";
 import { InviteesTab } from "../_components/invitees-tab";
 import { LiveTab, type LiveData } from "../_components/live-tab";
@@ -30,10 +33,16 @@ const TABS = { overview: "نظرة عامة", agenda: "الأجندة والمس
 export default async function MeetingPage({ params, searchParams }: PageProps<"/meetings/[meetingId]">) {
   const viewer = await requirePage("/meetings");
   const { meetingId } = await params;
-  const { tab: rawTab } = (await searchParams) as { tab?: string };
-  const tab = rawTab && rawTab in TABS ? (rawTab as keyof typeof TABS) : "overview";
+  const { tab: rawTab, stage: rawStage } = (await searchParams) as { tab?: string; stage?: string };
   const organizer = can(viewer.permissions, "/meetings", LEVELS.edit);
   const supabase = await createClient();
+  // Organizers follow the journey: four stages, each showing its own tabs.
+  const checks = organizer ? await loadJourney(supabase, meetingId) : null;
+  const current = checks ? currentStage(checks) : 4;
+  const tabStage = rawTab && !rawStage ? [...STAGES].reverse().find((s) => s.n <= current && (s.tabs as readonly string[]).includes(rawTab))?.n : undefined;
+  const view = Math.min(Math.max(Number(rawStage) || tabStage || current, 1), current);
+  const visible = (checks ? STAGES[view - 1].tabs : Object.keys(TABS)) as readonly (keyof typeof TABS)[];
+  const tab = rawTab && visible.includes(rawTab as keyof typeof TABS) ? (rawTab as keyof typeof TABS) : visible[0];
 
   const { data: meeting } = await supabase
     .from("meetings")
@@ -42,14 +51,15 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
     .maybeSingle();
   if (!meeting) notFound();
 
+  const [{ data: users }, profileDays] = tab === "agenda" && organizer ? await Promise.all([supabase.rpc("list_active_users"), companyProfile(supabase).then((p) => p?.invite_days)]) : [{ data: [] }, 5];
   const { data: minutesRow } = tab === "overview" ? await supabase.from("minutes").select("id").eq("meeting_id", meetingId).maybeSingle() : { data: null };
   const [{ data: items }, { data: invitees }, { data: documents }, { data: docRequests }, { data: departments }] = await Promise.all([
-    supabase.from("agenda_items").select("id, position, title, title_en, description, kind, duration_minutes, presenter, department_id, status, outcome").eq("meeting_id", meetingId).order("position"),
+    supabase.from("agenda_items").select("id, position, title, title_en, description, kind, duration_minutes, presenter, department_id, owner_user_id, status, outcome").eq("meeting_id", meetingId).order("position"),
     supabase.from("meeting_invitees").select("person_id, kind, rsvp, rsvp_note, person:people(full_name, user_id)").eq("meeting_id", meetingId),
     supabase.from("meeting_documents").select("id, title, file_name, size_bytes, agenda_item_id, document_request_id, created_at").eq("meeting_id", meetingId).order("created_at"),
     supabase
       .from("document_requests")
-      .select("id, agenda_item_id, department_id, title, due_date, status, review_note, department:departments(name), agenda_item:agenda_items!inner(meeting_id)")
+      .select("id, agenda_item_id, department_id, assignee_user_id, title, due_date, status, review_note, department:departments(name), agenda_item:agenda_items!inner(meeting_id)")
       .eq("agenda_item.meeting_id", meetingId)
       .order("created_at"),
     supabase.from("departments").select("id, name").eq("status", "active").order("name"),
@@ -59,7 +69,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   const people = organizer ? (await supabase.from("people").select("id, full_name").order("full_name")).data ?? [] : [];
 
   const agenda = (items ?? []) as AgendaItem[];
-  const inviteeRows = (invitees ?? []) as unknown as { person_id: string; kind: string; rsvp: string; rsvp_note: string | null; person: { full_name: string; user_id: string | null } }[];
+  const inviteeRows = ((invitees ?? []) as unknown as { person_id: string; kind: string; rsvp: string; rsvp_note: string | null; person: { full_name: string; user_id: string | null } }[]).filter((i) => i.person); // contributors may not see people
   const mine = inviteeRows.find((i) => i.person.user_id === viewer.id);
   const rsvp = rsvpSummary(inviteeRows);
   const body = (meeting.board ?? meeting.committee) as { name: string } | null;
@@ -79,11 +89,13 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
         }
       />
 
+      {checks && <JourneyBar meetingId={meetingId} checks={checks} current={current} view={view} />}
+
       <nav className="mb-6 flex gap-1 overflow-x-auto border-b border-rule text-sm" aria-label="أقسام الاجتماع">
-        {Object.entries(TABS).map(([key, label]) => (
+        {visible.map((key) => [key, TABS[key]] as const).map(([key, label]) => (
           <Link
             key={key}
-            href={`/meetings/${meetingId}?tab=${key}`}
+            href={`/meetings/${meetingId}?${checks ? `stage=${view}&` : ""}tab=${key}`}
             aria-current={tab === key ? "page" : undefined}
             className={clsx("whitespace-nowrap border-b-2 px-4 py-2.5", tab === key ? "border-brass font-medium text-ink" : "border-transparent text-ink-muted hover:text-ink")}
           >
@@ -138,7 +150,9 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
               {status === "draft" && (
                 <>
                   <p className="text-ink-muted">المسودة لا يراها إلا المنظمون. اعتمد الموعد لتظهر الدعوة للأعضاء ويردّوا عليها.</p>
-                  <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "scheduled")} label="اعتماد الموعد وإرسال الدعوة" variant="secondary" confirm="اعتماد الموعد وإظهار الدعوة للمدعوين؟" />
+                  {checks && !stageDone(checks, 1) ? (
+                    <p className="rounded-md bg-brass-soft px-3 py-2 text-xs text-brass">أكمل شروط مرحلة التحضير أولاً.</p>
+                  ) : <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "scheduled")} label="اعتماد الموعد وإرسال الدعوة" variant="secondary" confirm="اعتماد الموعد وإظهار الدعوة للمدعوين؟" />}
                 </>
               )}
               {status === "scheduled" && (
@@ -171,7 +185,12 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           items={agenda}
           documents={documents ?? []}
           docRequests={(docRequests ?? []) as never}
-          departments={departments ?? []}
+          targets={[
+            ...(departments ?? []).map((d) => ({ value: `department:${d.id}`, label: d.name, group: "department" as const })),
+            ...((users ?? []) as { id: string; full_name: string; email: string }[]).map((u) => ({ value: `user:${u.id}`, label: u.full_name || u.email, group: "user" as const })),
+          ]}
+          viewerId={viewer.id}
+          dueDefault={new Date(Date.parse(meeting.starts_at) - ((profileDays ?? 5) + 2) * 86400000).toISOString().slice(0, 10)}
           editable={editable}
           packPublished={Boolean(meeting.pack_published_at)}
           myDepartmentIds={(delegations ?? []).map((d) => d.department_id)}

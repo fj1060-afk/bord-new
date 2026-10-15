@@ -4,13 +4,15 @@ import { buttonClass } from "@/components/ui/styles";
 import { DOC_REQUEST_STATUS, ITEM_KINDS } from "@/lib/meetings";
 import { moveAgendaItem, removeAgendaItem } from "../_actions/agenda";
 import { AgendaItemForm, DocumentRequestForm, EditableAgendaItem, ReviewDocumentButtons, type AgendaItem } from "./agenda-forms";
+import { ownerOf, type Target } from "./agenda-targets";
 import { UploadDocument } from "./upload-document";
 
 type Doc = { id: string; title: string; file_name: string; size_bytes: number | null; agenda_item_id: string | null; document_request_id: string | null };
 type DocRequest = {
   id: string;
   agenda_item_id: string;
-  department_id: string;
+  department_id: string | null;
+  assignee_user_id: string | null;
   title: string;
   due_date: string | null;
   status: keyof typeof DOC_REQUEST_STATUS;
@@ -33,7 +35,9 @@ export function AgendaTab({
   items,
   documents,
   docRequests,
-  departments,
+  targets,
+  viewerId,
+  dueDefault,
   editable,
   packPublished,
   myDepartmentIds,
@@ -42,12 +46,16 @@ export function AgendaTab({
   items: AgendaItem[];
   documents: Doc[];
   docRequests: DocRequest[];
-  departments: { id: string; name: string }[];
+  targets: Target[];
+  viewerId: string;
+  dueDefault?: string;
   editable: boolean;
   packPublished: boolean;
   myDepartmentIds: string[];
 }) {
   const general = documents.filter((d) => !d.agenda_item_id);
+  const targetName = (userId: string | null) => targets.find((t) => t.value === `user:${userId}`)?.label ?? "—";
+  const ownerLabel = (item: AgendaItem) => targets.find((t) => t.value === ownerOf(item))?.label;
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,7 +81,13 @@ export function AgendaTab({
                 <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">{ITEM_KINDS[item.kind]}</span>
                 {item.duration_minutes && <span className="text-xs text-ink-muted">{item.duration_minutes} دقيقة</span>}
               </div>
-              {item.presenter && <p className="text-sm text-ink-muted">يقدّمه: {item.presenter}</p>}
+              {(ownerLabel(item) || item.presenter) && (
+                <p className="text-sm text-ink-muted">
+                  {ownerLabel(item) && <>المسؤول: <strong className="text-ink">{ownerLabel(item)}</strong></>}
+                  {ownerLabel(item) && item.presenter && " · "}
+                  {item.presenter && <>يقدّمه: {item.presenter}</>}
+                </p>
+              )}
               {item.description && <p className="whitespace-pre-line text-sm leading-7">{item.description}</p>}
             </>
           );
@@ -83,7 +97,7 @@ export function AgendaTab({
               <div className="flex gap-3">
                 <div className="min-w-0 flex-1">
                   {editable ? (
-                    <EditableAgendaItem meetingId={meetingId} item={item} departments={departments}>
+                    <EditableAgendaItem meetingId={meetingId} item={item} targets={targets}>
                       {content}
                     </EditableAgendaItem>
                   ) : (
@@ -115,7 +129,7 @@ export function AgendaTab({
                     <div key={r.id} className="flex flex-col gap-2 rounded-md bg-paper p-3 text-sm">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="min-w-0 flex-1">
-                          مطلوب من {r.department?.name}: <strong>{r.title}</strong>
+                          مطلوب من {r.department?.name ?? (r.assignee_user_id === viewerId ? "حضرتك" : targetName(r.assignee_user_id))}: <strong>{r.title}</strong>
                           {r.due_date && <span className="text-ink-muted"> · حتى {r.due_date}</span>}
                         </span>
                         <span className={r.status === "accepted" ? "text-primary" : r.status === "returned" ? "text-danger" : "text-brass"}>
@@ -124,7 +138,7 @@ export function AgendaTab({
                         {editable && r.status === "submitted" && <ReviewDocumentButtons meetingId={meetingId} requestId={r.id} />}
                       </div>
                       {r.review_note && <p className="text-danger">ملاحظة: {r.review_note}</p>}
-                      {(r.status === "requested" || r.status === "returned") && (editable || myDepartmentIds.includes(r.department_id)) && (
+                      {(r.status === "requested" || r.status === "returned") && (editable || r.assignee_user_id === viewerId || (!!r.department_id && myDepartmentIds.includes(r.department_id))) && (
                         <UploadDocument meetingId={meetingId} agendaItemId={item.id} documentRequestId={r.id} label="تسليم المستند" />
                       )}
                     </div>
@@ -132,7 +146,7 @@ export function AgendaTab({
                   {editable && (
                     <>
                       <UploadDocument meetingId={meetingId} agendaItemId={item.id} />
-                      <DocumentRequestForm meetingId={meetingId} itemId={item.id} departments={departments} />
+                      <DocumentRequestForm meetingId={meetingId} itemId={item.id} targets={targets} owner={ownerOf(item)} dueDate={dueDefault} />
                       <div>
                         <ConfirmButton action={removeAgendaItem.bind(null, meetingId, item.id)} label="حذف البند" confirm={`حذف البند "${item.title}"؟`} />
                       </div>
@@ -149,7 +163,7 @@ export function AgendaTab({
         <details className="rounded-lg border border-rule bg-surface">
           <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة بند</summary>
           <div className="border-t border-rule p-5">
-            <AgendaItemForm meetingId={meetingId} departments={departments} />
+            <AgendaItemForm meetingId={meetingId} targets={targets} />
           </div>
         </details>
       )}

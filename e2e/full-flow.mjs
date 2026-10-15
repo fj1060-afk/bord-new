@@ -33,6 +33,19 @@ async function step(name, fn) {
 const go = (path) => page.goto(base + path, { waitUntil: "networkidle" });
 const status = async (text) => page.getByRole("status").filter({ hasText: text }).first().waitFor({ timeout: 20000 });
 
+/** Passes the journey's warning-level checks with a reason, as a secretary would. */
+async function passWarnings() {
+  for (let i = 0; i < 6 && (await page.locator("summary:has-text('تجاوز بسبب')").count()); i++) {
+    const s = page.locator("summary:has-text('تجاوز بسبب')").first();
+    await s.click();
+    const form = page.locator("details[open]:has(> summary:has-text('تجاوز بسبب')) form").first();
+    await form.locator("input[name=reason]").fill("اختبار آلي");
+    await form.locator("button:has-text('تسجيل')").click();
+    await page.waitForLoadState("networkidle");
+    await page.reload({ waitUntil: "networkidle" });
+  }
+}
+
 await step("تسجيل الدخول", async () => {
   await go("/login");
   await page.fill("input[name=email]", process.env.E2E_EMAIL);
@@ -107,6 +120,7 @@ await step("إضافة بند للأجندة", async () => {
   await page.click("summary:has-text('إضافة بند')");
   await page.fill("form:has(button:has-text('إضافة البند')) input[name=title]", "اعتماد الميزانية");
   await page.selectOption("form:has(button:has-text('إضافة البند')) select[name=kind]", "decision");
+  await page.selectOption("form:has(button:has-text('إضافة البند')) select[name=owner]", { label: `إدارة اختبار ${stamp}` });
   await page.click("button:has-text('إضافة البند')");
   await status("أُضيف البند");
 });
@@ -121,21 +135,24 @@ await step("رفع مستند على البند", async () => {
 });
 
 await step("طلب مستند من الإدارة", async () => {
-  await page.click("summary:has-text('طلب مستند من إدارة')");
+  await page.click("summary:has-text('طلب مستند داعم من المسؤول')");
   // Scope to the request form: the hidden "add item" form has a department select too.
   const request = page.locator("form:has(button:has-text('إرسال الطلب'))").first();
   await request.locator("input[placeholder='المستند المطلوب']").fill("تقرير الربع الثالث");
-  await request.locator("select[name=department_id]").selectOption({ label: `إدارة اختبار ${stamp}` });
+  await request.locator("select[name=target]").selectOption({ label: `إدارة اختبار ${stamp}` });
   await page.click("button:has-text('إرسال الطلب')");
   await status("أُرسل طلب المستند");
 });
 
 await step("اعتماد الموعد ونشر الحزمة", async () => {
   await page.goto(meetingUrl, { waitUntil: "networkidle" });
+  await passWarnings();
   await page.click("button:has-text('اعتماد الموعد')");
   await page.getByText("مُجدول").first().waitFor({ timeout: 20000 });
   await page.click("button:has-text('نشر حزمة المجلس')");
-  await page.getByText("سحب حزمة المجلس").waitFor({ timeout: 20000 });
+  await page.waitForLoadState("networkidle");
+  await page.reload({ waitUntil: "networkidle" });
+  await passWarnings();
 });
 
 await step("فتح المستند المرفوع", async () => {

@@ -8,6 +8,8 @@ import { isOneOf } from "@/lib/org";
 import { MEETING_MODES, MEETING_TYPES, riyadhTimestamp } from "@/lib/meetings";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { stageDone } from "@/lib/journey";
+import { loadJourney } from "./journey-data";
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim() || null;
 
@@ -83,6 +85,7 @@ export async function updateMeeting(meetingId: string, _prev: ActionState, form:
 export async function setMeetingStatus(meetingId: string, status: "draft" | "scheduled" | "cancelled") {
   await requirePage("/meetings", status === "cancelled" ? LEVELS.manage : LEVELS.edit);
   const supabase = await createClient();
+  if (status === "scheduled") await requireStage(supabase, meetingId, 1);
   const { error } = await supabase.from("meetings").update({ status }).eq("id", meetingId);
   if (error) throw new Error("Could not update meeting status");
   revalidatePath(`/meetings/${meetingId}`);
@@ -93,6 +96,7 @@ export async function setMeetingStatus(meetingId: string, status: "draft" | "sch
 export async function setPackPublished(meetingId: string, published: boolean) {
   await requirePage("/meetings", LEVELS.edit);
   const supabase = await createClient();
+  if (published) await requireStage(supabase, meetingId, 1);
   const { error } = await supabase
     .from("meetings")
     .update({ pack_published_at: published ? new Date().toISOString() : null })
@@ -132,4 +136,10 @@ export async function respondRsvp(meetingId: string, _prev: ActionState, form: F
   if (error) return { ok: false, message: "تعذّر حفظ ردك." };
   revalidatePath(`/meetings/${meetingId}`);
   return { ok: true, message: "حُفظ ردك على الدعوة." };
+}
+
+/** Refuses to move on while a stage still has unmet checks (the journey's server-side guard). */
+async function requireStage(supabase: Awaited<ReturnType<typeof createClient>>, meetingId: string, stage: number) {
+  const checks = await loadJourney(supabase, meetingId);
+  if (checks && !stageDone(checks, stage)) throw new Error(`Stage ${stage} is not complete`);
 }

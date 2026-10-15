@@ -25,7 +25,7 @@ function readItem(form: FormData) {
       duration_minutes: duration,
       description: text(form, "description"),
       presenter: text(form, "presenter"),
-      department_id: text(form, "department_id"),
+      ...ownerColumns(text(form, "owner")),
     },
   };
 }
@@ -77,15 +77,15 @@ export async function removeAgendaItem(meetingId: string, itemId: string) {
 export async function requestDocument(meetingId: string, itemId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   await requirePage("/meetings", LEVELS.edit);
   const title = text(form, "title");
-  const departmentId = text(form, "department_id");
-  if (!title || !departmentId) return { ok: false, message: "حدد المستند والإدارة المطلوب منها." };
+  const target = ownerColumns(text(form, "target"));
+  if (!title || (!target.department_id && !target.owner_user_id)) return { ok: false, message: "حدد المستند والمطلوب منه." };
   const supabase = await createClient();
   const { error } = await supabase
     .from("document_requests")
-    .insert({ agenda_item_id: itemId, department_id: departmentId, title, due_date: text(form, "due_date") });
+    .insert({ agenda_item_id: itemId, department_id: target.department_id, assignee_user_id: target.owner_user_id, title, due_date: text(form, "due_date") });
   if (error) return { ok: false, message: "تعذّر إرسال الطلب." };
   revalidatePath(`/meetings/${meetingId}`);
-  return { ok: true, message: "أُرسل طلب المستند للإدارة." };
+  return { ok: true, message: "أُرسل طلب المستند." };
 }
 
 export async function reviewDocumentRequest(meetingId: string, requestId: string, decision: "accepted" | "returned", note?: string) {
@@ -97,4 +97,10 @@ export async function reviewDocumentRequest(meetingId: string, requestId: string
     .eq("id", requestId);
   if (error) throw new Error("Could not review request");
   revalidatePath(`/meetings/${meetingId}`);
+}
+
+/** "department:<id>" or "user:<id>" from a target select, as table columns. */
+function ownerColumns(value: string | null) {
+  const [kind, id] = (value ?? "").split(":");
+  return { department_id: kind === "department" && id ? id : null, owner_user_id: kind === "user" && id ? id : null };
 }

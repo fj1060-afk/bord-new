@@ -4,8 +4,25 @@ import { useActionState, useState, useTransition } from "react";
 import { EnglishField, buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
+import { ownerOf, type Target } from "./agenda-targets";
 
-type Option = { id: string; name: string };
+function TargetSelect({ name, targets, defaultValue, required, placeholder }: { name: string; targets: Target[]; defaultValue?: string; required?: boolean; placeholder: string }) {
+  return (
+    <select name={name} defaultValue={defaultValue ?? ""} required={required} className={inputClass}>
+      <option value="">{placeholder}</option>
+      {(["department", "user"] as const).map((g) => (
+        <optgroup key={g} label={g === "department" ? "الإدارات" : "الأشخاص"}>
+          {targets.filter((t) => t.group === g).map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
+  );
+}
+
 export type AgendaItem = {
   id: string;
   position: number;
@@ -16,9 +33,10 @@ export type AgendaItem = {
   duration_minutes: number | null;
   presenter: string | null;
   department_id: string | null;
+  owner_user_id?: string | null;
 };
 
-export function AgendaItemForm({ meetingId, item, departments, onDone }: { meetingId: string; item?: AgendaItem; departments: Option[]; onDone?: () => void }) {
+export function AgendaItemForm({ meetingId, item, targets, onDone }: { meetingId: string; item?: AgendaItem; targets: Target[]; onDone?: () => void }) {
   const [state, action] = useActionState(async (prev: Parameters<typeof saveAgendaItem>[2], form: FormData) => {
     const result = await saveAgendaItem(meetingId, item?.id ?? null, prev, form);
     if (result?.ok) onDone?.();
@@ -48,15 +66,8 @@ export function AgendaItemForm({ meetingId, item, departments, onDone }: { meeti
       <Field label="مقدّم البند">
         <input name="presenter" defaultValue={item?.presenter ?? ""} className={inputClass} />
       </Field>
-      <Field label="الإدارة المعنية">
-        <select name="department_id" defaultValue={item?.department_id ?? ""} className={inputClass}>
-          <option value="">—</option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
+      <Field label="المسؤول عن البند" hint="إلزامي لبنود القرار؛ تُرسل إليه طلبات المستندات.">
+        <TargetSelect name="owner" targets={targets} defaultValue={item ? ownerOf(item) : ""} placeholder="—" />
       </Field>
       <div className="sm:col-span-2">
         <Field label="الوصف">
@@ -73,12 +84,12 @@ export function AgendaItemForm({ meetingId, item, departments, onDone }: { meeti
   );
 }
 
-export function EditableAgendaItem({ meetingId, item, departments, children }: { meetingId: string; item: AgendaItem; departments: Option[]; children: React.ReactNode }) {
+export function EditableAgendaItem({ meetingId, item, targets, children }: { meetingId: string; item: AgendaItem; targets: Target[]; children: React.ReactNode }) {
   const [editing, setEditing] = useState(false);
   if (editing) {
     return (
       <div className="flex flex-col gap-3">
-        <AgendaItemForm meetingId={meetingId} item={item} departments={departments} onDone={() => setEditing(false)} />
+        <AgendaItemForm meetingId={meetingId} item={item} targets={targets} onDone={() => setEditing(false)} />
         <button type="button" onClick={() => setEditing(false)} className="w-fit text-sm text-ink-muted hover:underline">
           إلغاء
         </button>
@@ -95,24 +106,15 @@ export function EditableAgendaItem({ meetingId, item, departments, children }: {
   );
 }
 
-export function DocumentRequestForm({ meetingId, itemId, departments }: { meetingId: string; itemId: string; departments: Option[] }) {
+export function DocumentRequestForm({ meetingId, itemId, targets, owner, dueDate }: { meetingId: string; itemId: string; targets: Target[]; owner: string; dueDate?: string }) {
   const [state, action] = useActionState(requestDocument.bind(null, meetingId, itemId), null);
   return (
     <details>
-      <summary className="cursor-pointer text-sm text-primary">طلب مستند من إدارة</summary>
+      <summary className="cursor-pointer text-sm text-primary">طلب مستند داعم من المسؤول</summary>
       <form action={action} className="mt-3 grid gap-3 sm:grid-cols-3">
         <input name="title" placeholder="المستند المطلوب" required className={inputClass} />
-        <select name="department_id" required defaultValue="" className={inputClass}>
-          <option value="" disabled>
-            الإدارة
-          </option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
-        <input name="due_date" type="date" aria-label="آخر موعد" className={inputClass} />
+        <TargetSelect name="target" targets={targets} defaultValue={owner} required placeholder="المطلوب منه" />
+        <input name="due_date" type="date" aria-label="آخر موعد" defaultValue={dueDate} className={inputClass} />
         <div className="flex flex-col gap-2 sm:col-span-3">
           <FormMessage state={state} />
           <SubmitButton variant="secondary" pendingLabel="…" className="w-fit">
