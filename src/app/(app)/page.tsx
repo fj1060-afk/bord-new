@@ -64,19 +64,23 @@ export default async function HomePage() {
       : Promise.resolve({ data: null }),
   ]);
 
-  // Minutes waiting for the viewer's own signature.
-  let toSign = 0;
-  for (const m of reviewMinutes ?? []) {
-    const [{ data: signers }, { data: signed }] = await Promise.all([
-      supabase.rpc("minutes_signers", { p_minutes: m.id }),
-      supabase.from("minutes_signatures").select("person_id").eq("minutes_id", m.id).eq("version", m.version).eq("person_id", viewer.personId!),
-    ]);
-    if ((signers ?? []).some((s: { person_id: string }) => s.person_id === viewer.personId) && !(signed ?? []).length) toSign++;
-  }
-
-  const { data: openCirculars } = await supabase.from("circular_resolutions").select("id, votes:circular_votes(person_id)").eq("status", "open");
+  // These are independent: run them together instead of one after another.
+  const [signStates, { data: openCirculars }, findings] = await Promise.all([
+    // Minutes waiting for the viewer's own signature.
+    Promise.all(
+      (reviewMinutes ?? []).map(async (m) => {
+        const [{ data: signers }, { data: signed }] = await Promise.all([
+          supabase.rpc("minutes_signers", { p_minutes: m.id }),
+          supabase.from("minutes_signatures").select("person_id").eq("minutes_id", m.id).eq("version", m.version).eq("person_id", viewer.personId!),
+        ]);
+        return (signers ?? []).some((s: { person_id: string }) => s.person_id === viewer.personId) && !(signed ?? []).length;
+      }),
+    ),
+    supabase.from("circular_resolutions").select("id, votes:circular_votes(person_id)").eq("status", "open"),
+    can(p, "/governance-office") ? complianceFindings(supabase) : Promise.resolve(null),
+  ]);
+  const toSign = signStates.filter(Boolean).length;
   const awaitingVote = (openCirculars ?? []).filter((c) => !c.votes.some((v) => v.person_id === viewer.personId)).length;
-  const findings = can(p, "/governance-office") ? await complianceFindings(supabase) : null;
   const violations = findings?.filter((f) => f.status === "violation").length ?? 0;
   const compliance = findings && score(findings);
   const mine = implementation(myTasks ?? [], today);
