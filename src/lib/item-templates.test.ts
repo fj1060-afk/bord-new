@@ -22,6 +22,11 @@ describe("suggestTitles", () => {
     expect(suggestTitles("أمين السر", oct2026)[0].title).toBe("التصويت على تعيين أمين سر مجلس الإدارة وتحديد مكافأته");
   });
 
+  it("covers resignations and committee chairs", () => {
+    expect(suggestTitles("تعيين عضو بدل عضو استقال", oct2026)[0].title).toContain("بدلاً من العضو المستقيل");
+    expect(suggestTitles("رئيس لجنة المراجعة", oct2026)[0].title).toBe("التصويت على تعيين (…) رئيساً للجنة المراجعة");
+  });
+
   it("stays quiet when nothing fits", () => {
     expect(suggestTitles("زيارة ميدانية للمصنع", oct2026)).toEqual([]);
   });
