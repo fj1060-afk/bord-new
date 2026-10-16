@@ -80,7 +80,7 @@ function OwnerField({ targets, item }: { targets: Target[]; item?: AgendaItem })
 function TitleField({ defaultValue, library, body }: { defaultValue?: string; library?: Template[]; body?: Body }) {
   const [typed, setTyped] = useState("");
   const ref = useRef<HTMLInputElement>(null);
-  const suggestions = typed ? suggestTitles(typed, new Date(), 5, library, body) : [];
+  const suggestions = typed ? suggestTitles(typed, 5, library, body) : [];
   const pick = (s: TitleSuggestion) => {
     const input = ref.current;
     if (!input) return;

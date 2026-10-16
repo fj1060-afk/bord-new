@@ -7,7 +7,7 @@ import { buildTemplates, type Body, type Kind, type Template } from "./item-temp
 export { BODIES, CATEGORIES, type Body, type Template } from "./item-templates-data";
 export type TitleSuggestion = { title: string; en?: string; kind: Kind; needs?: string };
 
-export const templates = (today = new Date()) => buildTemplates(today);
+export const templates = () => buildTemplates();
 
 const bareWord = (w: string) => w.replace(/^(وال|بال|فال|لل|ال|و|ب|ل)/, "");
 
@@ -41,8 +41,8 @@ export function searchTemplates<T extends Template>(input: string, list: T[], li
 }
 
 /** Up to `limit` titles for the item form, from the company's own items and the built-in ones; items for `body` rank first. */
-export function suggestTitles(input: string, today = new Date(), limit = 5, own: Template[] = [], body?: Body): TitleSuggestion[] {
-  return searchTemplates(input, [...own, ...templates(today)], limit, body).map(({ title, en, kind, needs }) => ({ title, kind, ...(en ? { en } : {}), ...(needs ? { needs } : {}) }));
+export function suggestTitles(input: string, limit = 5, own: Template[] = [], body?: Body): TitleSuggestion[] {
+  return searchTemplates(input, [...own, ...templates()], limit, body).map(({ title, en, kind, needs }) => ({ title, kind, ...(en ? { en } : {}), ...(needs ? { needs } : {}) }));
 }
 
 /** The library's meeting type for a board or a committee kind. */

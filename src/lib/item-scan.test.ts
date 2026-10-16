@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { scanItem } from "./item-scan";
 import { templates } from "./item-templates";
 
-const std = templates(new Date("2026-10-15T12:00:00+03:00"));
+const std = templates();
 
 describe("scanItem", () => {
   it("passes a well-formed item", () => {
