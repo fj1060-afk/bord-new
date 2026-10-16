@@ -28,12 +28,13 @@ export type SideBranch = { href: string; label: string; icon: LucideIcon; permis
 export type SideSection = { label: string; collapsible?: boolean; items: (SideLink | SideBranch)[] };
 
 /** The pages of the board, and of each committee under its own base. */
-const bodyPages = (base: string, dashboard: string, members: string): SideLink[] => [
+const bodyPages = (base: string, dashboard: string, members: string, body: string): SideLink[] => [
   { href: base, label: dashboard, icon: LayoutDashboard, permission: members },
   { href: `${base}/members`, label: "الأعضاء", icon: Users, permission: members },
   { href: `${base}/meetings`, label: "الاجتماعات", icon: CalendarDays, permission: "/meetings" },
   { href: `${base}/minutes`, label: "المحاضر", icon: ScrollText, permission: "/minutes" },
   { href: `${base}/resolutions`, label: "القرارات", icon: Gavel, permission: "/resolutions" },
+  { href: `/resolutions/circular?body=${body}`, label: "القرارات بالتمرير", icon: Send, permission: "/" },
   { href: `${base}/documents`, label: "المستندات", icon: FileText, permission: "/documents" },
 ];
 
@@ -52,14 +53,14 @@ export function buildSidebar(allowed: string[], committees: { id: string; name: 
     {
       label: "مجلس الإدارة",
       collapsible: true,
-      items: [...bodyPages("/board", "لوحة المجلس", "/board"), { href: "/resolutions/circular", label: "القرارات بالتمرير", icon: Send, permission: "/" }],
+      items: bodyPages("/board", "لوحة المجلس", "/board", "board"),
     },
     {
       label: "اللجان",
       collapsible: true,
       items: [
         { href: "/committees", label: "لوحة اللجان", icon: UsersRound, permission: "/committees" },
-        ...committees.map((c): SideBranch => ({ href: `/committees/${c.id}`, label: c.name, icon: Landmark, permission: "/committees", children: bodyPages(`/committees/${c.id}`, "لوحة اللجنة", "/committees") })),
+        ...committees.map((c): SideBranch => ({ href: `/committees/${c.id}`, label: c.name, icon: Landmark, permission: "/committees", children: bodyPages(`/committees/${c.id}`, "لوحة اللجنة", "/committees", `committee:${c.id}`) })),
       ],
     },
     {
@@ -89,10 +90,11 @@ export function buildSidebar(allowed: string[], committees: { id: string; name: 
 
 const links = (sections: SideSection[]) => sections.flatMap((s) => s.items.flatMap((i) => ("children" in i ? [i, ...i.children] : [i])));
 
-/** The link a pathname belongs to: an exact match, else the longest prefix ("/" only for itself). */
-export function activeLink(sections: SideSection[], pathname: string): string | undefined {
+/** The link a page belongs to: an exact match, else the longest prefix ("/" only for itself); links with a query match it exactly. */
+export function activeLink(sections: SideSection[], pathname: string, search = ""): string | undefined {
+  const full = search ? `${pathname}?${search}` : pathname;
   return links(sections)
     .map((l) => l.href)
-    .filter((href) => href === pathname || (href !== "/" && pathname.startsWith(`${href}/`)))
+    .filter((href) => (href.includes("?") ? href === full : href === pathname || (href !== "/" && pathname.startsWith(`${href}/`))))
     .sort((a, b) => b.length - a.length)[0];
 }

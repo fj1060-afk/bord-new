@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link, { useLinkStatus } from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { ChevronDown } from "lucide-react";
 import { activeLink, buildSidebar, type SideLink, type SideSection } from "@/config/sidebar";
@@ -38,8 +38,9 @@ function Item({ link, active, onNavigate, nested }: { link: SideLink; active: bo
 }
 
 function Section({ section, current, onNavigate }: { section: SideSection; current?: string; onNavigate?: (href: string) => void }) {
-  const inside = (href: string) => current === href || (current?.startsWith(`${href}/`) ?? false);
-  const holds = section.items.some((i) => inside(i.href));
+  const inside = (item: SideSection["items"][number]) =>
+    current === item.href || (current?.startsWith(`${item.href}/`) ?? false) || ("children" in item && item.children.some((c) => c.href === current));
+  const holds = section.items.some(inside);
   const [open, setOpen] = useState(!section.collapsible || holds);
   const shown = open || holds;
   return (
@@ -61,7 +62,7 @@ function Section({ section, current, onNavigate }: { section: SideSection; curre
                 <ul className="flex flex-col gap-0.5">
                   <Item link={item} active={false} onNavigate={onNavigate} />
                   {/* A committee's own pages open under it while you are in it. */}
-                  {inside(item.href) && item.children.map((c) => <Item key={c.href} link={c} active={c.href === current} onNavigate={onNavigate} nested />)}
+                  {inside(item) && item.children.map((c) => <Item key={c.href} link={c} active={c.href === current} onNavigate={onNavigate} nested />)}
                 </ul>
               </li>
             ) : (
@@ -86,9 +87,10 @@ export function SidebarNav({
 }) {
   const sections = buildSidebar(allowed, committees);
   const pathname = usePathname();
+  const search = useSearchParams().toString();
   // Highlight the clicked link at once, before its page arrives.
   const [clicked, setClicked] = useState<{ href: string; from: string } | null>(null);
-  const current = clicked && clicked.from === pathname ? clicked.href : activeLink(sections, pathname);
+  const current = clicked && clicked.from === pathname ? clicked.href : activeLink(sections, pathname, search);
   return (
     <nav aria-label="القائمة الرئيسية" className="flex flex-col gap-6">
       {sections.map((s) => (

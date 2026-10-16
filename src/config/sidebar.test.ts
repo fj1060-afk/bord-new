@@ -15,7 +15,7 @@ describe("buildSidebar", () => {
   it("hides what the viewer may not open, and empty sections", () => {
     const s = buildSidebar(["/", "/board"], []);
     expect(s.map((x) => x.label)).toEqual(["عام", "مجلس الإدارة"]);
-    expect(s[1].items.map((i) => i.href)).toEqual(["/board", "/board/members", "/resolutions/circular"]);
+    expect(s[1].items.map((i) => i.href)).toEqual(["/board", "/board/members", "/resolutions/circular?body=board"]);
   });
 });
 
@@ -26,4 +26,5 @@ it("finds the active link by the longest prefix", () => {
   expect(activeLink(s, "/committees/c1")).toBe("/committees/c1");
   expect(activeLink(s, "/")).toBe("/");
   expect(activeLink(s, "/meetings/xyz")).toBeUndefined();
+  expect(activeLink(s, "/resolutions/circular", "body=committee:c1")).toBe("/resolutions/circular?body=committee:c1");
 });

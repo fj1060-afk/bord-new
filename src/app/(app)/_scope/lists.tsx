@@ -80,7 +80,7 @@ export async function ScopeDocuments({ scope }: { scope: Scope }) {
   const supabase = await createClient();
   const own = `${column(scope)}.eq.${idOf(scope)}`;
   const [{ data: library }, { data: packs }] = await Promise.all([
-    supabase.from("library_documents").select("id, title, category, created_at").eq("archived", false).or("board" in scope ? `${own},category.in.(charter,regulation,policy)` : own).order("created_at", { ascending: false }).limit(100),
+    supabase.from("library_documents").select("id, title, category, created_at").eq("archived", false).or("board" in scope ? `${own},and(category.in.(charter,regulation,policy),committee_id.is.null)` : own).order("created_at", { ascending: false }).limit(100),
     supabase.from("meeting_documents").select("id, title, meeting:meetings!inner(id, title, number, starts_at, board_id, committee_id)").eq(`meeting.${column(scope)}`, idOf(scope)).order("created_at", { ascending: false }).limit(100),
   ]);
   return (

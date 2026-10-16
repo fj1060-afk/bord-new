@@ -32,15 +32,21 @@ type Circular = {
   votes: { person_id: string; vote: keyof typeof VOTES }[];
 };
 
-export default async function CircularPage() {
+export default async function CircularPage({ searchParams }: PageProps<"/resolutions/circular">) {
   // Members vote here without access to the resolutions register; RLS shows each person their bodies only.
   const viewer = await requirePage("/");
   const manage = can(viewer.permissions, "/resolutions", LEVELS.edit);
   const supabase = await createClient();
-  const { data } = await supabase
+  // `?body=board` or `?body=committee:<id>` (from that body's section) shows its resolutions only.
+  const { body = "" } = (await searchParams) as { body?: string };
+  const committeeId = body.startsWith("committee:") ? body.slice(10) : null;
+  let query = supabase
     .from("circular_resolutions")
     .select("id, title, text, deadline, status, board_id, committee_id, ratified_meeting_id, board:boards(name), committee:committees(name), votes:circular_votes(person_id, vote)")
     .order("created_at", { ascending: false });
+  if (body === "board") query = query.not("board_id", "is", null);
+  else if (committeeId) query = query.eq("committee_id", committeeId);
+  const { data } = await query;
   const rows = (data ?? []) as unknown as Circular[];
   const voters = await Promise.all(rows.map((r) => supabase.rpc("circular_voters", { p_circular: r.id }).then(({ data }) => (data ?? []) as { person_id: string; user_id: string | null; full_name: string }[])));
   const [{ data: boards }, { data: committees }, { data: meetings }] = manage
@@ -54,7 +60,8 @@ export default async function CircularPage() {
   const openBodies = manage ? [...new Set(rows.filter((r) => r.status === "open").map((r) => r.board_id ?? r.committee_id ?? ""))] : [];
   const [profile, ...cvs] = manage ? await Promise.all([companyProfile(supabase), ...openBodies.map((id) => bodyAffiliations(supabase, rows.find((r) => r.board_id === id) ? { board: id } : { committee: id }))]) : [null];
   const cvOf = new Map<string, Affiliation[]>(openBodies.map((id, i) => [id, (cvs[i] as Affiliation[]) ?? []]));
-  const bodies = [...(boards ?? []).map((b) => ({ value: `board:${b.id}`, label: b.name })), ...(committees ?? []).map((c) => ({ value: `committee:${c.id}`, label: c.name }))];
+  const allBodies = [...(boards ?? []).map((b) => ({ value: `board:${b.id}`, label: b.name })), ...(committees ?? []).map((c) => ({ value: `committee:${c.id}`, label: c.name }))];
+  const bodies = body === "board" ? allBodies.filter((b) => b.value.startsWith("board:")) : committeeId ? allBodies.filter((b) => b.value === body) : allBodies;
 
   return (
     <>
