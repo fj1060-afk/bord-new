@@ -28,7 +28,9 @@ export async function translateArabic(text: string): Promise<string | null> {
   if (hit) return hit;
   for (const service of [google, myMemory]) {
     try {
-      const out = await service(q);
+      const raw = await service(q);
+      // Short answers sometimes come back in capitals ("LONDON").
+      const out = raw && /[A-Z]{3}/.test(raw) && raw === raw.toUpperCase() ? raw.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : raw;
       if (out) {
         if (cache.size > 2000) cache.clear();
         cache.set(q, out);
