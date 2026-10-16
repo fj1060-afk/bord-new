@@ -2,6 +2,7 @@
 // governance regulations and members' conflict-of-interest disclosures.
 // Advisory only: findings never block the meeting journey.
 
+import { withoutRequirements } from "./requirements";
 import { withPhraseFixes } from "./spelling";
 
 /** `fixes` are complete replacement titles; `template` marks remarks about unfilled template parts (expected in the library). */
@@ -210,8 +211,8 @@ export function templateGaps(title: string): Finding[] {
 
 /** `year` is the last completed financial year, used in suggested titles; `listed` adds the CMA rules. */
 export function reviewItem(item: ItemDraft, { disclosures = [], year = new Date().getFullYear() - 1, listed = false }: { disclosures?: Disclosure[]; year?: number; listed?: boolean } = {}): Finding[] {
-  // The auto-filled "المستندات الداعمة:" line lists documents, not what the item is about.
-  const about = (item.description ?? "").replace(/^المستندات الداعمة:.*$/gm, "");
+  // The auto-filled requirements block lists documents, not what the item is about.
+  const about = withoutRequirements(item.description ?? "");
   const text = fold(withPhraseFixes(`${item.title} ${about}`));
   const base = withPhraseFixes(item.title.trim());
   const title = fold(base);

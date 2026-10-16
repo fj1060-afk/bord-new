@@ -2,11 +2,12 @@
 
 import { fold } from "./item-review";
 import { withPhraseFixes } from "./spelling";
+import type { Req } from "./requirements";
 import { blankValues } from "./translate";
 import { buildTemplates, type Body, type Kind, type Template } from "./item-templates-data";
 
 export { BODIES, CATEGORIES, type Body, type Template } from "./item-templates-data";
-export type TitleSuggestion = { title: string; en?: string; kind: Kind; needs?: string };
+export type TitleSuggestion = { title: string; en?: string; kind: Kind; needs?: string; reqs?: Req[] };
 
 export const templates = () => buildTemplates();
 
@@ -52,7 +53,7 @@ export function searchTemplates<T extends Template>(input: string, list: T[], li
 
 /** Up to `limit` titles for the item form, from the company's own items and the built-in ones; items for `body` rank first. */
 export function suggestTitles(input: string, limit = 5, own: Template[] = [], body?: Body): TitleSuggestion[] {
-  return searchTemplates(input, [...own, ...templates()], limit, body).map(({ title, en, kind, needs }) => ({ title, kind, ...(en ? { en } : {}), ...(needs ? { needs } : {}) }));
+  return searchTemplates(input, [...own, ...templates()], limit, body).map(({ title, en, kind, needs, reqs }) => ({ title, kind, ...(en ? { en } : {}), ...(needs ? { needs } : {}), ...(reqs ? { reqs } : {}) }));
 }
 
 /** The library's meeting type for a board or a committee kind. */

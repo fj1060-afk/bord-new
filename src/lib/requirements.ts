@@ -67,3 +67,47 @@ export function departmentFor(from: ReqFrom | undefined, departments: { id: stri
   const pattern = from ? FUNCTION_NAMES[from] : undefined;
   return pattern ? (departments.find((d) => pattern.test(d.name))?.id ?? null) : null;
 }
+
+const DUE_AR: Record<ReqDue, string> = { immediate: "فوراً", "5d": "خلال 5 أيام", "15d": "خلال 15 يوماً", "30d": "خلال 30 يوماً", "15bd": "خلال 15 يوم عمل", before_ga: "قبل الجمعية العامة", "60d": "خلال 60 يوماً", "180d": "خلال 180 يوماً" };
+const DUE_EN: Record<ReqDue, string> = { immediate: "immediately", "5d": "within 5 days", "15d": "within 15 days", "30d": "within 30 days", "15bd": "within 15 business days", before_ga: "before the General Assembly", "60d": "within 60 days", "180d": "within 180 days" };
+const FROM_EN: Record<ReqFrom, string> = { owner: "the item owner", finance: "Finance", legal: "Legal", hr: "Human Resources", ir: "Investor Relations", audit: "the Audit Committee", nrc: "the Nomination & Remuneration Committee", risk: "the Risk Committee", secretary: "the board secretary" };
+
+/** Who provides a before-meeting requirement, as a heading. */
+function provider(r: Req, en: boolean) {
+  if (r.k === "check") return en ? "Confirmed by the board secretary" : "يتحقق منه أمين السر";
+  if (!r.from) return en ? "Assigned by the board secretary" : "يحدد أمين السر المطلوب منه";
+  return en ? `From ${FROM_EN[r.from]}` : `من ${REQ_FROM[r.from]}`;
+}
+
+/**
+ * The requirements block written into an item's description: before-meeting
+ * requirements grouped by who provides them, then the follow-up actions with
+ * their owner and deadline.
+ */
+export function requirementsText(reqs: Req[] = [], en = false): string {
+  if (!reqs.length) return "";
+  const groups = new Map<string, string[]>();
+  for (const r of beforeMeeting(reqs)) groups.set(provider(r, en), [...(groups.get(provider(r, en)) ?? []), en ? r.en : r.ar]);
+  const lines = [...groups].map(([who, list]) => `• ${who}: ${list.join(en ? "; " : "؛ ")}`);
+  const after = reqs.filter((r) => r.k === "after");
+  const out: string[] = [];
+  if (lines.length) out.push(en ? "Before the meeting:" : "المتطلبات قبل الاجتماع:", ...lines);
+  if (after.length) {
+    out.push(en ? "After the resolution:" : "بعد القرار:");
+    for (const r of after) {
+      const meta = [r.from ? (en ? FROM_EN[r.from] : REQ_FROM[r.from]) : "", r.due ? (en ? DUE_EN[r.due] : DUE_AR[r.due]) : ""].filter(Boolean).join(en ? ", " : "، ");
+      out.push(`• ${en ? r.en : r.ar}${meta ? ` (${meta})` : ""}`);
+    }
+  }
+  return out.join("\n");
+}
+
+/** Removes an auto-filled requirements block (current or older format) from a description. */
+export const withoutRequirements = (description: string) =>
+  description
+    .split("\n")
+    .filter((l) => !/^(المستندات الداعمة:|المتطلبات قبل الاجتماع:|بعد القرار:|•\s)/.test(l.trim()))
+    .join("\n");
+
+/** Whether a description is nothing but an auto-filled block (so it may follow the title). */
+export const isRequirementsOnly = (description: string) => !!description.trim() && !withoutRequirements(description).trim();

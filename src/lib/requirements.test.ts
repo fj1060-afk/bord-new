@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { departmentFor, needsText, planSync, unassigned, type Req, type ReqRow } from "./requirements";
+import { departmentFor, isRequirementsOnly, needsText, planSync, requirementsText, unassigned, withoutRequirements, type Req, type ReqRow } from "./requirements";
 
 const reqs: Req[] = [
   { k: "doc", ar: "مسودة العقد", en: "Draft contract", from: "owner" },
@@ -34,5 +34,20 @@ describe("requirements", () => {
     expect(departmentFor("finance", deps)).toBe("1");
     expect(departmentFor("legal", deps)).toBe("2");
     expect(departmentFor("hr", deps)).toBeNull();
+  });
+
+  it("groups the description block by who provides each requirement", () => {
+    expect(requirementsText(reqs)).toBe(
+      ["المتطلبات قبل الاجتماع:", "• من المسؤول عن البند: مسودة العقد", "• من لجنة المراجعة: توصية لجنة المراجعة", "• يتحقق منه أمين السر: التحقق من عدم وجود مصلحة لعضو", "بعد القرار:", "• الإفصاح الفوري (فوراً)"].join("\n"),
+    );
+    expect(requirementsText(reqs, true)).toContain("• From the Audit Committee: Audit committee recommendation");
+  });
+
+  it("recognizes and strips auto-filled blocks", () => {
+    const block = requirementsText(reqs);
+    expect(isRequirementsOnly(block)).toBe(true);
+    expect(isRequirementsOnly("المستندات الداعمة: أ؛ ب")).toBe(true);
+    expect(isRequirementsOnly(`ملاحظة الأمين\n${block}`)).toBe(false);
+    expect(withoutRequirements(`ملاحظة الأمين\n${block}`)).toBe("ملاحظة الأمين");
   });
 });

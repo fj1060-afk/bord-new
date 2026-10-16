@@ -7,6 +7,7 @@ import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
 import { byDepartment, ownerOf, type Target } from "./agenda-targets";
 import { useAutoEnglish } from "./auto-english";
+import { isRequirementsOnly, requirementsText, type Req } from "@/lib/requirements";
 import { ItemReviewPanel } from "./item-review-panel";
 import { matchTemplate, suggestTitles, type Body, type Template, type TitleSuggestion } from "@/lib/item-templates";
 
@@ -85,7 +86,7 @@ function TitleField({ defaultValue, library, body, onPicked }: { defaultValue?: 
   const field = <T extends Element>(name: string) => ref.current?.form?.elements.namedItem(name) as T | null;
 
   /** Links the title to a standard wording (or to none) and lets the auto-filled description follow it. */
-  const follow = (t: { title: string; en?: string; needs?: string } | null) => {
+  const follow = (t: { title: string; en?: string; needs?: string; reqs?: Req[] } | null) => {
     const input = ref.current;
     if (!input) return;
     if (t?.en) {
@@ -95,15 +96,26 @@ function TitleField({ defaultValue, library, body, onPicked }: { defaultValue?: 
       delete input.dataset.templateAr;
       delete input.dataset.templateEn;
     }
-    // Text the author wrote is never replaced.
+    // Only a description that is still just the auto-filled requirements is replaced.
     const description = field<HTMLTextAreaElement>("description");
-    if (!description || (description.value.trim() && description.value !== description.dataset.auto)) return;
-    const next = t?.needs ? `المستندات الداعمة: ${t.needs}` : "";
+    if (!description || (description.value.trim() && !isRequirementsOnly(description.value))) return;
+    const next = t?.reqs ? requirementsText(t.reqs) : t?.needs ? `المستندات الداعمة: ${t.needs}` : "";
     if (next === description.value) return;
     description.value = next;
-    description.dataset.auto = next;
-    onPicked?.();
+    // The library's own English is exact; a company item's is machine-translated.
+    const en = field<HTMLTextAreaElement>("description_en");
+    if (t?.reqs && en && !en.dataset.manual) {
+      en.value = requirementsText(t.reqs, true);
+      const details = en.closest("details");
+      if (details) details.open = true;
+    } else onPicked?.();
   };
+
+  // Opening a saved item refreshes an auto-filled description to the current requirements.
+  useEffect(() => {
+    if (defaultValue) follow(matchTemplate(defaultValue, library));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pick = (s: TitleSuggestion) => {
     const input = ref.current;
@@ -170,12 +182,6 @@ export function AgendaItemForm({ meetingId, item, targets, library, body, onDone
   }, null);
   const ref = useRef<HTMLFormElement>(null);
   const auto = useAutoEnglish(ref, { title: "title_en", description: "description_en" });
-  // A saved item's description that is still the auto-filled documents line keeps following the title.
-  useEffect(() => {
-    const description = ref.current?.elements.namedItem("description") as HTMLTextAreaElement | null;
-    const needs = item ? matchTemplate(item.title, library)?.needs : undefined;
-    if (description && needs && description.value === `المستندات الداعمة: ${needs}`) description.dataset.auto = description.value;
-  }, [item, library]);
 
   return (
     <ActionForm ref={ref} action={action} state={state} onInput={auto.onInput} onReset={auto.onReset} className="grid gap-4 sm:grid-cols-2">

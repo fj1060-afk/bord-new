@@ -76,7 +76,6 @@ export function useAutoEnglish(form: RefObject<HTMLFormElement | null>, pairs: R
         delete a.dataset.templateAr;
         delete a.dataset.templateEn;
       }
-      if (a) delete a.dataset.auto;
       const n = get(en);
       if (n) delete n.dataset.manual;
     }
