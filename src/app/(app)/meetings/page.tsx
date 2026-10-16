@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/format";
 import { DOC_REQUEST_STATUS, ITEM_KINDS, MEETING_STATUS, REQUEST_STATUS, meetingReference } from "@/lib/meetings";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { DeleteMeeting } from "../_scope/lists";
 import { AgendaRequestForm, ReviewAgendaRequestForm } from "./_components/meeting-forms";
 
 export const metadata: Metadata = { title: "الاجتماعات" };
@@ -29,6 +30,7 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/meeting
   const viewer = await requirePage("/meetings");
   const { show = "upcoming" } = (await searchParams) as { show?: string };
   const organizer = can(viewer.permissions, "/meetings", LEVELS.edit);
+  const canDelete = can(viewer.permissions, "/admin/roles", LEVELS.manage);
   const supabase = await createClient();
   const now = new Date().toISOString();
 
@@ -121,8 +123,8 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/meeting
       <ul className="mb-10 divide-y divide-rule rounded-lg border border-rule bg-surface">
         {rows.length === 0 && <li className="p-8 text-center text-sm text-ink-muted">لا توجد اجتماعات {show === "past" ? "سابقة" : "قادمة"}.</li>}
         {rows.map((m) => (
-          <li key={m.id}>
-            <Link href={`/meetings/${m.id}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 hover:bg-paper">
+          <li key={m.id} className="flex items-center">
+            <Link href={`/meetings/${m.id}`} className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 hover:bg-paper">
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">{m.title}</span>
                 <span className="block text-xs text-ink-muted">
@@ -141,6 +143,7 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/meeting
                 {MEETING_STATUS[m.status]}
               </span>
             </Link>
+            {canDelete && <DeleteMeeting id={m.id} title={m.title} />}
           </li>
         ))}
       </ul>

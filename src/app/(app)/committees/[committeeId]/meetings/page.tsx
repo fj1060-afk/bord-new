@@ -14,7 +14,7 @@ export default async function CommitteeMeetingsPage({ params }: PageProps<"/comm
   return (
     <>
       <PageHeader section={committee.name} title="الاجتماعات" />
-      <ScopeMeetings scope={{ committee: committee.id }} canEdit={can(viewer.permissions, "/meetings", LEVELS.edit)} />
+      <ScopeMeetings scope={{ committee: committee.id }} canEdit={can(viewer.permissions, "/meetings", LEVELS.edit)} canDelete={can(viewer.permissions, "/admin/roles", LEVELS.manage)} />
     </>
   );
 }

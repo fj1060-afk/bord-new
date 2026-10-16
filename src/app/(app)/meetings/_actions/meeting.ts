@@ -146,3 +146,12 @@ async function requireStage(supabase: Awaited<ReturnType<typeof createClient>>, 
   const checks = await loadJourney(supabase, meetingId);
   if (checks && !stageDone(checks, stage)) throw new Error(`Stage ${stage} is not complete`);
 }
+
+/** Deletes a meeting and everything under it (system administrator, while data is trial). */
+export async function deleteMeeting(meetingId: string) {
+  await requirePage("/admin/roles", LEVELS.manage);
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("meetings").delete().eq("id", meetingId).select("id");
+  if (error || !data?.length) throw new Error("Could not delete meeting");
+  revalidatePath("/", "layout");
+}

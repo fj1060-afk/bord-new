@@ -14,7 +14,7 @@ export default async function BoardMeetingsPage() {
   return (
     <>
       <PageHeader section="مجلس الإدارة" title="اجتماعات المجلس" />
-      <ScopeMeetings scope={{ board: board.id }} canEdit={can(viewer.permissions, "/meetings", LEVELS.edit)} />
+      <ScopeMeetings scope={{ board: board.id }} canEdit={can(viewer.permissions, "/meetings", LEVELS.edit)} canDelete={can(viewer.permissions, "/admin/roles", LEVELS.manage)} />
     </>
   );
 }
