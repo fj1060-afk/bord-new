@@ -98,6 +98,11 @@ export function AgendaTab({
                 </p>
               )}
               {item.description && <p className="whitespace-pre-line text-sm leading-7">{item.description}</p>}
+              {item.description_en && (
+                <p dir="ltr" lang="en" className="whitespace-pre-line text-start text-xs leading-6 text-ink-muted">
+                  {item.description_en}
+                </p>
+              )}
               {review && <ItemNotes findings={reviewItem(item, review)} />}
             </>
           );

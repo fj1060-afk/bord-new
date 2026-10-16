@@ -27,6 +27,7 @@ function readItem(form: FormData) {
       kind,
       duration_minutes: duration,
       description: text(form, "description"),
+      description_en: text(form, "description_en"),
       presenter: text(form, "presenter"),
       presenter_user_id: text(form, "presenter_user_id"),
       ...ownerColumns(text(form, "owner")),

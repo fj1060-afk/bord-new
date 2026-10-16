@@ -6,6 +6,7 @@ import { EnglishField, buttonClass, Field, FormMessage, inputClass, SubmitButton
 import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
 import { byDepartment, ownerOf, type Target } from "./agenda-targets";
+import { useAutoEnglish } from "./auto-english";
 import { ItemReviewPanel } from "./item-review-panel";
 import { suggestTitles, type Body, type Template, type TitleSuggestion } from "@/lib/item-templates";
 
@@ -77,7 +78,7 @@ function OwnerField({ targets, item }: { targets: Target[]; item?: AgendaItem })
 }
 
 /** Title input that offers standard wordings as you type; picking one also sets the item's purpose. */
-function TitleField({ defaultValue, library, body }: { defaultValue?: string; library?: Template[]; body?: Body }) {
+function TitleField({ defaultValue, library, body, onPicked }: { defaultValue?: string; library?: Template[]; body?: Body; onPicked?: () => void }) {
   const [typed, setTyped] = useState("");
   const ref = useRef<HTMLInputElement>(null);
   const suggestions = typed ? suggestTitles(typed, 5, library, body) : [];
@@ -91,11 +92,16 @@ function TitleField({ defaultValue, library, body }: { defaultValue?: string; li
     if (description && !description.value.trim() && s.needs) description.value = `المستندات الداعمة: ${s.needs}`;
     const en = input.form?.elements.namedItem("title_en") as HTMLInputElement | null;
     if (en && s.en) {
+      // The English wording is exact; filling the Arabic blanks later updates it.
+      input.dataset.templateAr = s.title;
+      input.dataset.templateEn = s.en;
+      delete en.dataset.manual;
       en.value = s.en;
       const details = en.closest("details");
       if (details) details.open = true;
     }
     setTyped("");
+    onPicked?.();
   };
   return (
     <div className="flex flex-col gap-2">
@@ -115,12 +121,15 @@ function TitleField({ defaultValue, library, body }: { defaultValue?: string; li
   );
 }
 
+const TranslateHint = () => <p className="text-xs text-brass">تعذّرت الترجمة الآلية الآن؛ أكمل النص الإنجليزي يدوياً أو أعد المحاولة بعد قليل.</p>;
+
 export type AgendaItem = {
   id: string;
   position: number;
   title: string;
   title_en?: string | null;
   description: string | null;
+  description_en?: string | null;
   kind: keyof typeof ITEM_KINDS;
   duration_minutes: number | null;
   presenter: string | null;
@@ -136,13 +145,15 @@ export function AgendaItemForm({ meetingId, item, targets, library, body, onDone
     return result;
   }, null);
   const ref = useRef<HTMLFormElement>(null);
+  const auto = useAutoEnglish(ref, { title: "title_en", description: "description_en" });
 
   return (
-    <ActionForm ref={ref} action={action} state={state} className="grid gap-4 sm:grid-cols-2">
+    <ActionForm ref={ref} action={action} state={state} onInput={auto.onInput} onReset={auto.onReset} className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <Field label="عنوان البند">
-          <TitleField defaultValue={item?.title} library={library} body={body} />
+          <TitleField defaultValue={item?.title} library={library} body={body} onPicked={() => auto.sync("description")} />
           <EnglishField name="title_en" defaultValue={item?.title_en} />
+          {auto.failed.includes("title") && <TranslateHint />}
         </Field>
       </div>
       <Field label="الغرض">
@@ -165,6 +176,8 @@ export function AgendaItemForm({ meetingId, item, targets, library, body, onDone
       <div className="sm:col-span-2">
         <Field label="الوصف">
           <textarea spellCheck lang="ar" name="description" rows={3} defaultValue={item?.description ?? ""} className={inputClass} />
+          <EnglishField name="description_en" rows={3} defaultValue={item?.description_en} />
+          {auto.failed.includes("description") && <TranslateHint />}
         </Field>
       </div>
       <ItemReviewPanel meetingId={meetingId} form={() => ref.current} />

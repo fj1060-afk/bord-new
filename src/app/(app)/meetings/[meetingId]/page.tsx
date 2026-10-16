@@ -66,7 +66,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   const profileDays = profile?.invite_days ?? 5;
   const { data: minutesRow } = tab === "overview" ? await supabase.from("minutes").select("id").eq("meeting_id", meetingId).maybeSingle() : { data: null };
   const [{ data: items }, { data: invitees }, { data: documents }, { data: docRequests }, { data: departments }] = await Promise.all([
-    supabase.from("agenda_items").select("id, position, title, title_en, description, kind, duration_minutes, presenter, presenter_user_id, department_id, owner_user_id, status, outcome").eq("meeting_id", meetingId).order("position"),
+    supabase.from("agenda_items").select("id, position, title, title_en, description, description_en, kind, duration_minutes, presenter, presenter_user_id, department_id, owner_user_id, status, outcome").eq("meeting_id", meetingId).order("position"),
     supabase.from("meeting_invitees").select("person_id, kind, rsvp, rsvp_note, person:people(full_name, user_id)").eq("meeting_id", meetingId),
     supabase.from("meeting_documents").select("id, title, file_name, size_bytes, agenda_item_id, document_request_id, created_at").eq("meeting_id", meetingId).order("created_at"),
     supabase
