@@ -102,11 +102,11 @@ await step("إنشاء لجنة وإضافة عضو", async () => {
   await status("أُضيف العضو");
 });
 
-await step("أرشفة لجنة الاختبار", async () => {
-  // Test committees would otherwise pile up in the sidebar.
-  await page.click("summary:has-text('تعديل اللجنة')");
-  await page.click("button:has-text('أرشفة اللجنة')");
-  await page.getByText("هذه اللجنة مؤرشفة").waitFor({ timeout: 20000 });
+await step("حذف لجنة الاختبار", async () => {
+  // Test committees would otherwise pile up in the sidebar and the archive.
+  await go("/committees");
+  await page.click(`button[aria-label='حذف لجنة اختبار ${stamp}']`);
+  await page.locator(`a:has-text('لجنة اختبار ${stamp}')`).waitFor({ state: "detached", timeout: 20000 });
 });
 
 let meetingUrl = "";

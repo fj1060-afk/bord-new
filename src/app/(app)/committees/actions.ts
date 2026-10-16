@@ -78,3 +78,13 @@ export async function endCommitteeMembership(committeeId: string, membershipId: 
   if (error) throw new Error("Could not end membership");
   revalidatePath(`${PAGE}/${committeeId}`, "layout");
 }
+
+/** Deletes a committee with no meetings or circular resolutions (system administrator, while data is trial). */
+export async function deleteCommittee(committeeId: string) {
+  await requirePage("/admin/roles", LEVELS.manage);
+  const supabase = await createClient();
+  const { error } = await supabase.from("committees").delete().eq("id", committeeId);
+  if (error) throw new Error("Could not delete committee");
+  revalidatePath("/", "layout");
+  redirect(PAGE);
+}
