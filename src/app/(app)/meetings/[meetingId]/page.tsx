@@ -168,7 +168,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
               )}
             </dl>
             {editable && (
-              <details className="rounded-lg border border-rule bg-surface">
+              <details id="meeting-details" className="scroll-mt-24 rounded-lg border border-rule bg-surface">
                 <summary className="cursor-pointer px-5 py-4 text-sm font-medium">تعديل بيانات الاجتماع</summary>
                 <div className="border-t border-rule p-5">
                   <MeetingDetailsForm meeting={meeting} allowRemote={services.remote_meetings} />

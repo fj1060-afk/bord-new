@@ -129,7 +129,7 @@ export function AgendaTab({
           );
 
           return (
-            <li key={item.id} className="rounded-lg border border-rule bg-surface">
+            <li key={item.id} id={`item-${item.id}`} className="scroll-mt-24 rounded-lg border border-rule bg-surface">
               <div className="flex">
                 <details className="group min-w-0 flex-1">
                   <summary className="flex cursor-pointer list-none items-start gap-3 p-4 hover:bg-paper [&::-webkit-details-marker]:hidden">
@@ -228,7 +228,7 @@ export function AgendaTab({
       </ol>
 
       {editable && (
-        <details className="rounded-lg border border-rule bg-surface">
+        <details id="add-item" className="scroll-mt-24 rounded-lg border border-rule bg-surface">
           <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة بند</summary>
           <div className="border-t border-rule p-5">
             <AgendaItemForm meetingId={meetingId} targets={targets} library={library} body={body} />

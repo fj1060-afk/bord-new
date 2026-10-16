@@ -20,7 +20,7 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
   const [profile, { data: items }, { data: requests }, { data: invitees }, { data: members }, { data: board }, { data: minutes }, { data: circulars }, { data: resolutions }, { data: overrides }] = await Promise.all([
     companyProfile(supabase),
     supabase.from("agenda_items").select("id, title, kind, owner_user_id, department_id").eq("meeting_id", meetingId),
-    supabase.from("document_requests").select("title, status, item:agenda_items!inner(meeting_id)").eq("item.meeting_id", meetingId),
+    supabase.from("document_requests").select("title, status, agenda_item_id, item:agenda_items!inner(meeting_id)").eq("item.meeting_id", meetingId),
     supabase.from("meeting_invitees").select("person_id").eq("meeting_id", meetingId).eq("kind", "member"),
     m.board_id
       ? supabase.from("board_members").select("person_id").eq("board_id", m.board_id).eq("status", "active")
@@ -40,6 +40,8 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
   const wordings = await meetingBody(supabase, meetingId);
   const wanted = new Map((items ?? []).map((i) => [i.id, new Set((matchTemplate(i.title, library, wordings)?.reqs ?? []).map((r) => r.ar))]));
   const live = (reqRows ?? []).filter((r) => r.status !== "dismissed");
+  const unsent = live.filter((r) => r.status === "draft" || (!r.custom && r.status === "sent" && !wanted.get(r.agenda_item_id)?.has(r.label)));
+  const unchecked = live.filter((r) => r.kind === "check" && !r.checked_at);
   return journeyChecks({
     today: riyadhToday(),
     companyType: profile?.company_type ?? "unlisted_jsc",
@@ -48,11 +50,13 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
     boardTermEnd: board?.term_end ?? null,
     secretary: !!profile?.secretary_person_id,
     meeting: m,
-    items: (items ?? []).map((i) => ({ title: i.title, kind: i.kind, owned: !!(i.owner_user_id || i.department_id) })),
-    requests: (requests ?? []).map((r) => ({ title: r.title, status: r.status })),
+    items: (items ?? []).map((i) => ({ id: i.id, title: i.title, kind: i.kind, owned: !!(i.owner_user_id || i.department_id) })),
+    requests: (requests ?? []).map((r) => ({ title: r.title, status: r.status, itemId: r.agenda_item_id })),
     requirements: {
-      unsent: live.filter((r) => r.status === "draft" || (!r.custom && r.status === "sent" && !wanted.get(r.agenda_item_id)?.has(r.label))).length,
-      unchecked: live.filter((r) => r.kind === "check" && !r.checked_at).map((r) => r.label),
+      unsent: unsent.length,
+      unchecked: unchecked.map((r) => r.label),
+      unsentItems: unsent.map((r) => r.agenda_item_id),
+      uncheckedItems: unchecked.map((r) => r.agenda_item_id),
     },
     invitedMembers: (invitees ?? []).length,
     quorumNeeded: quorumNeeded((members ?? []).length, quorumRule(profile, !!m.board_id)),

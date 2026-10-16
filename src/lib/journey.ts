@@ -13,7 +13,9 @@ export const STAGES = [
 ] as const;
 
 export type Level = "block" | "warn" | "info";
-export type Check = { id: string; stage: 1 | 2 | 3 | 4; label: string; ok: boolean; level: Level; ref?: string; detail?: string; tab: string; overridden?: string };
+/** Where "أكمِل" leads: another page, or a spot on the meeting page; targets are the items to fix. */
+export type Fix = { label: string; href?: string; anchor?: string; targets?: { label: string; anchor: string }[]; /** Shown above the targets instead of the detail. */ note?: string };
+export type Check = { id: string; stage: 1 | 2 | 3 | 4; label: string; ok: boolean; level: Level; ref?: string; detail?: string; tab: string; overridden?: string; fix?: Fix };
 
 export type JourneyInput = {
   today: string;
@@ -23,10 +25,10 @@ export type JourneyInput = {
   boardTermEnd: string | null;
   secretary: boolean;
   meeting: { status: string; live_status: string; starts_at: string; mode: string; location: string | null; virtual_link: string | null; pack_published_at: string | null; pack_emailed_at?: string | null; meeting_type: string };
-  items: { title: string; kind: string; owned: boolean }[];
-  requests: { title: string; status: string }[];
+  items: { id?: string; title: string; kind: string; owned: boolean }[];
+  requests: { title: string; status: string; itemId?: string }[];
   /** Item requirements: drafts or withdrawals not yet sent, and checks not yet confirmed. */
-  requirements?: { unsent: number; unchecked: string[] };
+  requirements?: { unsent: number; unchecked: string[]; unsentItems?: string[]; uncheckedItems?: string[] };
   invitedMembers: number;
   quorumNeeded: number;
   minutes: { status: string; gaps: string[] } | null;
@@ -45,17 +47,19 @@ export function journeyChecks(j: JourneyInput): Check[] {
   const notice = m.pack_published_at ? Math.floor((Date.parse(m.starts_at) - Date.parse(m.pack_published_at)) / 86400000) : null;
   const unowned = j.items.filter((i) => i.kind === "decision" && !i.owned);
   const vague = j.items.filter((i) => templateGaps(i.title).length);
+  const byIds = (ids?: string[]) => j.items.filter((i) => i.id && ids?.includes(i.id));
+  const targets = (list: JourneyInput["items"]) => list.filter((i) => i.id).map((i) => ({ label: i.title, anchor: `item-${i.id}` }));
   const checks: Check[] = [
-    { id: "details", stage: 1, tab: "overview", label: "بيانات الاجتماع: التاريخ والوقت والمكان أو الرابط", level: "block", ok: !!m.starts_at && (m.mode === "virtual" ? !!m.virtual_link : !!m.location) && (m.mode === "in_person" || !!m.virtual_link) },
-    ...(j.isBoard ? [{ id: "term", stage: 1 as const, tab: "overview", label: "دورة المجلس سارية في تاريخ الاجتماع", level: (jsc ? "block" : "warn") as Level, ref: "نظام الشركات م68", ok: !!j.boardTermEnd && day(m.starts_at) <= j.boardTermEnd }] : []),
-    ...(j.isBoard ? [{ id: "secretary", stage: 1 as const, tab: "overview", label: "أمين سر المجلس معيّن", level: "warn" as Level, ref: "نظام الشركات م78/4", ok: j.secretary }] : []),
-    { id: "items", stage: 1, tab: "agenda", label: "جدول الأعمال: بند واحد على الأقل", level: "block", ok: j.items.length > 0, detail: `${j.items.length} بند` },
-    { id: "definite", stage: 1, tab: "agenda", label: "عناوين البنود محددة: لا خيارات «/» ولا فراغات «(…)»", level: "block", ok: vague.length === 0, detail: vague.length ? `تحتاج تحديداً: ${vague.map((i) => i.title).join("، ")}` : undefined },
-    { id: "owners", stage: 1, tab: "agenda", label: "كل بند للقرار له مسؤول", level: "block", ok: unowned.length === 0, detail: unowned.length ? `بلا مسؤول: ${unowned.map((i) => i.title).join("، ")}` : undefined },
-    { id: "requirements-sent", stage: 1, tab: "agenda", label: "إرسال طلبات متطلبات البنود", level: "block", ok: !j.requirements?.unsent, detail: j.requirements?.unsent ? `${j.requirements.unsent} لم تُرسل بعد` : undefined },
-    { id: "requirements-checks", stage: 1, tab: "agenda", label: "تأكيد التحققات المطلوبة للبنود", level: "warn", ok: !j.requirements?.unchecked.length, detail: j.requirements?.unchecked.length ? `بانتظار: ${j.requirements.unchecked.join("، ")}` : undefined },
-    { id: "docs", stage: 1, tab: "agenda", label: "المستندات المطلوبة مسلّمة ومعتمدة", level: "warn", ok: pending.length === 0, detail: pending.length ? `بانتظار: ${pending.map((r) => r.title).join("، ")}` : undefined },
-    { id: "quorum-possible", stage: 1, tab: "invitees", label: "الأعضاء المدعوون يكفون لاكتمال النصاب", level: "block", ref: "نظام الشركات م80/2", ok: j.invitedMembers >= j.quorumNeeded, detail: `مدعوون ${j.invitedMembers}، والنصاب ${j.quorumNeeded}` },
+    { id: "details", stage: 1, tab: "overview", label: "بيانات الاجتماع: التاريخ والوقت والمكان أو الرابط", level: "block", ok: !!m.starts_at && (m.mode === "virtual" ? !!m.virtual_link : !!m.location) && (m.mode === "in_person" || !!m.virtual_link), fix: { label: "أكمِل بيانات الاجتماع", anchor: "meeting-details" } },
+    ...(j.isBoard ? [{ id: "term", stage: 1 as const, tab: "overview", label: "دورة المجلس سارية في تاريخ الاجتماع", level: (jsc ? "block" : "warn") as Level, ref: "نظام الشركات م68", ok: !!j.boardTermEnd && day(m.starts_at) <= j.boardTermEnd, fix: { label: "حدّث دورة المجلس", href: "/board" } }] : []),
+    ...(j.isBoard ? [{ id: "secretary", stage: 1 as const, tab: "overview", label: "أمين سر المجلس معيّن", level: "warn" as Level, ref: "نظام الشركات م78/4", ok: j.secretary, fix: { label: "عيّن أمين السر", href: "/admin/company?tab=secretary" } }] : []),
+    { id: "items", stage: 1, tab: "agenda", label: "جدول الأعمال: بند واحد على الأقل", level: "block", ok: j.items.length > 0, detail: `${j.items.length} بند`, fix: { label: "أضف بنداً", anchor: "add-item" } },
+    { id: "definite", stage: 1, tab: "agenda", label: "عناوين البنود محددة: لا خيارات «/» ولا فراغات «(…)»", level: "block", ok: vague.length === 0, detail: vague.length ? `تحتاج تحديداً: ${vague.map((i) => i.title).join("، ")}` : undefined, fix: { label: "حدّد العنوان", targets: targets(vague), note: "تحتاج تحديداً:" } },
+    { id: "owners", stage: 1, tab: "agenda", label: "كل بند للقرار له مسؤول", level: "block", ok: unowned.length === 0, detail: unowned.length ? `بلا مسؤول: ${unowned.map((i) => i.title).join("، ")}` : undefined, fix: { label: "حدّد المسؤول", targets: targets(unowned), note: "بلا مسؤول:" } },
+    { id: "requirements-sent", stage: 1, tab: "agenda", label: "إرسال طلبات متطلبات البنود", level: "block", ok: !j.requirements?.unsent, detail: j.requirements?.unsent ? `${j.requirements.unsent} لم تُرسل بعد` : undefined, fix: { label: "راجع وأرسل", targets: targets(byIds(j.requirements?.unsentItems)), note: j.requirements?.unsent ? `${j.requirements.unsent} لم تُرسل بعد، في البنود:` : undefined } },
+    { id: "requirements-checks", stage: 1, tab: "agenda", label: "تأكيد التحققات المطلوبة للبنود", level: "warn", ok: !j.requirements?.unchecked.length, detail: j.requirements?.unchecked.length ? `بانتظار: ${j.requirements.unchecked.join("، ")}` : undefined, fix: { label: "أكّد التحقق", targets: targets(byIds(j.requirements?.uncheckedItems)) } },
+    { id: "docs", stage: 1, tab: "agenda", label: "المستندات المطلوبة مسلّمة ومعتمدة", level: "warn", ok: pending.length === 0, detail: pending.length ? `بانتظار: ${pending.map((r) => r.title).join("، ")}` : undefined, fix: { label: "راجع المستندات", targets: targets(byIds(pending.map((r) => r.itemId ?? ""))) } },
+    { id: "quorum-possible", stage: 1, tab: "invitees", label: "الأعضاء المدعوون يكفون لاكتمال النصاب", level: "block", ref: "نظام الشركات م80/2", ok: j.invitedMembers >= j.quorumNeeded, detail: `مدعوون ${j.invitedMembers}، والنصاب ${j.quorumNeeded}`, fix: { label: "ادعُ الأعضاء" } },
     { id: "scheduled", stage: 2, tab: "overview", label: "اعتماد موعد الاجتماع", level: "block", ok: m.status === "scheduled" },
     { id: "pack", stage: 2, tab: "overview", label: "نشر حزمة المجلس (جدول الأعمال والمستندات) للأعضاء", level: "block", ref: "لائحة الحوكمة م30/ج", ok: !!m.pack_published_at },
     {
