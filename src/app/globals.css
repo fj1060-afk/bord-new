@@ -76,6 +76,29 @@ body {
   outline-offset: 2px;
 }
 
+/* Motion: opening a <details> slides instead of jumping (where the browser can animate to auto). */
+@supports (interpolate-size: allow-keywords) {
+  :root { interpolate-size: allow-keywords; }
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition: block-size 200ms ease, content-visibility 200ms allow-discrete;
+  }
+  details[open]::details-content { block-size: auto; }
+}
+
+/* A new page fades in; the loading skeleton waits a moment so quick pages never flash it. */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page-in { animation: page-in 180ms ease-out both; }
+.appear-late { animation: appear 200ms ease-out 150ms both; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
