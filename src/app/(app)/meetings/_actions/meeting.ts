@@ -155,3 +155,14 @@ export async function deleteMeeting(meetingId: string) {
   if (error || !data?.length) throw new Error("Could not delete meeting");
   revalidatePath("/", "layout");
 }
+
+/** Deletes several trial meetings at once (system administrator). */
+export async function deleteMeetings(meetingIds: string[]) {
+  await requirePage("/admin/roles", LEVELS.manage);
+  const ids = meetingIds.filter((id) => /^[0-9a-f-]{36}$/.test(id)).slice(0, 100);
+  if (!ids.length) return;
+  const supabase = await createClient();
+  const { error } = await supabase.from("meetings").delete().in("id", ids);
+  if (error) throw new Error("Could not delete meetings");
+  revalidatePath("/", "layout");
+}

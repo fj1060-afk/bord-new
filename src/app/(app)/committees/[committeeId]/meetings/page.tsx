@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
 import { requirePage } from "@/lib/auth";
-import { can, LEVELS } from "@/lib/permissions";
-import { ScopeMeetings } from "../../../_scope/lists";
+import { MeetingsTable } from "@/app/(app)/meetings/_components/meetings-table";
 import { committeeOf } from "../../_committee";
 
 export const metadata: Metadata = { title: "الاجتماعات" };
 
-export default async function CommitteeMeetingsPage({ params }: PageProps<"/committees/[committeeId]/meetings">) {
-  const viewer = await requirePage("/meetings");
+export default async function CommitteeMeetingsPage({ params, searchParams }: PageProps<"/committees/[committeeId]/meetings">) {
+  await requirePage("/meetings");
   const { committeeId } = await params;
   const committee = await committeeOf(committeeId);
   return (
     <>
       <PageHeader section={committee.name} title="الاجتماعات" />
-      <ScopeMeetings scope={{ committee: committee.id }} canEdit={can(viewer.permissions, "/meetings", LEVELS.edit)} canDelete={can(viewer.permissions, "/admin/roles", LEVELS.manage)} />
+      <MeetingsTable base={`/committees/${committee.id}/meetings`} params={await searchParams} scope={{ committee: committee.id }} />
     </>
   );
 }

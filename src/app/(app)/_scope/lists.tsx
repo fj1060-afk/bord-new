@@ -1,13 +1,10 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { Trash2 } from "lucide-react";
-import { ConfirmButton } from "@/components/org/confirm-button";
-import { deleteMeeting } from "../meetings/_actions/meeting";
 import { Panel } from "../_dashboard/widgets";
 import { implementation } from "@/lib/dashboard";
-import { formatDateTime, formatGregorianDate } from "@/lib/format";
+import { formatGregorianDate } from "@/lib/format";
 import { LIBRARY_CATEGORIES, type LibraryCategory } from "@/lib/library";
-import { MEETING_STATUS, meetingReference } from "@/lib/meetings";
+import { meetingReference } from "@/lib/meetings";
 import { MINUTES_STATUS, RESOLUTION_STATUS, resolutionReference, riyadhToday } from "@/lib/minutes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,40 +16,6 @@ const whose = (scope: Scope) => ("board" in scope ? "المجلس" : "اللجن
 
 const empty = (text: string) => <li className="px-5 py-6 text-center text-sm text-ink-muted">{text}</li>;
 const row = "flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-3 text-sm hover:bg-paper";
-
-/** The board's or a committee's meetings, newest first. */
-export async function ScopeMeetings({ scope, canEdit, canDelete }: { scope: Scope; canEdit: boolean; canDelete?: boolean }) {
-  const supabase = await createClient();
-  const { data } = await supabase.from("meetings").select("id, title, number, starts_at, status, live_status").eq(column(scope), idOf(scope)).order("starts_at", { ascending: false }).limit(100);
-  return (
-    <Panel title={`اجتماعات ${whose(scope)}`} action={canEdit && <Link href={`/meetings/new?body=${"board" in scope ? "board" : "committee"}:${idOf(scope)}`} className="text-sm text-primary hover:underline">اجتماع جديد</Link>}>
-      <ul className="divide-y divide-rule">
-        {(data ?? []).length === 0 && empty("لا اجتماعات بعد.")}
-        {(data ?? []).map((m) => (
-          <li key={m.id} className="flex items-center">
-            <Link href={`/meetings/${m.id}`} className={clsx(row, "min-w-0 flex-1")}>
-              <span className="min-w-0 flex-1 font-medium">{m.title}</span>
-              <span className="text-ink-muted">{meetingReference(m.number, m.starts_at)} · {formatDateTime(new Date(m.starts_at))}</span>
-              <span className={clsx("rounded-full px-2 py-0.5 text-xs", m.status === "cancelled" ? "bg-paper text-ink-muted" : m.live_status === "ended" ? "bg-primary-soft text-primary" : "bg-brass-soft text-brass")}>
-                {m.status === "cancelled" ? MEETING_STATUS.cancelled : m.live_status === "ended" ? "انعقد" : MEETING_STATUS[m.status as keyof typeof MEETING_STATUS]}
-              </span>
-            </Link>
-            {canDelete && <DeleteMeeting id={m.id} title={m.title} />}
-          </li>
-        ))}
-      </ul>
-    </Panel>
-  );
-}
-
-/** Trash icon for trial meetings; everything under the meeting goes with it. */
-export function DeleteMeeting({ id, title }: { id: string; title: string }) {
-  return (
-    <span className="pe-3">
-      <ConfirmButton action={deleteMeeting.bind(null, id)} label={`حذف ${title}`} icon={<Trash2 size={16} aria-hidden="true" />} confirm={`حذف «${title}» نهائياً مع بنوده ومحضره وقراراته ومستنداته؟ لا يمكن التراجع.`} />
-    </span>
-  );
-}
 
 type Resolution = { id: string; number: number | null; year: number | null; text: string; status: keyof typeof RESOLUTION_STATUS; meeting: { starts_at: string }; resolution_tasks: { status: string; due_date: string | null }[] };
 
