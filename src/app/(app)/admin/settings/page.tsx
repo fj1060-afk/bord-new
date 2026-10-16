@@ -17,7 +17,7 @@ const ENTITY_LABELS: Record<string, string> = {
   roles: "الأدوار",
   role_permissions: "الصلاحيات",
   sessions: "الجلسات",
-  service_settings: "الخدمات الخارجية",
+  service_settings: "إعدادات الموقع",
 };
 const ACTION_LABELS: Record<string, string> = {
   insert: "إضافة",
@@ -41,14 +41,14 @@ export default async function SettingsPage({ searchParams }: PageProps<"/admin/s
   if (entity in ENTITY_LABELS) auditQuery = auditQuery.eq("entity_type", entity);
 
   const [{ data: sessions }, { data: logs }, services] = await Promise.all([supabase.rpc("list_sessions"), auditQuery, serviceSettings(supabase)]);
-  const { ready, host, model, provider } = aiConfig(process.env);
+  const { ready, host, model } = aiConfig(process.env);
   const canEndAny = can(viewer.permissions, "/admin/settings", LEVELS.manage);
 
   return (
     <>
-      <PageHeader section="الإدارة" title="الإعدادات" description="الذكاء الاصطناعي والخدمات الخارجية، والجلسات النشطة، وسجل العمليات الحساسة." />
+      <PageHeader section="الإدارة" title="الإعدادات" description="الخدمات الخارجية والاجتماعات والخصوصية، والجلسات النشطة، وسجل العمليات الحساسة." />
 
-      <ServicesForm settings={services} ai={{ ready, host, model, provider }} canManage={canEndAny} />
+      <ServicesForm settings={services} ai={{ ready, host, model }} canManage={canEndAny} />
 
       <section className="mb-10">
         <h2 className="mb-3 font-display text-xl font-bold">الجلسات النشطة</h2>

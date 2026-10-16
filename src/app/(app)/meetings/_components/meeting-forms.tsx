@@ -34,7 +34,8 @@ function Select({ name, options, defaultValue, onChange }: { name: string; optio
 }
 
 /** Create a meeting (with a body picker) or edit an existing meeting's details. */
-export function MeetingDetailsForm({ meeting, bodies }: { meeting?: Meeting; bodies?: Body[] }) {
+/** `allowRemote` false (a site setting) leaves only in-person, unless the meeting already uses another mode. */
+export function MeetingDetailsForm({ meeting, bodies, allowRemote = true }: { meeting?: Meeting; bodies?: Body[]; allowRemote?: boolean }) {
   const action = meeting ? updateMeeting.bind(null, meeting.id) : createMeeting;
   const [state, formAction] = useActionState(action, null);
   const [mode, setMode] = useState(meeting?.mode ?? "in_person");
@@ -74,7 +75,7 @@ export function MeetingDetailsForm({ meeting, bodies }: { meeting?: Meeting; bod
         <input name="duration_minutes" type="number" min={15} max={720} step={15} defaultValue={meeting?.duration_minutes ?? 120} className={inputClass} />
       </Field>
       <Field label="طريقة الانعقاد">
-        <Select name="mode" options={MEETING_MODES} defaultValue={mode} onChange={setMode} />
+        <Select name="mode" options={allowRemote ? MEETING_MODES : Object.fromEntries(Object.entries(MEETING_MODES).filter(([k]) => k === "in_person" || k === meeting?.mode))} defaultValue={mode} onChange={setMode} />
       </Field>
       {mode !== "virtual" && (
         <Field label="المكان">

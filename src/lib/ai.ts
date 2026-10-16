@@ -4,7 +4,16 @@
 export type AiProvider = "anthropic" | "openai-compatible";
 export type AiConfig = { provider: AiProvider; model: string; url: string; host: string; key: string | null; ready: boolean };
 
-export type ServiceSettings = { ai_enabled: boolean; ai_no_retention_confirmed: boolean; external_translation: boolean; external_spelling: boolean };
+export type ServiceSettings = {
+  ai_enabled: boolean;
+  ai_no_retention_confirmed: boolean;
+  external_translation: boolean;
+  external_spelling: boolean;
+  remote_meetings: boolean;
+  circular_enabled: boolean;
+  pack_requires_disclosure: boolean;
+  hide_contacts: boolean;
+};
 
 type Env = Record<string, string | undefined>;
 

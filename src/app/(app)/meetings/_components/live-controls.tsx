@@ -41,7 +41,7 @@ export function MeetingTimer({
   );
 }
 
-export function AttendanceSelect({ meetingId, personId, value, disabled }: { meetingId: string; personId: string; value?: string; disabled: boolean }) {
+export function AttendanceSelect({ meetingId, personId, value, disabled, allowRemote = true }: { meetingId: string; personId: string; value?: string; disabled: boolean; allowRemote?: boolean }) {
   const [pending, start] = useTransition();
   return (
     <select
@@ -54,7 +54,7 @@ export function AttendanceSelect({ meetingId, personId, value, disabled }: { mee
       <option value="" disabled>
         لم يُسجّل
       </option>
-      {Object.entries(ATTENDANCE).map(([v, l]) => (
+      {Object.entries(ATTENDANCE).filter(([v]) => allowRemote || v !== "remote" || v === value).map(([v, l]) => (
         <option key={v} value={v}>
           {l}
         </option>

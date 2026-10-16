@@ -3,6 +3,7 @@ import { RegulationNote } from "@/components/ui/regulation-note";
 import { NOTES } from "@/lib/regulations";
 import { PageHeader } from "@/components/ui/page-header";
 import { requirePage } from "@/lib/auth";
+import { serviceSettings } from "@/lib/ai-server";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { MeetingDetailsForm } from "../_components/meeting-forms";
@@ -12,7 +13,7 @@ export const metadata: Metadata = { title: "اجتماع جديد" };
 export default async function NewMeetingPage() {
   await requirePage("/meetings", LEVELS.edit);
   const supabase = await createClient();
-  const { data: bodies } = await supabase.rpc("list_meeting_bodies");
+  const [{ data: bodies }, services] = await Promise.all([supabase.rpc("list_meeting_bodies"), serviceSettings(supabase)]);
 
   return (
     <>
@@ -28,7 +29,7 @@ export default async function NewMeetingPage() {
         </p>
       ) : (
         <div className="rounded-lg border border-rule bg-surface p-6">
-          <MeetingDetailsForm bodies={bodies as { id: string; name: string; kind: string }[]} />
+          <MeetingDetailsForm bodies={bodies as { id: string; name: string; kind: string }[]} allowRemote={services.remote_meetings} />
         </div>
       )}
     </>

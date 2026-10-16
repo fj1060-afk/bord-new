@@ -34,6 +34,7 @@ import { MinutesTab } from "../_components/minutes-tab";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MeetingDetailsForm, RsvpForm } from "../_components/meeting-forms";
 import type { AgendaItem } from "../_components/agenda-forms";
+import { serviceSettings } from "@/lib/ai-server";
 
 export const metadata: Metadata = { title: "الاجتماع" };
 
@@ -59,6 +60,10 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
     .eq("id", meetingId)
     .maybeSingle();
   if (!meeting) notFound();
+  const services = await serviceSettings(supabase);
+  // A member without this year's disclosure sees no pack documents (enforced in RLS) when the company requires it.
+  const packBlocked =
+    !organizer && Boolean(meeting.pack_published_at) && services.pack_requires_disclosure && !(await supabase.rpc("pack_disclosure_ok", { p_meeting: meetingId })).data;
 
   const [{ data: users }, profile, disclosures, { data: library }, { data: requirementRows }, powers] =
     tab === "agenda" && organizer
@@ -164,7 +169,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
               <details className="rounded-lg border border-rule bg-surface">
                 <summary className="cursor-pointer px-5 py-4 text-sm font-medium">تعديل بيانات الاجتماع</summary>
                 <div className="border-t border-rule p-5">
-                  <MeetingDetailsForm meeting={meeting} />
+                  <MeetingDetailsForm meeting={meeting} allowRemote={services.remote_meetings} />
                 </div>
               </details>
             )}
@@ -218,6 +223,16 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           <DocIntroForm meetingId={meetingId} doc="agenda" intro={meeting.agenda_intro} introEn={meeting.agenda_intro_en} />
         </div>
       )}
+      {tab === "agenda" && packBlocked && (
+        <p className="mb-4 rounded-lg border border-brass bg-brass-soft p-4 text-sm">
+          تُفتح مستندات الحزمة بعد تقديم إفصاحك السنوي عن تعارض المصالح لهذا العام.{" "}
+          {viewer.personId && (
+            <Link href={`/people/${viewer.personId}`} className="font-medium text-primary hover:underline">
+              تقديم الإفصاح
+            </Link>
+          )}
+        </p>
+      )}
       {tab === "agenda" && (
         <AgendaTab
           meetingId={meetingId}
@@ -263,6 +278,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
               invitees: inviteeRows,
               items: agenda as unknown as LiveData["items"],
               ...(await loadLive(supabase, meetingId, !!meeting.board_id)),
+              remoteAllowed: services.remote_meetings,
             }}
           />
         ) : (

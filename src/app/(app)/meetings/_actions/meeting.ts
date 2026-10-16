@@ -41,6 +41,9 @@ function readDetails(form: FormData) {
   };
 }
 
+const REMOTE_OFF = "الاجتماعات والحضور عن بُعد موقوفة في إعدادات الموقع؛ اختر «حضوري».";
+const remoteOff = (error: { message?: string } | null) => Boolean(error?.message?.includes("remote meetings are turned off"));
+
 export async function createMeeting(_prev: ActionState, form: FormData): Promise<ActionState> {
   await requirePage("/meetings", LEVELS.edit);
   const [kind, bodyId] = String(form.get("body") ?? "").split(":");
@@ -54,7 +57,7 @@ export async function createMeeting(_prev: ActionState, form: FormData): Promise
     .insert({ ...details.row, board_id: kind === "board" ? bodyId : null, committee_id: kind === "committee" ? bodyId : null })
     .select("id")
     .single();
-  if (error || !meeting) return { ok: false, message: "تعذّر إنشاء الاجتماع." };
+  if (error || !meeting) return { ok: false, message: remoteOff(error) ? REMOTE_OFF : "تعذّر إنشاء الاجتماع." };
 
   // Invite the body's active members; guests are added later from the meeting page.
   const { data: members } = await supabase
@@ -76,7 +79,7 @@ export async function updateMeeting(meetingId: string, _prev: ActionState, form:
   if ("error" in details) return { ok: false, message: details.error! };
   const supabase = await createClient();
   const { error } = await supabase.from("meetings").update(details.row).eq("id", meetingId);
-  if (error) return { ok: false, message: "تعذّر حفظ التعديلات." };
+  if (error) return { ok: false, message: remoteOff(error) ? REMOTE_OFF : "تعذّر حفظ التعديلات." };
   revalidatePath(`/meetings/${meetingId}`);
   return { ok: true, message: "حُفظت التعديلات." };
 }

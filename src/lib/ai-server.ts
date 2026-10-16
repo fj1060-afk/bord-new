@@ -2,12 +2,22 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiAnswer, aiConfig, aiRequest, type ServiceSettings } from "./ai";
 
-const OFF: ServiceSettings = { ai_enabled: false, ai_no_retention_confirmed: false, external_translation: false, external_spelling: false };
+// If the row cannot be read, outside services stay off and the meeting switches keep their defaults.
+const FALLBACK: ServiceSettings = {
+  ai_enabled: false,
+  ai_no_retention_confirmed: false,
+  external_translation: false,
+  external_spelling: false,
+  remote_meetings: true,
+  circular_enabled: true,
+  pack_requires_disclosure: false,
+  hide_contacts: false,
+};
 
-/** The site's outside-service switches; everything is off if they cannot be read. */
+/** The site's switches (service_settings). */
 export async function serviceSettings(supabase: SupabaseClient): Promise<ServiceSettings> {
-  const { data } = await supabase.from("service_settings").select("ai_enabled, ai_no_retention_confirmed, external_translation, external_spelling").maybeSingle();
-  return (data as ServiceSettings | null) ?? OFF;
+  const { data } = await supabase.from("service_settings").select(Object.keys(FALLBACK).join(", ")).maybeSingle();
+  return (data as ServiceSettings | null) ?? FALLBACK;
 }
 
 /**

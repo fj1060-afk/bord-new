@@ -6,6 +6,7 @@ import { RegulationNote } from "@/components/ui/regulation-note";
 import { requirePage } from "@/lib/auth";
 import { formatGregorianDate } from "@/lib/format";
 import { meetingReference } from "@/lib/meetings";
+import { serviceSettings } from "@/lib/ai-server";
 import { can, LEVELS } from "@/lib/permissions";
 import { CIRCULAR_STATUS, circularOutcome, VOTES } from "@/lib/secretary";
 import { createClient } from "@/lib/supabase/server";
@@ -56,7 +57,7 @@ export default async function CircularPage() {
           { source: "نظام الشركات", article: "م82", text: "تصدر بموافقة أغلبية أصوات الأعضاء ما لم يطلب أحدهم كتابةً اجتماع المجلس للمداولة، وتُعرض في أول اجتماع تالٍ لإثباتها في محضره." },
         ]}
       />
-      {manage && <CircularForm bodies={bodies} />}
+      {manage && ((await serviceSettings(supabase)).circular_enabled ? <CircularForm bodies={bodies} /> : <p className="mb-6 rounded-lg border border-dashed border-rule bg-surface p-4 text-sm text-ink-muted">طرح قرارات جديدة بالتمرير موقوف في إعدادات الموقع؛ القرارات المطروحة سابقاً تكمل تصويتها.</p>)}
       <ul className="flex flex-col gap-4">
         {rows.length === 0 && <li className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">لا توجد قرارات بالتمرير.</li>}
         {rows.map((r, i) => {

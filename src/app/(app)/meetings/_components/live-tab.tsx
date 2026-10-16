@@ -25,6 +25,7 @@ export type LiveData = {
   breaks: { started_at: string; ended_at: string | null }[];
   rule: QuorumRule;
   proxyAllowed: boolean;
+  remoteAllowed: boolean;
   items: { id: string; position: number; title: string; kind: keyof typeof ITEM_KINDS; status: keyof typeof ITEM_STATUS; outcome: string | null; duration_minutes: number | null }[];
 };
 
@@ -114,7 +115,7 @@ export function LiveTab({ data, canRun }: { data: LiveData; canRun: boolean }) {
                   </span>
                   {canRun && !ended ? (
                     <>
-                      <AttendanceSelect meetingId={meeting.id} personId={i.person_id} value={status[i.person_id]} disabled={false} />
+                      <AttendanceSelect meetingId={meeting.id} personId={i.person_id} value={status[i.person_id]} disabled={false} allowRemote={data.remoteAllowed} />
                       {status[i.person_id] === "proxy" && i.kind === "member" && !data.proxyAllowed && <span className="text-xs text-danger">الإنابة غير مسموحة في نظام الشركة الأساس</span>}
                       {status[i.person_id] === "proxy" && i.kind === "member" && data.proxyAllowed && (
                         <ProxySelect meetingId={meeting.id} grantorId={i.person_id} value={holderOf[i.person_id]} holders={holders} disabled={false} />

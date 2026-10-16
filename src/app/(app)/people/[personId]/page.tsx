@@ -22,12 +22,13 @@ export default async function PersonPage({ params }: PageProps<"/people/[personI
   const supabase = await createClient();
 
   // RLS returns the person only to themself or to people who can see members.
-  const { data: person } = await supabase
-    .from("people")
-    .select("id, full_name, full_name_en, email, phone, job_title, organization, qualifications, experience, user_id")
-    .eq("id", personId)
-    .maybeSingle<PersonDetails>();
-  if (!person) notFound();
+  // Email and phone come separately: the company may hide them from other members.
+  const [{ data: row }, { data: contact }] = await Promise.all([
+    supabase.from("people").select("id, full_name, full_name_en, job_title, organization, qualifications, experience, user_id").eq("id", personId).maybeSingle(),
+    supabase.rpc("person_contact", { p_person: personId }).maybeSingle<{ email: string | null; phone: string | null }>(),
+  ]);
+  if (!row) notFound();
+  const person = { ...row, email: contact?.email ?? null, phone: contact?.phone ?? null } as PersonDetails;
 
   const isSelf = person.user_id === viewer.id;
   const canEditPerson = can(viewer.permissions, "/board", LEVELS.edit) || can(viewer.permissions, "/committees", LEVELS.edit);

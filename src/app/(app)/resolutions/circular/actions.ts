@@ -24,7 +24,7 @@ export async function createCircular(_: ActionState, fd: FormData): Promise<Acti
     text,
     deadline: /^\d{4}-\d{2}-\d{2}$/.test(deadline) ? deadline : null,
   });
-  if (error) return { ok: false, message: "تعذّر الحفظ." };
+  if (error) return { ok: false, message: error.message.includes("circular resolutions are turned off") ? "القرارات بالتمرير موقوفة في إعدادات الموقع." : "تعذّر الحفظ." };
   revalidatePath(PATH);
   return { ok: true, message: "طُرح القرار للتصويت." };
 }

@@ -15,7 +15,7 @@ export async function endSession(sessionId: string) {
   revalidatePath("/admin/settings");
 }
 
-/** Which outside services may receive the site's text. */
+/** Saves the site's switches: outside services, meetings and decisions, privacy. */
 export async function saveServices(_: ActionState, fd: FormData): Promise<ActionState> {
   await requirePage("/admin/settings", LEVELS.manage);
   const on = (k: string) => fd.get(k) === "on";
@@ -27,7 +27,17 @@ export async function saveServices(_: ActionState, fd: FormData): Promise<Action
   const { data: user } = await supabase.auth.getUser();
   const { error } = await supabase
     .from("service_settings")
-    .update({ ai_enabled: ai, ai_no_retention_confirmed: confirmed, external_translation: on("external_translation"), external_spelling: on("external_spelling"), updated_by: user.user?.id ?? null })
+    .update({
+      ai_enabled: ai,
+      ai_no_retention_confirmed: confirmed,
+      external_translation: on("external_translation"),
+      external_spelling: on("external_spelling"),
+      remote_meetings: on("remote_meetings"),
+      circular_enabled: on("circular_enabled"),
+      pack_requires_disclosure: on("pack_requires_disclosure"),
+      hide_contacts: on("hide_contacts"),
+      updated_by: user.user?.id ?? null,
+    })
     .eq("id", true);
   if (error) return { ok: false, message: "تعذّر الحفظ." };
   revalidatePath("/admin/settings");
