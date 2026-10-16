@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bodyOf, CATEGORIES, libraryTemplates, suggestTitles, templates } from "./item-templates";
+import { bodyOf, CATEGORIES, libraryTemplates, matchTemplate, suggestTitles, templates } from "./item-templates";
 
 describe("suggestTitles", () => {
   it("completes the financial statements item", () => {
@@ -47,6 +47,12 @@ describe("suggestTitles", () => {
     expect(suggestTitles("القوائم المالية", 5, [], "board")[0].title).toBe("التصويت على اعتماد القوائم المالية للسنة المالية المنتهية في (…)");
     expect(suggestTitles("القوائم المالية")[0].en).toBe("Approving the financial statements for the financial year ended (…)");
     expect(bodyOf({ board_id: null, committee_kind: "remuneration_nomination" })).toBe("nrc");
+  });
+
+  it("recognizes the wording a typed title is based on", () => {
+    expect(matchTemplate("التصويت على فتح فرع للشركة في لندن")?.title).toBe("التصويت على فتح فرع للشركة في (…)");
+    expect(matchTemplate("التصويت على اعتماد محضر الاجتماع السابق")?.needs).toContain("مسودة المحضر");
+    expect(matchTemplate("مناقشة خطة التحول الرقمي")).toBeNull();
   });
 
   it("stays quiet when nothing fits", () => {

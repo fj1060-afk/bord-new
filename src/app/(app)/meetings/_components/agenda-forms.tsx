@@ -8,7 +8,7 @@ import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_acti
 import { byDepartment, ownerOf, type Target } from "./agenda-targets";
 import { useAutoEnglish } from "./auto-english";
 import { ItemReviewPanel } from "./item-review-panel";
-import { suggestTitles, type Body, type Template, type TitleSuggestion } from "@/lib/item-templates";
+import { matchTemplate, suggestTitles, type Body, type Template, type TitleSuggestion } from "@/lib/item-templates";
 
 function TargetSelect({ name, targets, defaultValue, required, placeholder }: { name: string; targets: Target[]; defaultValue?: string; required?: boolean; placeholder: string }) {
   return (
@@ -82,34 +82,54 @@ function TitleField({ defaultValue, library, body, onPicked }: { defaultValue?: 
   const [typed, setTyped] = useState("");
   const ref = useRef<HTMLInputElement>(null);
   const suggestions = typed ? suggestTitles(typed, 5, library, body) : [];
+  const field = <T extends Element>(name: string) => ref.current?.form?.elements.namedItem(name) as T | null;
+
+  /** Links the title to a standard wording (or to none) and lets the auto-filled description follow it. */
+  const follow = (t: { title: string; en?: string; needs?: string } | null) => {
+    const input = ref.current;
+    if (!input) return;
+    if (t?.en) {
+      input.dataset.templateAr = t.title;
+      input.dataset.templateEn = t.en;
+    } else {
+      delete input.dataset.templateAr;
+      delete input.dataset.templateEn;
+    }
+    // Text the author wrote is never replaced.
+    const description = field<HTMLTextAreaElement>("description");
+    if (!description || (description.value.trim() && description.value !== description.dataset.auto)) return;
+    const next = t?.needs ? `المستندات الداعمة: ${t.needs}` : "";
+    if (next === description.value) return;
+    description.value = next;
+    description.dataset.auto = next;
+    onPicked?.();
+  };
+
   const pick = (s: TitleSuggestion) => {
     const input = ref.current;
     if (!input) return;
     input.value = s.title;
-    const kind = input.form?.elements.namedItem("kind") as HTMLSelectElement | null;
+    const kind = field<HTMLSelectElement>("kind");
     if (kind) kind.value = s.kind;
-    // The description follows the picked wording unless the author has written their own.
-    const description = input.form?.elements.namedItem("description") as HTMLTextAreaElement | null;
-    if (description && (!description.value.trim() || description.value === description.dataset.auto)) {
-      description.value = s.needs ? `المستندات الداعمة: ${s.needs}` : "";
-      description.dataset.auto = description.value;
-    }
-    const en = input.form?.elements.namedItem("title_en") as HTMLInputElement | null;
+    const en = field<HTMLInputElement>("title_en");
     if (en && s.en) {
-      // The English wording is exact; filling the Arabic blanks later updates it.
-      input.dataset.templateAr = s.title;
-      input.dataset.templateEn = s.en;
       delete en.dataset.manual;
       en.value = s.en;
       const details = en.closest("details");
       if (details) details.open = true;
     }
+    follow(s);
     setTyped("");
-    onPicked?.();
   };
+
+  const onInput = (value: string) => {
+    setTyped(value);
+    follow(matchTemplate(value, library));
+  };
+
   return (
     <div className="flex flex-col gap-2">
-      <input ref={ref} name="title" spellCheck lang="ar" defaultValue={defaultValue} required autoComplete="off" onInput={(e) => setTyped(e.currentTarget.value)} className={inputClass} />
+      <input ref={ref} name="title" spellCheck lang="ar" defaultValue={defaultValue} required autoComplete="off" onInput={(e) => onInput(e.currentTarget.value)} className={inputClass} />
       {suggestions.length > 0 && (
         <div className="flex flex-col gap-1">
           <span className="text-xs text-ink-muted">صيغ مقترحة:</span>

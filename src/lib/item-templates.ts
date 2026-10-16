@@ -2,6 +2,7 @@
 
 import { fold } from "./item-review";
 import { withPhraseFixes } from "./spelling";
+import { blankValues } from "./translate";
 import { buildTemplates, type Body, type Kind, type Template } from "./item-templates-data";
 
 export { BODIES, CATEGORIES, type Body, type Template } from "./item-templates-data";
@@ -50,4 +51,27 @@ export function bodyOf(meeting: { board_id: string | null; committee_kind?: stri
   if (meeting.board_id) return "board";
   const kind = meeting.committee_kind ?? "";
   return kind === "audit" ? "audit" : kind === "risk" ? "risk" : ["remuneration", "nomination", "remuneration_nomination"].includes(kind) ? "nrc" : "any";
+}
+
+const meaningful = (s: string) => fold(s.replace(/\(…\)/g, " ")).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 2);
+
+/**
+ * The standard wording a typed title is based on: one whose blanks it fills,
+ * or failing that one sharing most of its words. Null when none fits.
+ */
+export function matchTemplate(title: string, own: Template[] = []): Template | null {
+  const text = title.trim();
+  if (text.length < 5) return null;
+  const list = [...own, ...templates()];
+  const filled = list.find((t) => t.title === text || blankValues(t.title, text));
+  if (filled) return filled;
+  const typed = new Set(meaningful(text));
+  let best: { t: Template; score: number } | null = null;
+  for (const t of list) {
+    const words = meaningful(t.title);
+    if (!words.length) continue;
+    const score = words.filter((w) => typed.has(w)).length / Math.max(words.length, typed.size);
+    if (!best || score > best.score) best = { t, score };
+  }
+  return best && best.score >= 0.7 ? best.t : null;
 }
