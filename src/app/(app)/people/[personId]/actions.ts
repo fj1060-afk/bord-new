@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { getViewer } from "@/lib/auth";
 import { POSITION_ROLES } from "@/lib/affiliations";
+import { INDEPENDENCE_ISSUES, parseOwnershipNotice } from "@/lib/declarations";
 import { currentYear, isOneOf } from "@/lib/org";
 import { LEVELS, can } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -110,5 +111,51 @@ export async function removePosition(personId: string, positionId: string) {
   await requireViewer();
   const supabase = await createClient();
   await supabase.from("person_positions").delete().eq("id", positionId);
+  revalidatePath(`/people/${personId}`);
+}
+
+/** Files a competition, independence or other-boards declaration for this year (the person, or board editors). */
+export async function fileDeclaration(personId: string, kind: "competition" | "independence" | "other_boards", _prev: ActionState, form: FormData): Promise<ActionState> {
+  await requireViewer();
+  const details = text(form, "details")?.slice(0, 4000) ?? null;
+  const issues = form.getAll("issue").map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < INDEPENDENCE_ISSUES.length);
+  const flagged = kind === "competition" ? form.get("flagged") === "yes" : kind === "independence" ? issues.length > 0 : false;
+  if (kind === "competition" && flagged && !details) return { ok: false, message: "اذكر العمل المنافس وجهته." };
+  const seats = kind === "other_boards" ? String(form.get("seats") ?? "").slice(0, 4000) : "";
+  const supabase = await createClient();
+  const { error } = await supabase.from("member_declarations").insert({
+    person_id: personId,
+    kind,
+    year: currentYear(),
+    flagged,
+    details,
+    data: kind === "independence" ? { issues } : kind === "other_boards" ? { seats: seats.split("\n").filter(Boolean) } : {},
+  });
+  if (error) return { ok: false, message: "تعذّر حفظ الإقرار." };
+  revalidatePath(`/people/${personId}`);
+  return { ok: true, message: "قُدّم الإقرار." };
+}
+
+/** Saves a filled 5% ownership notice; the member prints, signs and sends it to the Exchange. */
+export async function saveOwnershipNotice(personId: string, raw: unknown): Promise<ActionState & { id?: string }> {
+  await requireViewer();
+  const notice = parseOwnershipNotice(raw);
+  if (!notice) return { ok: false, message: "أكمل الاسم ورقم الهوية واسم المصدر وتاريخ وقوع الحدث." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("member_declarations")
+    .insert({ person_id: personId, kind: "ownership_notice", year: Number(notice.eventDate.slice(0, 4)), flagged: true, data: notice })
+    .select("id")
+    .single();
+  if (error || !data) return { ok: false, message: "تعذّر حفظ الإشعار." };
+  revalidatePath(`/people/${personId}`);
+  return { ok: true, message: "حُفظ الإشعار.", id: data.id };
+}
+
+export async function reviewDeclaration(personId: string, declarationId: string) {
+  const viewer = await requireViewer();
+  if (!can(viewer.permissions, "/board", LEVELS.edit)) throw new Error("Not allowed");
+  const supabase = await createClient();
+  await supabase.from("member_declarations").update({ status: "reviewed", reviewed_by: viewer.id }).eq("id", declarationId);
   revalidatePath(`/people/${personId}`);
 }

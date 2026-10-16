@@ -11,6 +11,8 @@ import { createClient } from "@/lib/supabase/server";
 import { reviewDisclosure } from "./actions";
 import { DisclosureForm, PersonForm, type PersonDetails } from "./person-forms";
 import { CvEditor, type Position } from "./cv-editor";
+import { Declarations, type Declaration } from "./declarations";
+import { BOARD_SEATS, POSITION_ROLES } from "@/lib/affiliations";
 
 export const metadata: Metadata = { title: "ملف العضو" };
 
@@ -47,12 +49,17 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/p
   const canReview = can(viewer.permissions, "/board", LEVELS.edit);
   const year = currentYear();
 
-  const [{ data: board }, { data: committees }, { data: disclosures }, { data: users }] = await Promise.all([
-    supabase.from("board_members").select("id, position, start_date, end_date, status, board:boards(name)").eq("person_id", personId).order("start_date", { ascending: false }),
+  const [{ data: board }, { data: committees }, { data: disclosures }, { data: users }, { data: declarations }] = await Promise.all([
+    supabase.from("board_members").select("id, position, category, start_date, end_date, status, board:boards(name)").eq("person_id", personId).order("start_date", { ascending: false }),
     supabase.from("committee_members").select("id, position, start_date, end_date, status, committee:committees(id, name)").eq("person_id", personId).order("start_date", { ascending: false }),
     supabase.from("disclosures").select("id, year, has_conflict, details, status, submitted_at").eq("person_id", personId).order("year", { ascending: false }),
     canEditPerson ? supabase.rpc("list_active_users") : Promise.resolve({ data: [] }),
+    supabase.from("member_declarations").select("id, kind, year, flagged, details, data, status, submitted_at").eq("person_id", personId).order("submitted_at", { ascending: false }),
   ]);
+  const independent = (board ?? []).some((m) => m.status === "active" && m.category === "independent");
+  const seats = ((positions ?? []) as Position[])
+    .filter((p) => p.end_year === null && BOARD_SEATS.includes(p.role))
+    .map((p) => `${p.organization} · ${POSITION_ROLES[p.role]}${p.listed ? " · مدرجة" : ""}`);
   const filedThisYear = (disclosures ?? []).some((d) => d.year === year);
 
   const memberships = [
@@ -118,6 +125,13 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/p
         </div>
 
         <aside className="flex flex-col gap-4">
+          <h2 className="font-display text-xl font-bold">الإقرارات</h2>
+          {(declarations ?? []).length === 0 && !(isSelf || canReview) ? (
+            <p className="text-sm text-ink-muted">لا تظهر الإقرارات إلا للعضو وللمخوّلين بمراجعتها.</p>
+          ) : (
+            <Declarations personId={person.id} year={year} items={(declarations ?? []) as Declaration[]} independent={independent} seats={seats} canFile={isSelf || canReview} canReview={canReview} />
+          )}
+
           <h2 className="font-display text-xl font-bold">الإفصاحات السنوية</h2>
           {!filedThisYear && (isSelf || canReview) && <DisclosureForm personId={person.id} year={year} />}
           {(disclosures ?? []).length === 0 && !(isSelf || canReview) && (
