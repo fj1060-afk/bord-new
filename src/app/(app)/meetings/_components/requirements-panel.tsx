@@ -28,13 +28,19 @@ const ICONS = { doc: FileText, rec: Landmark, check: CheckSquare };
 const targetOf = (r: RequirementRow) => (r.department_id ? `department:${r.department_id}` : r.assignee_user_id ? `user:${r.assignee_user_id}` : "");
 
 /** An item's requirements: drafts to adjust before sending, checks to confirm, and changes still to send. */
-export function RequirementsPanel({ meetingId, itemId, rows, targets, dueDefault }: { meetingId: string; itemId: string; rows: RequirementRow[]; targets: Target[]; dueDefault: string }) {
+export function RequirementsPanel({ meetingId, itemId, rows, targets, dueDefault, send }: { meetingId: string; itemId: string; rows: RequirementRow[]; targets: Target[]; dueDefault: string; send?: React.ReactNode }) {
   const drafts = rows.filter((r) => r.status === "draft" && r.kind !== "check");
   const checks = rows.filter((r) => r.kind === "check" && r.status !== "dismissed");
   const obsolete = rows.filter((r) => r.obsolete);
   const dismissed = rows.filter((r) => r.status === "dismissed");
   const sent = rows.filter((r) => r.status === "sent" && r.kind !== "check" && !r.obsolete).length;
-  if (!rows.length) return <AddRequirement meetingId={meetingId} itemId={itemId} targets={targets} dueDefault={dueDefault} />;
+  if (!rows.length)
+    return (
+      <>
+        <AddRequirement meetingId={meetingId} itemId={itemId} targets={targets} dueDefault={dueDefault} />
+        {send}
+      </>
+    );
 
   return (
     <div className="flex flex-col gap-2 rounded-md border border-rule p-3 text-sm">
@@ -77,6 +83,7 @@ export function RequirementsPanel({ meetingId, itemId, rows, targets, dueDefault
         </details>
       )}
       <AddRequirement meetingId={meetingId} itemId={itemId} targets={targets} dueDefault={dueDefault} />
+      {send}
     </div>
   );
 }
@@ -86,21 +93,23 @@ function DraftRow({ meetingId, row, targets }: { meetingId: string; row: Require
   const [pending, start] = useTransition();
   const save = (target: string, due: string | null) => start(() => setRequirementTarget(meetingId, row.id, target, due));
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded bg-paper p-2">
-      <Icon size={14} className="text-ink-muted" aria-label={REQ_KINDS[row.kind]} />
-      <span className="min-w-40 flex-1">{row.label}</span>
-      <div className="w-56" onChange={(e) => save((e.target as unknown as HTMLSelectElement).value, row.due_date)}>
+    <div className="grid gap-2 rounded bg-paper p-2 md:grid-cols-[1fr_14rem_10rem_auto] md:items-center">
+      <span className="flex items-start gap-2">
+        <Icon size={14} className="mt-1 shrink-0 text-ink-muted" aria-label={REQ_KINDS[row.kind]} />
+        {row.label}
+      </span>
+      <div onChange={(e) => save((e.target as unknown as HTMLSelectElement).value, row.due_date)}>
         <TargetSelect name={`t-${row.id}`} targets={targets} defaultValue={targetOf(row)} placeholder="المطلوب منه؟" />
       </div>
-      <div className="w-40">
+      <div className="flex items-center gap-2 md:contents">
         <input type="date" aria-label="آخر موعد" defaultValue={row.due_date ?? ""} onChange={(e) => save(targetOf(row), e.target.value)} className={inputClass} />
+        <form action={setRequirementStatus.bind(null, meetingId, row.id, "dismissed")} className="shrink-0 md:justify-self-end">
+          <button disabled={pending} className="px-1 py-2 text-xs text-ink-muted hover:text-danger">
+            استبعاد
+          </button>
+        </form>
       </div>
-      <form action={setRequirementStatus.bind(null, meetingId, row.id, "dismissed")}>
-        <button disabled={pending} className="text-xs text-ink-muted hover:text-danger">
-          استبعاد
-        </button>
-      </form>
-      {!targetOf(row) && <span className="w-full text-xs text-danger">حدّد المطلوب منه قبل الإرسال.</span>}
+      {!targetOf(row) && <span className="text-xs text-danger md:col-span-4">حدّد المطلوب منه قبل الإرسال.</span>}
     </div>
   );
 }
@@ -110,19 +119,18 @@ function CheckRow({ meetingId, row }: { meetingId: string; row: RequirementRow }
   const [pending, start] = useTransition();
   const checked = !!row.checked_at;
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded bg-paper p-2">
-      <input type="checkbox" checked={checked} disabled={pending} onChange={(e) => start(() => confirmCheck(meetingId, row.id, e.target.checked, note))} aria-label="تأكيد" />
-      <span className={`min-w-40 flex-1 ${checked ? "text-primary" : ""}`}>{row.label}</span>
-      {!checked && (
-        <div className="w-56">
-          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة (اختياري)" className={inputClass} />
-        </div>
-      )}
-      {checked && row.note && <span className="text-xs text-ink-muted">{row.note}</span>}
-      {row.status === "draft" && (
-        <form action={setRequirementStatus.bind(null, meetingId, row.id, "dismissed")}>
-          <button className="text-xs text-ink-muted hover:text-danger">استبعاد</button>
+    <div className="grid gap-2 rounded bg-paper p-2 md:grid-cols-[1fr_14rem_auto] md:items-center">
+      <label className="flex items-start gap-2">
+        <input type="checkbox" checked={checked} disabled={pending} onChange={(e) => start(() => confirmCheck(meetingId, row.id, e.target.checked, note))} className="mt-1 shrink-0" />
+        <span className={checked ? "text-primary" : ""}>{row.label}</span>
+      </label>
+      {checked ? <span className="text-xs text-ink-muted">{row.note}</span> : <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة (اختياري)" className={inputClass} />}
+      {row.status === "draft" ? (
+        <form action={setRequirementStatus.bind(null, meetingId, row.id, "dismissed")} className="justify-self-end">
+          <button className="px-1 py-2 text-xs text-ink-muted hover:text-danger">استبعاد</button>
         </form>
+      ) : (
+        <span />
       )}
     </div>
   );
@@ -133,8 +141,8 @@ function AddRequirement({ meetingId, itemId, targets, dueDefault }: { meetingId:
   return (
     <details className="text-sm">
       <summary className="w-fit cursor-pointer text-primary">إضافة متطلب</summary>
-      <ActionForm action={action} state={state} className="mt-2 grid gap-2 sm:grid-cols-4">
-        <input name="label" required placeholder="المتطلب" className={`${inputClass} sm:col-span-4`} />
+      <ActionForm action={action} state={state} className="mt-2 grid gap-2 md:grid-cols-4">
+        <input name="label" required placeholder="المتطلب" className={`${inputClass} md:col-span-4`} />
         <select name="kind" defaultValue="doc" className={inputClass}>
           {(["doc", "rec", "check"] as const).map((k) => (
             <option key={k} value={k}>
@@ -147,7 +155,7 @@ function AddRequirement({ meetingId, itemId, targets, dueDefault }: { meetingId:
         <SubmitButton pendingLabel="…" className="w-fit">
           إضافة
         </SubmitButton>
-        <div className="sm:col-span-4">
+        <div className="md:col-span-4">
           <FormMessage state={state} />
         </div>
       </ActionForm>
@@ -171,15 +179,15 @@ export function SendRequirementsBar({ meetingId, rows, targets, sentAt }: { meet
   );
 
   if (!pendingChanges)
-    return <p className="rounded-lg border border-rule bg-surface p-4 text-sm text-primary">✓ أُرسلت طلبات المتطلبات{sentAt ? ` في ${sentAt.slice(0, 10)}` : ""}، ولا تغييرات جديدة.</p>;
+    return <p className="text-xs text-primary">✓ أُرسلت طلبات المتطلبات{sentAt ? ` في ${sentAt.slice(0, 10)}` : ""}، ولا تغييرات جديدة.</p>;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-brass bg-surface p-4 text-sm">
+    <div className="flex flex-col gap-3 rounded-lg border border-brass bg-surface p-3 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <strong>
           {sentAt ? "تحديثات لم تُرسل" : "طلبات المتطلبات لم تُرسل بعد"}: {drafts.length} جديد{obsolete.length ? ` · ${obsolete.length} للسحب` : ""}
         </strong>
-        <span className="text-xs text-ink-muted">لا يُرسل شيء عند حفظ البنود؛ راجع ثم أرسل مرة واحدة.</span>
+        <span className="text-xs text-ink-muted">للاجتماع كاملاً؛ لا يُرسل شيء عند حفظ البنود.</span>
       </div>
       <details>
         <summary className="w-fit cursor-pointer text-primary">مراجعة حسب المطلوب منه</summary>

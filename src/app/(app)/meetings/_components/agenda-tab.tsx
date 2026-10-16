@@ -82,7 +82,6 @@ export function AgendaTab({
         <p className="rounded-md bg-brass-soft px-4 py-3 text-sm text-brass">تظهر مستندات الاجتماع هنا بعد نشر حزمة المجلس.</p>
       )}
 
-      {editable && requirements && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} />}
       <ol className="flex flex-col gap-4">
         {items.length === 0 && <li className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">لا توجد بنود بعد.</li>}
         {items.map((item, index) => {
@@ -165,7 +164,14 @@ export function AgendaTab({
                     </div>
                   ))}
                   {editable && requirements && (
-                    <RequirementsPanel meetingId={meetingId} itemId={item.id} rows={requirements.filter((r) => r.agenda_item_id === item.id)} targets={targets} dueDefault={dueDefault ?? ""} />
+                    <RequirementsPanel
+                      meetingId={meetingId}
+                      itemId={item.id}
+                      rows={requirements.filter((r) => r.agenda_item_id === item.id)}
+                      targets={targets}
+                      dueDefault={dueDefault ?? ""}
+                      send={requirements.some((r) => r.agenda_item_id === item.id) && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} />}
+                    />
                   )}
                   {editable && (
                     <>
