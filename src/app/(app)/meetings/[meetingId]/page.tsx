@@ -11,7 +11,7 @@ import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
-import { meetingDisclosures } from "@/lib/item-review-server";
+import { meetingAffiliations, meetingDisclosures } from "@/lib/item-review-server";
 import { bodyOf, libraryTemplates, matchTemplate, type Template } from "@/lib/item-templates";
 import type { RequirementRow } from "../_components/requirements-panel";
 import { currentYear } from "@/lib/org";
@@ -65,7 +65,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   const packBlocked =
     !organizer && Boolean(meeting.pack_published_at) && services.pack_requires_disclosure && !(await supabase.rpc("pack_disclosure_ok", { p_meeting: meetingId })).data;
 
-  const [{ data: users }, profile, disclosures, { data: library }, { data: requirementRows }, powers] =
+  const [{ data: users }, profile, disclosures, { data: library }, { data: requirementRows }, powers, affiliations] =
     tab === "agenda" && organizer
       ? await Promise.all([
           supabase.rpc("list_people_by_department"),
@@ -78,8 +78,9 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
             .eq("meeting_id", meetingId)
             .order("position"),
           loadPowers(supabase),
+          meetingAffiliations(supabase, meetingId),
         ])
-      : [{ data: [] }, null, [], { data: [] }, { data: [] }, undefined];
+      : [{ data: [] }, null, [], { data: [] }, { data: [] }, undefined, []];
   const profileDays = profile?.invite_days ?? 5;
   // Outlook messages: the members' invitation and pack (overview), the request emails (agenda).
   const [mail, mailProfile] =
@@ -253,7 +254,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           requirementsSentAt={meeting.requirements_sent_at}
           requestMails={mail ? mail.recipients.map((r) => ({ name: r.name, to: r.to, ...requestsMail(mail.meeting, r.name, r.requests, mail.tasksUrl) })) : undefined}
           body={bodyOf({ board_id: meeting.board_id, committee_kind: (meeting.committee as { kind?: string } | null)?.kind })}
-          review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1, powers } : undefined}
+          review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1, powers, affiliations, company: profile?.name ?? "" } : undefined}
         />
       )}
       {tab === "agenda" && (

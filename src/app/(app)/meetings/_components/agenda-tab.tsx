@@ -9,9 +9,8 @@ import { UploadDocument } from "./upload-document";
 import { RequirementsPanel, SendRequirementsBar, type RequestMail, type RequirementRow } from "./requirements-panel";
 import { ItemFindings } from "./item-review-panel";
 import { AuthorityBadge } from "./authority-badge";
-import { reviewItem, type Disclosure } from "@/lib/item-review";
+import { reviewItem, type ReviewContext } from "@/lib/item-review";
 import { matchTemplate, type Body, type Template } from "@/lib/item-templates";
-import type { Powers } from "@/lib/authority";
 
 type Doc = { id: string; title: string; file_name: string; size_bytes: number | null; agenda_item_id: string | null; document_request_id: string | null };
 type DocRequest = {
@@ -59,7 +58,7 @@ export function AgendaTab({
   requirementsSentAt?: string | null;
   library?: Template[];
   body?: Body;
-  review?: { disclosures: Disclosure[]; listed: boolean; year: number; powers?: Powers };
+  review?: Omit<ReviewContext, "template">;
   meetingId: string;
   items: AgendaItem[];
   documents: Doc[];

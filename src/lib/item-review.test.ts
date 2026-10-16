@@ -142,3 +142,13 @@ describe("delegations", () => {
     expect(warn("التوصية للجمعية العامة العادية بتفويض مجلس الإدارة بتوزيع أرباح مرحلية")).toBe(false);
   });
 });
+
+describe("members' CV positions", () => {
+  it("warns when the item names a company a member chairs", () => {
+    const f = reviewItem(
+      { title: "التصويت على التعاقد مع شركة الأفق للتقنية", description: "", kind: "decision" },
+      { affiliations: [{ name: "خالد", organization: "شركة الأفق للتقنية", role: "chair", current: true }], company: "شركة مجلس" },
+    );
+    expect(f.find((x) => x.ref === "نظام الشركات م71")?.text).toContain("خالد رئيس مجلس الإدارة");
+  });
+});

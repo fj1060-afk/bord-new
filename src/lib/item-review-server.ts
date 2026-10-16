@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Affiliation } from "./affiliations";
 import type { Disclosure } from "./item-review";
 import { currentYear } from "./org";
 
@@ -14,4 +15,28 @@ export async function meetingDisclosures(supabase: SupabaseClient, meetingId: st
   if (!ids.length) return [];
   const { data } = await supabase.from("disclosures").select("details, person:people(full_name)").eq("year", currentYear()).eq("has_conflict", true).in("person_id", ids);
   return ((data ?? []) as unknown as { details: string | null; person: { full_name: string } | null }[]).map((d) => ({ name: d.person?.full_name ?? "", details: d.details }));
+}
+
+/** Current CV positions of the members of the meeting's board or committee (RLS applies). */
+export async function meetingAffiliations(supabase: SupabaseClient, meetingId: string): Promise<Affiliation[]> {
+  const { data: m } = await supabase.from("meetings").select("board_id, committee_id").eq("id", meetingId).maybeSingle();
+  if (!m) return [];
+  return bodyAffiliations(supabase, m.board_id ? { board: m.board_id } : { committee: m.committee_id });
+}
+
+/** Current CV positions of a board's or committee's active members. */
+export async function bodyAffiliations(supabase: SupabaseClient, body: { board?: string | null; committee?: string | null }): Promise<Affiliation[]> {
+  const { data: members } = body.board
+    ? await supabase.from("board_members").select("person_id").eq("board_id", body.board).eq("status", "active")
+    : await supabase.from("committee_members").select("person_id").eq("committee_id", body.committee ?? "").eq("status", "active");
+  const ids = (members ?? []).map((r) => r.person_id);
+  if (!ids.length) return [];
+  const { data } = await supabase.from("person_positions").select("organization, role, title, end_year, person:people(full_name)").in("person_id", ids).is("end_year", null);
+  return ((data ?? []) as unknown as { organization: string; role: Affiliation["role"]; title: string | null; end_year: number | null; person: { full_name: string } | null }[]).map((p) => ({
+    name: p.person?.full_name ?? "",
+    organization: p.organization,
+    role: p.role,
+    title: p.title,
+    current: p.end_year === null,
+  }));
 }

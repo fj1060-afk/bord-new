@@ -7,6 +7,9 @@ import { requirePage } from "@/lib/auth";
 import { formatGregorianDate } from "@/lib/format";
 import { meetingReference } from "@/lib/meetings";
 import { serviceSettings } from "@/lib/ai-server";
+import { affiliationNotices, type Affiliation } from "@/lib/affiliations";
+import { bodyAffiliations } from "@/lib/item-review-server";
+import { companyProfile } from "@/lib/live-server";
 import { can, LEVELS } from "@/lib/permissions";
 import { CIRCULAR_STATUS, circularOutcome, VOTES } from "@/lib/secretary";
 import { createClient } from "@/lib/supabase/server";
@@ -47,6 +50,10 @@ export default async function CircularPage() {
         supabase.from("meetings").select("id, number, starts_at, board_id, committee_id").neq("status", "cancelled").order("starts_at", { ascending: false }).limit(50),
       ])
     : [{ data: [] }, { data: [] }, { data: [] }];
+  // Organizers see members whose CV ties them to a company the text names.
+  const openBodies = manage ? [...new Set(rows.filter((r) => r.status === "open").map((r) => r.board_id ?? r.committee_id ?? ""))] : [];
+  const [profile, ...cvs] = manage ? await Promise.all([companyProfile(supabase), ...openBodies.map((id) => bodyAffiliations(supabase, rows.find((r) => r.board_id === id) ? { board: id } : { committee: id }))]) : [null];
+  const cvOf = new Map<string, Affiliation[]>(openBodies.map((id, i) => [id, (cvs[i] as Affiliation[]) ?? []]));
   const bodies = [...(boards ?? []).map((b) => ({ value: `board:${b.id}`, label: b.name })), ...(committees ?? []).map((c) => ({ value: `committee:${c.id}`, label: c.name }))];
 
   return (
@@ -76,6 +83,12 @@ export default async function CircularPage() {
                 {r.deadline && <span className="text-xs text-ink-muted">حتى {formatGregorianDate(new Date(`${r.deadline}T12:00:00Z`))}</span>}
               </div>
               <p className="whitespace-pre-line">{r.text}</p>
+              {manage && r.status === "open" &&
+                affiliationNotices(`${r.title} ${r.text}`, cvOf.get(r.board_id ?? r.committee_id ?? "") ?? [], profile?.name ?? "").map((a) => (
+                  <p key={`${a.name}-${a.organization}`} role="note" className="rounded-md border border-brass bg-brass-soft p-3 text-xs leading-6">
+                    مصلحة محتملة: ورد في القرار «{a.organization}»، و{a.name} {a.role} فيها بحسب سيرته الذاتية. إن كانت له مصلحة فيُفصح ولا يشارك في التصويت (نظام الشركات م71).
+                  </p>
+                ))}
               <p className="text-ink-muted">
                 موافق <span className="font-mono">{result.approve}</span> · غير موافق <span className="font-mono">{result.reject}</span> · ممتنع <span className="font-mono">{result.abstain}</span> · لم يصوّت <span className="font-mono">{result.pending}</span> — يصدر بموافقة <span className="font-mono">{result.majority}</span>
               </p>

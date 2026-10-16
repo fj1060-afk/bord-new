@@ -2,7 +2,9 @@
 // governance regulations and members' conflict-of-interest disclosures.
 // Advisory only: findings never block the meeting journey.
 
+import { affiliationNotices, type Affiliation } from "./affiliations";
 import { authorityFindings, type AuthorityTemplate, type Powers } from "./authority";
+import { fold } from "./fold";
 import { withoutRequirements } from "./requirements";
 import { withPhraseFixes } from "./spelling";
 
@@ -11,15 +13,7 @@ export type Finding = { level: "warn" | "tip"; text: string; ref?: string; fixes
 export type ItemDraft = { title: string; description?: string | null; kind: string };
 export type Disclosure = { name: string; details: string | null };
 
-/** Arabic text folded for matching: no diacritics or tatweel, one alef, ta marbuta as ha, alef maqsura as ya. */
-export function fold(s: string) {
-  return s
-    .replace(/[ً-ْـ]/g, "")
-    .replace(/[أإآ]/g, "ا")
-    .replace(/ة/g, "ه")
-    .replace(/ى/g, "ي")
-    .toLowerCase();
-}
+export { fold };
 
 const has = (text: string, words: string[]) => words.some((w) => text.includes(fold(w)));
 
@@ -210,10 +204,21 @@ export function templateGaps(title: string): Finding[] {
   return gaps;
 }
 
+export type ReviewContext = {
+  disclosures?: Disclosure[];
+  year?: number;
+  listed?: boolean;
+  template?: AuthorityTemplate | null;
+  powers?: Powers;
+  /** Members' positions from their CVs, and the company's own name (never a conflict). */
+  affiliations?: Affiliation[];
+  company?: string;
+};
+
 /** `year` is the last completed financial year, used in suggested titles; `listed` adds the CMA rules; `template` and `powers` add who decides. */
 export function reviewItem(
   item: ItemDraft,
-  { disclosures = [], year = new Date().getFullYear() - 1, listed = false, template, powers }: { disclosures?: Disclosure[]; year?: number; listed?: boolean; template?: AuthorityTemplate | null; powers?: Powers } = {},
+  { disclosures = [], year = new Date().getFullYear() - 1, listed = false, template, powers, affiliations = [], company = "" }: ReviewContext = {},
 ): Finding[] {
   // The auto-filled requirements block lists documents, not what the item is about.
   const about = withoutRequirements(item.description ?? "");
@@ -243,6 +248,8 @@ export function reviewItem(
     const hit = keywords(d.details ?? "").find(({ key }) => text.includes(key));
     if (hit) findings.push({ level: "warn", text: `تعارض مصالح محتمل: ${d.name} أفصح عن مصلحة تتصل بـ«${hit.word}». يُفصح فوراً ويُثبت ذلك في المحضر، ولا يشارك في المداولة ولا التصويت.`, ref: "نظام الشركات م71؛ لائحة الحوكمة م42" });
   }
+  for (const a of affiliationNotices(`${item.title} ${about}`, affiliations, company))
+    findings.push({ level: "warn", text: `مصلحة محتملة: ورد في البند «${a.organization}»، و${a.name} ${a.role} فيها بحسب سيرته الذاتية. إن كانت له مصلحة مباشرة أو غير مباشرة فيُفصح للمجلس فوراً ويُثبت ذلك في المحضر، ولا يشارك في التصويت.`, ref: "نظام الشركات م71" });
   // A wording classified "per the bylaws" already carries the company-specific Art. 74 remark.
   const known = template?.authority === "bylaws" ? "نظام الشركات م74" : null;
   for (const r of RULES) if (has(text, r.when) && !(r.unless && has(text, r.unless)) && (!r.listed || listed) && r.finding.ref !== known) findings.push(r.finding);
