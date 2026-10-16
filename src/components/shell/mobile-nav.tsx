@@ -35,7 +35,7 @@ export function MobileNav({ allowed, committees }: { allowed: string[]; committe
         aria-label="القائمة الرئيسية"
         className="m-0 me-auto h-dvh max-h-none w-72 max-w-[85vw] bg-sidebar p-0 backdrop:bg-black/40 lg:hidden"
       >
-        <div className="flex h-full flex-col gap-8 overflow-y-auto px-3 py-6">
+        <div className="flex h-full flex-col gap-8 overflow-y-auto side-scroll px-3 py-6">
           <div className="flex items-center justify-between">
             <SidebarBrand />
             <button

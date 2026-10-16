@@ -16,7 +16,7 @@ export function SidebarBrand() {
 /** Fixed sidebar for wide screens; the mobile drawer reuses the same parts. */
 export function Sidebar({ allowed, committees }: { allowed: string[]; committees: CommitteeLink[] }) {
   return (
-    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-8 overflow-y-auto bg-sidebar px-3 py-6 lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-8 overflow-y-auto side-scroll bg-sidebar px-3 py-6 lg:flex">
       <SidebarBrand />
       <SidebarNav allowed={allowed} committees={committees} />
     </aside>

@@ -113,3 +113,15 @@ body {
 .rich-text ul { list-style: disc; padding-inline-start: 1.4em; margin: 0 0 0.4em; }
 .rich-text ol { list-style: decimal; padding-inline-start: 1.4em; margin: 0 0 0.4em; }
 .rich-text > :last-child { margin-bottom: 0; }
+
+/* Dark side panels: a thin scrollbar on a clear track that only shows while the pointer is over the panel. */
+.side-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scrollbar-gutter: stable;
+  transition: scrollbar-color 0.2s;
+}
+.side-scroll:hover,
+.side-scroll:focus-within {
+  scrollbar-color: color-mix(in oklab, var(--sidebar-ink) 25%, transparent) transparent;
+}
