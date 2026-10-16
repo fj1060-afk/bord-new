@@ -88,3 +88,12 @@ describe("auto-filled documents line", () => {
     expect(f.some((x) => x.ref?.includes("م52"))).toBe(false);
   });
 });
+
+describe("dividend dates", () => {
+  it("asks for the eligibility and distribution dates", () => {
+    const dates = (title: string) => reviewItem({ title, kind: "decision", description: "x" }).some((f) => f.ref?.startsWith("نظام الشركات م125/2"));
+    expect(dates("التوصية للجمعية العامة العادية بتوزيع أرباح نقدية بواقع 2 ريال للسهم")).toBe(true);
+    expect(dates("التوصية للجمعية العامة العادية بتوزيع أرباح نقدية بواقع 2 ريال للسهم، على أن تكون الأحقية للمساهمين المسجلين بنهاية يوم 1 مايو")).toBe(false);
+    expect(dates("التصويت على اعتماد سياسة توزيع الأرباح")).toBe(false);
+  });
+});
