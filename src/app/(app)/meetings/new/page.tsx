@@ -10,9 +10,16 @@ import { MeetingDetailsForm } from "../_components/meeting-forms";
 
 export const metadata: Metadata = { title: "اجتماع جديد" };
 
-export default async function NewMeetingPage() {
+/** `?body=board:<id>` or `committee:<id>` (from that body's pages) keeps only that body. */
+const only = (bodies: { id: string; name: string; kind: string }[], body?: string) => {
+  const match = bodies.filter((b) => `${b.kind}:${b.id}` === body);
+  return match.length ? match : bodies;
+};
+
+export default async function NewMeetingPage({ searchParams }: PageProps<"/meetings/new">) {
   await requirePage("/meetings", LEVELS.edit);
   const supabase = await createClient();
+  const { body } = (await searchParams) as { body?: string };
   const [{ data: bodies }, services] = await Promise.all([supabase.rpc("list_meeting_bodies"), serviceSettings(supabase)]);
 
   return (
@@ -29,7 +36,7 @@ export default async function NewMeetingPage() {
         </p>
       ) : (
         <div className="rounded-lg border border-rule bg-surface p-6">
-          <MeetingDetailsForm bodies={bodies as { id: string; name: string; kind: string }[]} allowRemote={services.remote_meetings} />
+          <MeetingDetailsForm bodies={only(bodies as { id: string; name: string; kind: string }[], body)} allowRemote={services.remote_meetings} />
         </div>
       )}
     </>

@@ -45,7 +45,7 @@ export default async function CommitteePage({ params }: PageProps<"/committees/[
           <p className="whitespace-pre-line px-5 py-4 text-sm leading-7">{committee.mandate || "لم تُحدد بعد."}</p>
         </Panel>
         <div className="grid gap-6 lg:grid-cols-2">
-          <Panel title="الاجتماعات القادمة" action={<Link href="/meetings/new" className="text-sm text-primary hover:underline">اجتماع جديد</Link>}>
+          <Panel title="الاجتماعات القادمة" action={<Link href={`/meetings/new?body=committee:${committeeId}`} className="text-sm text-primary hover:underline">اجتماع جديد</Link>}>
             <ul className="divide-y divide-rule text-sm">
               {upcoming.length === 0 && <li className="px-5 py-4 text-ink-muted">لا اجتماعات قادمة.</li>}
               {upcoming.map((m) => (

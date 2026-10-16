@@ -46,7 +46,7 @@ await step("الرئيسية تعرض بطاقة الامتثال", async () => 
 
 await step("ملاحظة الأنظمة في صفحة المجلس وإنشاء الاجتماع", async () => {
   await as("ADMIN");
-  for (const [p, article] of [["/board", "م67"], ["/meetings/new", "م80/1"]]) {
+  for (const [p, article] of [["/board/members", "م67"], ["/meetings/new", "م80/1"]]) {
     await go(p);
     await page.click("summary:has-text('ما تقوله الأنظمة')");
     await has(article);

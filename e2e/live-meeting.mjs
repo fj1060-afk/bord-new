@@ -50,9 +50,9 @@ await step("تسجيل الدخول", async () => {
 });
 
 await step("إنشاء اجتماع ببندين واعتماد موعده", async () => {
-  await page.goto(base + "/meetings/new", { waitUntil: "networkidle" });
-  const board = await page.locator("select[name=body] option[value^='board:']").first().getAttribute("value");
-  await page.selectOption("select[name=body]", board);
+  await page.goto(base + "/board/meetings", { waitUntil: "networkidle" });
+  await page.click("a:has-text('اجتماع جديد')");
+  await page.waitForURL(/\/meetings\/new\?body=board:/, { timeout: 20000 });
   await page.fill("input[name=title]", `اجتماع انعقاد ${stamp}`);
   await page.fill("input[name=date]", new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10));
   await page.fill("input[name=location]", "قاعة المجلس");

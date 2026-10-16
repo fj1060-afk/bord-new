@@ -22,7 +22,7 @@ export async function ScopeMeetings({ scope, canEdit }: { scope: Scope; canEdit:
   const supabase = await createClient();
   const { data } = await supabase.from("meetings").select("id, title, number, starts_at, status, live_status").eq(column(scope), idOf(scope)).order("starts_at", { ascending: false }).limit(100);
   return (
-    <Panel title={`اجتماعات ${whose(scope)}`} action={canEdit && <Link href="/meetings/new" className="text-sm text-primary hover:underline">اجتماع جديد</Link>}>
+    <Panel title={`اجتماعات ${whose(scope)}`} action={canEdit && <Link href={`/meetings/new?body=${"board" in scope ? "board" : "committee"}:${idOf(scope)}`} className="text-sm text-primary hover:underline">اجتماع جديد</Link>}>
       <ul className="divide-y divide-rule">
         {(data ?? []).length === 0 && empty("لا اجتماعات بعد.")}
         {(data ?? []).map((m) => (

@@ -43,7 +43,13 @@ export function MeetingDetailsForm({ meeting, bodies, allowRemote = true }: { me
 
   return (
     <ActionForm action={formAction} state={state} className="grid gap-5 sm:grid-cols-2">
-      {bodies && (
+      {bodies?.length === 1 ? (
+        // Opened from the board's or a committee's pages: the body is fixed.
+        <Field label="الجهة">
+          <input type="hidden" name="body" value={`${bodies[0].kind}:${bodies[0].id}`} />
+          <p className="rounded-md border border-rule bg-paper px-3 py-2 text-sm">{bodies[0].name}</p>
+        </Field>
+      ) : bodies && (
         <Field label="الجهة">
           <select name="body" required defaultValue="" className={inputClass}>
             <option value="" disabled>

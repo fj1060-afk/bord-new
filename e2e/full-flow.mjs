@@ -111,9 +111,10 @@ await step("حذف لجنة الاختبار", async () => {
 
 let meetingUrl = "";
 await step("إنشاء اجتماع للمجلس", async () => {
-  await go("/meetings/new");
-  const board = await page.locator("select[name=body] option[value^='board:']").first().getAttribute("value");
-  await page.selectOption("select[name=body]", board);
+  // From the board's own pages the body is fixed to the board.
+  await go("/board/meetings");
+  await page.click("a:has-text('اجتماع جديد')");
+  await page.waitForURL(/\/meetings\/new\?body=board:/, { timeout: 20000 });
   await page.fill("input[name=title]", `اجتماع اختبار ${stamp}`);
   await page.fill("input[name=date]", "2026-12-20");
   await page.fill("input[name=location]", "قاعة المجلس");
