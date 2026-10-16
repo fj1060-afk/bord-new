@@ -220,6 +220,10 @@ export function reviewItem(item: ItemDraft, { disclosures = [], year = new Date(
   const verb = verbless ? "التصويت على اعتماد " : "";
   const fullPeriod = `للسنة المالية المنتهية في 31 ديسمبر ${year}`;
   const findings: Finding[] = [...templateGaps(base)];
+  // A delegation is for "certain acts" (CL 77/1): it must say who, in what capacity, for what, and for how long.
+  const delegation = /(^|\s)(تفويض|وكاله|توكيل)/.test(title) && !/تفويض مجلس الاداره|بتفويض مجلس|بناء علي تفويض|تفويض الجمعيه|تفويض ممثل|حسابات الشركه/.test(title);
+  if (delegation && !(/بصفته/.test(title) && /(لمده|حتي|اعتبارا من|لانجاز|لاتمام)/.test(title)))
+    findings.push({ level: "warn", text: "التفويض يكون لأعمال محددة: اذكر المفوَّض وصفته، والعمل أو المستند المحدد والجهة، والحدود المالية إن وجدت، والمدة، وهل يحق له تفويض الغير.", ref: "نظام الشركات م77/1 وم79" });
   if (DANGLING.test(title)) {
     const yearWord = YEAR_WORD.test(base);
     findings.push({

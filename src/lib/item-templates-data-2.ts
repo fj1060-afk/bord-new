@@ -188,7 +188,7 @@ export const partTwo = (): Part => [
       doc("القيود القائمة على الأصل", "Existing encumbrances on the asset", "legal"),
       disclose("الإفصاح للمدرجة إن بلغت قيمته 10% من صافي الأصول (قواعد الطرح م80)", "Disclosure if its value reaches 10% of net assets (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["صكوك", "ادوات دين", "سندات"], kind: "decision", title: "التصويت على إصدار صكوك/سندات بقيمة (…) ريال لمدة (…)", en: "Issuing sukuk/bonds of SAR (…) with a term of (…)", reqs: [
+    { body: "board", keys: ["صكوك", "ادوات دين", "سندات"], kind: "decision", title: "التصويت على إصدار صكوك/سندات بقيمة (…) ريال لمدة (…) لغرض (…)", en: "Issuing sukuk/bonds of SAR (…) with a term of (…) to fund (…)", reqs: [
       doc("المستشار المالي", "Financial adviser", "finance"),
       doc("هيكل الإصدار", "Issue structure", "finance"),
       after("الموافقات النظامية وفق نظام السوق المالية (نظام الشركات م117)", "Regulatory approvals under the Capital Market Law (Companies Law Art. 117)", undefined, "legal"),
@@ -205,7 +205,7 @@ export const partTwo = (): Part => [
       after("موافقة الهيئة العامة للمنافسة عند الاقتضاء", "General Authority for Competition approval where required", undefined, "legal"),
       disclose("الإفصاح للمدرجة (قواعد الطرح م80)", "Disclosure (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["استثمار", "محفظه", "ودائع"], kind: "decision", title: "التصويت على استثمار مبلغ (…) ريال في (…)", en: "Investing SAR (…) in (…)", reqs: [
+    { body: "board", keys: ["استثمار", "محفظه", "ودائع"], kind: "decision", title: "التصويت على استثمار مبلغ (…) ريال في (…) لمدة (…) بعائد متوقع (…)، وفق سياسة الاستثمار المعتمدة", en: "Investing SAR (…) in (…) for (…) with an expected return of (…), in line with the approved investment policy", reqs: [
       doc("سياسة الاستثمار", "Investment policy", "finance"),
       doc("تقييم المخاطر والعائد", "Risk and return assessment", "finance"),
       doc("وصف أداة الاستثمار وسيولتها", "Description of the instrument and its liquidity", "finance"),
@@ -220,7 +220,7 @@ export const partTwo = (): Part => [
       noInterest("التحقق من عدم وجود مصلحة لعضو في الطرف الآخر", "Confirm no board member has an interest in the counterparty"),
       disclose("الإفصاح للمدرجة إن بلغت القيمة 10% من صافي الأصول (قواعد الطرح م80)", "Disclosure if the value reaches 10% of net assets (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["ديون", "شطب", "معدومه", "اعفاء"], kind: "decision", title: "التصويت على شطب ديون معدومة بقيمة (…) ريال", en: "Writing off bad debts of SAR (…)", reqs: [
+    { body: "board", keys: ["ديون", "شطب", "معدومه", "اعفاء"], kind: "decision", title: "التصويت على شطب ديون معدومة بقيمة (…) ريال مستحقة على (…) لتعذّر تحصيلها بعد استنفاد إجراءات التحصيل", en: "Writing off bad debts of SAR (…) owed by (…), uncollectible after all collection steps were exhausted", reqs: [
       doc("تقرير التحصيل", "Collection report", "finance"),
       doc("رأي مراجع الحسابات", "External auditor's opinion", "finance"),
       doc("ما يثبت استنفاد إجراءات التحصيل", "Evidence that collection efforts were exhausted", "finance"),
@@ -244,20 +244,20 @@ export const partTwo = (): Part => [
     ] },
   ]],
   ["البنوك والتفويضات والشركات التابعة", [
-    { body: "board", keys: ["حساب بنكي", "حسابات بنكيه", "فتح حساب", "اغلاق حساب"], kind: "decision", title: "التصويت على فتح/إغلاق حساب بنكي لدى (…)", en: "Opening/closing a bank account with (…)", reqs: [
+    { body: "board", keys: ["حساب بنكي", "حسابات بنكيه", "فتح حساب", "اغلاق حساب"], kind: "decision", title: "التصويت على فتح/إغلاق حساب بنكي (…) لدى (…) لغرض (…)، وتحديد المفوضين بالتوقيع عليه", en: "Opening/closing a (…) bank account with (…) for (…), and designating its authorized signatories", reqs: [
       doc("الغرض من الحساب", "Purpose of the account", "finance"),
       doc("نوعه وعملته", "Account type and currency", "finance"),
       doc("المفوضون بالتشغيل وحدود صلاحياتهم", "Authorized operators and their limits", "finance"),
       doc("عند الإغلاق: الرصيد وجهة تحويله", "On closure: the balance and where it is transferred", "finance"),
     ] },
-    { body: "board", keys: ["المفوضين", "التوقيع البنكي", "صلاحيات التوقيع"], kind: "decision", title: "التصويت على تحديد المفوضين بالتوقيع على الحسابات البنكية وحدود صلاحياتهم", en: "Designating the authorized bank signatories and their limits", reqs: [
+    { body: "board", keys: ["المفوضين", "التوقيع البنكي", "صلاحيات التوقيع"], kind: "decision", title: "التصويت على تفويض (…) بالتوقيع على حسابات الشركة لدى (…) منفردين/مجتمعين في حدود (…) ريال للعملية الواحدة، وإلغاء التفويضات السابقة", en: "Authorizing (…) to sign on the company's accounts with (…) individually/jointly up to SAR (…) per transaction, and revoking previous authorizations", reqs: [
       doc("جدول الصلاحيات", "Delegation of authority", "finance"),
       doc("أسماء المفوضين", "Names of the signatories", "finance"),
       doc("حدود الصلاحيات ونوع التوقيع (منفرد/مشترك)", "Limits and signature type (single/joint)", "finance"),
       doc("التفويضات السابقة الملغاة", "Previous authorizations revoked", "finance"),
       doc("صور الهويات لإبلاغ البنوك", "ID copies for notifying the banks", "finance"),
     ] },
-    { body: "board", keys: ["تفويض", "توقيع", "نيابه"], kind: "decision", title: "التصويت على تفويض (…) بتوقيع (…) نيابة عن الشركة", en: "Authorizing (…) to sign (…) on behalf of the company", reqs: [
+    { body: "board", keys: ["تفويض", "توقيع", "نيابه"], kind: "decision", title: "التصويت على تفويض (…) بصفته (…) بالتوقيع نيابة عن الشركة على (…) أمام (…)، في حدود مبلغ (…) ريال، لمدة (…) تبدأ من (…)، دون حق تفويض الغير", en: "Authorizing (…), in the capacity of (…), to sign (…) on behalf of the company before (…), up to SAR (…), for (…) starting (…), without the right to sub-delegate", reqs: [
       doc("حدود التفويض ومدته", "Scope and duration of the authorization"),
       doc("المستند محل التوقيع أو نطاقه", "The document to be signed or its scope"),
       bylawsPower("صلاحية المجلس في التفويض وفق النظام الأساس", "Board's power to delegate under the bylaws"),
@@ -269,7 +269,7 @@ export const partTwo = (): Part => [
       rec("توصية لجنة المراجعة", "Audit committee recommendation", "audit"),
       chk("التوافق مع النظام الأساس وما تحتفظ به الجمعية والمجلس من صلاحيات", "Consistent with the bylaws and the powers reserved to the General Assembly and the board"),
     ] },
-    { body: "board", keys: ["وكاله", "الجهات الحكوميه", "تفويض حكومي"], kind: "decision", title: "التصويت على إصدار وكالة/تفويض لـ(…) لتمثيل الشركة أمام (…)", en: "Issuing a power of attorney to (…) to represent the company before (…)", reqs: [
+    { body: "board", keys: ["وكاله", "الجهات الحكوميه", "تفويض حكومي"], kind: "decision", title: "التصويت على إصدار وكالة/تفويض لـ(…) بصفته (…) لتمثيل الشركة أمام (…) في (…)، لمدة (…)، دون حق توكيل الغير", en: "Issuing a power of attorney to (…), in the capacity of (…), to represent the company before (…) in (…), for (…), without the right to appoint others", reqs: [
       doc("نطاق الوكالة ومدتها", "Scope and duration of the power of attorney"),
       doc("بيانات الوكيل", "Attorney's details"),
       doc("حق التوكيل للغير من عدمه", "Whether onward delegation is allowed"),
@@ -282,7 +282,7 @@ export const partTwo = (): Part => [
       chk("التحقق من استقلال المستشار وعدم تعارض مصالحه", "Confirm the adviser's independence and absence of conflicts"),
       noInterest(),
     ] },
-    { body: "board", keys: ["تاسيس", "شركه تابعه", "فرع"], kind: "decision", title: "التصويت على تأسيس شركة تابعة باسم (…) برأس مال (…) ريال مملوكة للشركة بنسبة (…)%", en: "Establishing a subsidiary named (…) with capital of SAR (…), (…)% owned by the company", reqs: [
+    { body: "board", keys: ["تاسيس", "شركه تابعه", "فرع"], kind: "decision", title: "التصويت على تأسيس شركة تابعة باسم (…) برأس مال (…) ريال مملوكة للشركة بنسبة (…)% لمزاولة نشاط (…)", en: "Establishing a subsidiary named (…) with capital of SAR (…), (…)% owned by the company, to carry out (…)", reqs: [
       doc("دراسة الجدوى", "Feasibility study"),
       doc("هيكل الملكية", "Ownership structure"),
       doc("مسودة النظام الأساس أو عقد التأسيس", "Draft bylaws or articles of association", "legal"),
@@ -291,7 +291,7 @@ export const partTwo = (): Part => [
       doc("ترتيبات الحوكمة والإشراف", "Governance and oversight arrangements"),
       disclose("تقييم الإفصاح للمدرجة", "Assess disclosure (listed companies)"),
     ] },
-    { body: "board", keys: ["فتح فرع", "فرع"], kind: "decision", title: "التصويت على فتح فرع للشركة في (…)", en: "Opening a company branch in (…)", reqs: [
+    { body: "board", keys: ["فتح فرع", "فرع"], kind: "decision", title: "التصويت على فتح فرع للشركة في (…) لمزاولة نشاط (…)، وتعيين (…) مديراً له", en: "Opening a company branch in (…) to carry out (…), with (…) as its manager", reqs: [
       doc("دراسة الجدوى", "Feasibility study"),
       doc("متطلبات السجل التجاري للفرع", "Commercial registration requirements for the branch", "legal"),
       doc("تحديد مدير الفرع وصلاحياته", "Branch manager and powers"),
@@ -302,7 +302,7 @@ export const partTwo = (): Part => [
       doc("صلاحيات الممثلين وآلية رفع تقاريرهم للمجلس", "Representatives' powers and how they report to the board"),
       chk("متطلبات النظام الأساس للشركة التابعة", "Subsidiary's bylaws requirements met"),
     ] },
-    { body: "board", keys: ["تصفيه", "شركه تابعه", "دمج تابعه"], kind: "decision", title: "التصويت على تصفية/دمج الشركة التابعة (…)", en: "Liquidating/merging subsidiary (…)", reqs: [
+    { body: "board", keys: ["تصفيه", "شركه تابعه", "دمج تابعه"], kind: "decision", title: "التصويت على تصفية/دمج الشركة التابعة (…) بسبب (…)، وتفويض ممثل الشركة (…) بالتصويت على ذلك في جمعيتها", en: "Liquidating/merging subsidiary (…) because (…), authorizing the company's representative (…) to vote for it at its general assembly", reqs: [
       doc("الأثر المالي والقانوني", "Financial and legal impact"),
       doc("مبررات القرار", "Rationale for the decision"),
       after("القرار النهائي لجمعية الشركة التابعة أو شركائها، فيُفوَّض ممثل الشركة بالتصويت فيها", "The subsidiary's assembly or partners decide; authorize the company's representative to vote there"),

@@ -133,3 +133,12 @@ describe("operative elements the law requires in the resolution", () => {
     expect(refs("التصويت على اتخاذ إجراءات صرف الأرباح التي أقرتها الجمعية العامة بتاريخ 1 مايو 2026 وفق تاريخي الأحقية والتوزيع المحددين في قرارها")).toEqual([]);
   });
 });
+
+describe("delegations", () => {
+  it("asks for the delegate, capacity, act and duration", () => {
+    const warn = (title: string) => reviewItem({ title, kind: "decision", description: "x" }).some((f) => f.ref === "نظام الشركات م77/1 وم79");
+    expect(warn("التصويت على تفويض أحمد بتوقيع العقد نيابة عن الشركة")).toBe(true);
+    expect(warn("التصويت على تفويض أحمد بصفته المدير المالي بالتوقيع نيابة عن الشركة على عقد التوريد أمام شركة النخبة لمدة سنة")).toBe(false);
+    expect(warn("التوصية للجمعية العامة العادية بتفويض مجلس الإدارة بتوزيع أرباح مرحلية")).toBe(false);
+  });
+});

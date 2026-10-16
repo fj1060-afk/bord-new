@@ -53,7 +53,7 @@ describe("suggestTitles", () => {
   });
 
   it("recognizes the wording a typed title is based on", () => {
-    expect(matchTemplate("التصويت على فتح فرع للشركة في لندن")?.title).toBe("التصويت على فتح فرع للشركة في (…)");
+    expect(matchTemplate("التصويت على فتح فرع للشركة في لندن لمزاولة نشاط التجارة، وتعيين خالد مديراً له")?.title).toBe("التصويت على فتح فرع للشركة في (…) لمزاولة نشاط (…)، وتعيين (…) مديراً له");
     expect(matchTemplate("التصويت على اعتماد محضر الاجتماع السابق")?.needs).toContain("مسودة المحضر");
     expect(matchTemplate("مناقشة خطة التحول الرقمي")).toBeNull();
   });
