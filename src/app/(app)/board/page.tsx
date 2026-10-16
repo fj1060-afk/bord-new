@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { RegulationNote } from "@/components/ui/regulation-note";
 import { NOTES } from "@/lib/regulations";
 import Link from "next/link";
+import { buttonClass } from "@/components/ui/styles";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { PageHeader } from "@/components/ui/page-header";
 import { requirePage } from "@/lib/auth";
@@ -95,7 +96,10 @@ export default async function BoardPage() {
       </dl>
 
       {canEdit && (
-        <div className="mb-6">
+        <div className="mb-6 flex flex-col gap-3">
+          <Link href="/board/members/new" className={buttonClass("primary", "w-fit")}>
+            تسجيل عضو جديد
+          </Link>
           <AddBoardMemberForm boardId={board.id} people={people} />
         </div>
       )}

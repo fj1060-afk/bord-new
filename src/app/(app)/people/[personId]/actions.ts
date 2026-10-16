@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { getViewer } from "@/lib/auth";
-import { currentYear } from "@/lib/org";
+import { POSITION_ROLES } from "@/lib/affiliations";
+import { currentYear, isOneOf } from "@/lib/org";
 import { LEVELS, can } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,6 +34,8 @@ export async function savePerson(personId: string, _prev: ActionState, form: For
     qualifications: text(form, "qualifications"),
     experience: text(form, "experience"),
   };
+  // Identity details are written here but read only through person_private().
+  for (const key of ["national_id", "nationality", "address"]) if (form.has(key)) update[key] = text(form, key)?.slice(0, 300) ?? null;
   if (form.has("user_id")) update.user_id = text(form, "user_id");
 
   const supabase = await createClient();
@@ -71,5 +74,41 @@ export async function reviewDisclosure(personId: string, disclosureId: string) {
     .update({ status: "reviewed", reviewed_by: viewer.id })
     .eq("id", disclosureId);
   if (error) throw new Error("Could not review disclosure");
+  revalidatePath(`/people/${personId}`);
+}
+
+const year = (form: FormData, key: string) => {
+  const n = Number(form.get(key));
+  return Number.isInteger(n) && n >= 1950 && n <= 2100 ? n : null;
+};
+
+/** Adds a position to a member's CV (the member, or member editors; RLS decides). */
+export async function addPosition(personId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  await requireViewer();
+  const organization = text(form, "organization");
+  const role = String(form.get("role") ?? "");
+  if (!organization || !isOneOf(role, POSITION_ROLES)) return { ok: false, message: "اكتب اسم الجهة واختر الصفة." };
+  const start = year(form, "start_year");
+  const end = form.get("current") === "on" ? null : year(form, "end_year");
+  if (start && end && end < start) return { ok: false, message: "سنة الانتهاء قبل سنة البداية." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("person_positions").insert({
+    person_id: personId,
+    organization: organization.slice(0, 200),
+    role,
+    title: text(form, "title")?.slice(0, 120) ?? null,
+    listed: form.get("listed") === "on",
+    start_year: start,
+    end_year: end,
+  });
+  if (error) return { ok: false, message: "تعذّر الحفظ." };
+  revalidatePath(`/people/${personId}`);
+  return { ok: true, message: "أُضيف إلى السيرة الذاتية." };
+}
+
+export async function removePosition(personId: string, positionId: string) {
+  await requireViewer();
+  const supabase = await createClient();
+  await supabase.from("person_positions").delete().eq("id", positionId);
   revalidatePath(`/people/${personId}`);
 }

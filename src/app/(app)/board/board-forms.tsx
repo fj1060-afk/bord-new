@@ -63,7 +63,7 @@ export function AddBoardMemberForm({ boardId, people }: { boardId: string; peopl
   const [state, action] = useActionState(addBoardMember.bind(null, boardId), null);
   return (
     <details className="rounded-lg border border-rule bg-surface">
-      <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة عضو</summary>
+      <summary className={buttonClass("secondary", "m-4 w-fit cursor-pointer list-none")}>إضافة شخص مسجّل من قبل</summary>
       <ActionForm action={action} state={state} className="flex flex-col gap-4 border-t border-rule p-5">
         <PersonPicker people={people} />
         <div className="grid gap-4 sm:grid-cols-3">

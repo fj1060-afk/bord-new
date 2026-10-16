@@ -10,25 +10,37 @@ import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { reviewDisclosure } from "./actions";
 import { DisclosureForm, PersonForm, type PersonDetails } from "./person-forms";
+import { CvEditor, type Position } from "./cv-editor";
 
 export const metadata: Metadata = { title: "ملف العضو" };
 
 type Membership = { id: string; position: string; start_date: string; end_date: string | null; status: string };
 
-export default async function PersonPage({ params }: PageProps<"/people/[personId]">) {
+const ACCOUNT_NOTES: Record<string, [string, boolean]> = {
+  invited: ["سُجّل العضو، وأُنشئ حساب دخوله، وأُرسلت الدعوة إلى بريده.", true],
+  created: ["سُجّل العضو وأُنشئ حساب دخوله. أرسل الدعوة من صفحة المستخدمين متى شئت.", true],
+  "invite-failed": ["سُجّل العضو وأُنشئ حسابه، وتعذّر إرسال الدعوة الآن. أعد الإرسال من صفحة المستخدمين.", false],
+  "linked-elsewhere": ["سُجّل العضو، لكن الحساب بهذا البريد مرتبط بملف شخص آخر.", false],
+  failed: ["سُجّل العضو، وتعذّر إنشاء حساب الدخول. أنشئه من صفحة المستخدمين.", false],
+};
+
+export default async function PersonPage({ params, searchParams }: PageProps<"/people/[personId]">) {
   const viewer = await getViewer();
   if (!viewer) redirect("/login");
   const { personId } = await params;
+  const accountNote = ACCOUNT_NOTES[String(((await searchParams) as { account?: string }).account ?? "")];
   const supabase = await createClient();
 
   // RLS returns the person only to themself or to people who can see members.
   // Email and phone come separately: the company may hide them from other members.
-  const [{ data: row }, { data: contact }] = await Promise.all([
+  const [{ data: row }, { data: contact }, { data: identity }, { data: positions }] = await Promise.all([
     supabase.from("people").select("id, full_name, full_name_en, job_title, organization, qualifications, experience, user_id").eq("id", personId).maybeSingle(),
     supabase.rpc("person_contact", { p_person: personId }).maybeSingle<{ email: string | null; phone: string | null }>(),
+    supabase.rpc("person_private", { p_person: personId }).maybeSingle<{ national_id: string | null; nationality: string | null; address: string | null }>(),
+    supabase.from("person_positions").select("id, organization, role, title, listed, start_year, end_year").eq("person_id", personId),
   ]);
   if (!row) notFound();
-  const person = { ...row, email: contact?.email ?? null, phone: contact?.phone ?? null } as PersonDetails;
+  const person = { ...row, email: contact?.email ?? null, phone: contact?.phone ?? null, ...(identity ?? {}) } as PersonDetails;
 
   const isSelf = person.user_id === viewer.id;
   const canEditPerson = can(viewer.permissions, "/board", LEVELS.edit) || can(viewer.permissions, "/committees", LEVELS.edit);
@@ -56,6 +68,11 @@ export default async function PersonPage({ params }: PageProps<"/people/[personI
     <>
       <PageHeader section={isSelf ? "ملفي" : "ملف العضو"} title={person.full_name} description={[person.job_title, person.organization].filter(Boolean).join(" · ") || undefined} />
 
+      {accountNote && (
+        <p role="status" className={accountNote[1] ? "mb-6 rounded-lg border border-primary bg-primary-soft p-4 text-sm" : "mb-6 rounded-lg border border-brass bg-brass-soft p-4 text-sm"}>
+          {accountNote[0]}
+        </p>
+      )}
       <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
         <div className="flex flex-col gap-8">
           <section>
@@ -74,6 +91,13 @@ export default async function PersonPage({ params }: PageProps<"/people/[personI
                 </li>
               ))}
             </ul>
+          </section>
+
+          <section>
+            <h2 className="mb-3 font-display text-xl font-bold">السيرة الذاتية: المناصب والجهات</h2>
+            <div className="rounded-lg border border-rule bg-surface p-5">
+              <CvEditor personId={person.id} positions={(positions ?? []) as Position[]} canEdit={canEditPerson || isSelf} />
+            </div>
           </section>
 
           {canEditPerson ? (

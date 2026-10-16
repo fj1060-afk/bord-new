@@ -16,6 +16,10 @@ export type PersonDetails = {
   qualifications: string | null;
   experience: string | null;
   user_id: string | null;
+  /** Identity details, present only for the person and member editors. */
+  national_id?: string | null;
+  nationality?: string | null;
+  address?: string | null;
 };
 
 export function PersonForm({
@@ -57,10 +61,19 @@ export function PersonForm({
           </select>
         </Field>
       )}
+      <Field label="الجنسية">
+        <input name="nationality" defaultValue={person.nationality ?? ""} className={inputClass} />
+      </Field>
+      <Field label="رقم الهوية أو الإقامة" hint="بيانات شخصية: يراها العضو ومحررو ملفات الأعضاء فقط.">
+        <input name="national_id" dir="ltr" defaultValue={person.national_id ?? ""} className={inputClass} />
+      </Field>
+      <Field label="العنوان الوطني">
+        <input name="address" defaultValue={person.address ?? ""} className={inputClass} />
+      </Field>
       <Field label="المؤهلات">
         <textarea spellCheck lang="ar" name="qualifications" rows={3} defaultValue={person.qualifications ?? ""} className={inputClass} />
       </Field>
-      <Field label="الخبرات">
+      <Field label="نبذة عن الخبرات">
         <textarea spellCheck lang="ar" name="experience" rows={3} defaultValue={person.experience ?? ""} className={inputClass} />
       </Field>
       <div className="flex flex-col gap-3 sm:col-span-2">
