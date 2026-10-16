@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans_Arabic, Noto_Naskh_Arabic } from "next/font/google";
+import { SmoothDetails } from "@/components/ui/smooth-details";
 import "./globals.css";
 
 const body = IBM_Plex_Sans_Arabic({
@@ -32,7 +33,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       dir="rtl"
       className={`${body.variable} ${naskh.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <SmoothDetails />
+      </body>
     </html>
   );
 }

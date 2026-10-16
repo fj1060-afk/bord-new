@@ -76,16 +76,7 @@ body {
   outline-offset: 2px;
 }
 
-/* Motion: opening a <details> slides instead of jumping (where the browser can animate to auto). */
-@supports (interpolate-size: allow-keywords) {
-  :root { interpolate-size: allow-keywords; }
-  details::details-content {
-    block-size: 0;
-    overflow: clip;
-    transition: block-size 200ms ease, content-visibility 200ms allow-discrete;
-  }
-  details[open]::details-content { block-size: auto; }
-}
+/* Motion: every <details> slides open and shut through SmoothDetails (src/components/ui/smooth-details.tsx). */
 
 /* A new page fades in; the loading skeleton waits a moment so quick pages never flash it. */
 @keyframes page-in {

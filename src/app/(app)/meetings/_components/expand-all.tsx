@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
+import { slide } from "@/components/ui/smooth-details";
 
 /** Opens or folds every agenda item in the list with the given id. */
 export function ExpandAll({ listId }: { listId: string }) {
@@ -10,7 +11,7 @@ export function ExpandAll({ listId }: { listId: string }) {
     <button
       type="button"
       onClick={() => {
-        document.querySelectorAll<HTMLDetailsElement>(`#${listId} > li > div > details`).forEach((d) => (d.open = !open));
+        document.querySelectorAll<HTMLDetailsElement>(`#${listId} > li > div > details`).forEach((d) => d.open !== !open && slide(d, !open));
         setOpen(!open);
       }}
       className="ms-auto inline-flex items-center gap-1.5 text-sm text-primary hover:underline"

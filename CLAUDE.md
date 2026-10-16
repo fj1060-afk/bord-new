@@ -24,3 +24,4 @@ The build plan and its status live in `src/config/phases.ts` (shown on the home 
 - The Supabase MCP `apply_migration` times out on statements it treats as destructive (`revoke`, `delete`); put those in a migration the user runs from the SQL editor.
 - Server components must not call functions exported from a `"use client"` file (they become client references and throw at runtime). Shared helpers like `buttonClass` live in `src/components/ui/styles.ts`.
 - RLS policies must not look up their own table by id (e.g. `can_view_x(id)`): the row being inserted is not visible yet, so `insert … select` fails. Check the row's columns directly.
+- Every collapsible (dropdown, accordion, fold-out panel) must open and close smoothly. Use `<details>`/`<summary>` (animated site-wide by `SmoothDetails` in the root layout), or for custom ones a `grid-rows-[0fr]`→`[1fr]` transition like the sidebar. Never show/hide by conditional render or `hidden` alone.
