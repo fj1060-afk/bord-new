@@ -96,6 +96,10 @@ export function GovernanceTexts({ texts, articles, canEdit }: { texts: Governanc
       <div>
         <h2 className="font-display text-lg font-bold">النظام الأساس واللوائح</h2>
         <p className="mt-1 text-sm text-ink-muted">النظام الأساس ولوائح المجلس واللجان والسياسات المعتمدة، مقسمة إلى مواد يُبحث فيها، مع إصداراتها السابقة.</p>
+        <ul className="mt-3 list-disc rounded-md border border-brass bg-brass-soft p-3 ps-8 text-xs leading-6">
+          <li>ملف PDF الممسوح ضوئياً (صورة) لا يُقرأ نصه؛ الصق نص الوثيقة بنفسك في خانة «نص الوثيقة».</li>
+          <li>تعرض الصفحة نحو 1000 مادة كحد أقصى من مجموع الوثائق؛ إن تجاوزتها قد لا تظهر المواد الزائدة. الوثائق المعتادة لا تبلغ هذا الحد.</li>
+        </ul>
       </div>
 
       {current.length > 0 && (
