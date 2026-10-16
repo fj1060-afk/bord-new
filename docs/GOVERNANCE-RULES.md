@@ -56,3 +56,12 @@ Article numbers were checked against the official English translations; the Arab
 - Related parties: board authorization under a delegation lasts at most one year or the board term (IR 64(d)); otherwise the assembly authorizes (IR 65). Public tenders are exempt from CL 27(1) (CL 27/5).
 - Second assembly meeting: ordinary within 30 days (CL 92/2); extraordinary quorum a quarter at the second meeting (CL 93/2).
 - Head of internal audit appointed, removed and paid by the board (CGR 24) on the audit committee's recommendation (CGR 52).
+
+## Board members, declarations and the board dashboard
+- Interest in company transactions disclosed immediately, recorded in the minutes, no vote (CL 71); raised automatically when an item or circular resolution names a company where a member holds a current position in their CV.
+- Competing business needs the assembly's authorization (CL 27/2): yearly competition declaration.
+- Independence: the issues that negate it (CGR 19/c), declared yearly by independent members; the board assesses independence annually (CGR 19/b).
+- Composition: majority non-executive, independents at least two or a third, whichever is greater (CGR 16); at least three members (CGR 17/a).
+- No more than five listed boards at once (CGR 17/c), counted from the CV; CMA notified within five business days of the term's start, an appointment or a change (CGR 17/d).
+- Directors, senior executives and audit committee members do not deal in the company's securities 15 days before a quarter end and 30 days before the year end, until the statements are disclosed (OSCOs 86).
+- Owning or being interested in 5% or more, or a change, notified to the Exchange by the end of the third trading day (OSCOs 85), on Tadawul's ownership notice form.
