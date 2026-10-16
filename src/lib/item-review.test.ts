@@ -69,3 +69,22 @@ describe("board remuneration wording variants", () => {
     }
   });
 });
+
+describe("template gaps", () => {
+  it("asks to choose between alternatives and offers each", () => {
+    const [gap] = reviewItem({ title: "التوصية للجمعية العامة غير العادية بزيادة/تخفيض رأس مال الشركة", kind: "decision", description: "x" });
+    expect(gap.fixes).toEqual(["التوصية للجمعية العامة غير العادية بزيادة رأس مال الشركة", "التوصية للجمعية العامة غير العادية بتخفيض رأس مال الشركة"]);
+    expect(reviewItem({ title: "التصويت على تعيين (…) مستشاراً (قانونياً/مالياً) للشركة", kind: "decision", description: "x" })[0].fixes?.[1]).toBe("التصويت على تعيين (…) مستشاراً مالياً للشركة");
+  });
+
+  it("flags unfilled blanks", () => {
+    expect(reviewItem({ title: "التصويت على تعيين (…) رئيساً للجنة المراجعة", kind: "decision", description: "x" }).some((f) => f.text.includes("فراغات"))).toBe(true);
+  });
+});
+
+describe("auto-filled documents line", () => {
+  it("does not trigger rules", () => {
+    const f = reviewItem({ title: "التوصية للجمعية العامة غير العادية بزيادة رأس مال الشركة", kind: "decision", description: "المستندات الداعمة: بيان المجلس؛ تقرير مراجع الحسابات" });
+    expect(f.some((x) => x.ref?.includes("م52"))).toBe(false);
+  });
+});

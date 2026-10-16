@@ -4,8 +4,8 @@
 
 import { withPhraseFixes } from "./spelling";
 
-/** `fixes` are complete replacement titles the author can apply with one click. */
-export type Finding = { level: "warn" | "tip"; text: string; ref?: string; fixes?: string[] };
+/** `fixes` are complete replacement titles; `template` marks remarks about unfilled template parts (expected in the library). */
+export type Finding = { level: "warn" | "tip"; text: string; ref?: string; fixes?: string[]; template?: true };
 export type ItemDraft = { title: string; description?: string | null; kind: string };
 export type Disclosure = { name: string; details: string | null };
 
@@ -161,15 +161,36 @@ const DANGLING = /(?:^|\s)(لعام|عام|لسنه|سنه|للعام|للسنه
 // The same trailing "year of" words, as typed, so they can be cut from the suggestion.
 const YEAR_WORD = /\s*(لعام|عام|للعام|لسن[ةه]|سن[ةه]|للسن[ةه])\s*$/;
 
+// "زيادة/تخفيض" or "(قانونياً/مالياً)": a choice the author must make.
+const CHOICE = /\(?([^\s()/]+)\/([^\s()/]+)\)?/;
+
+/** Unmade choices and unfilled blanks left from a standard wording. */
+function templateGaps(title: string): Finding[] {
+  const gaps: Finding[] = [];
+  const choice = title.match(CHOICE);
+  if (choice) {
+    const [whole, a, rest] = choice;
+    // "بزيادة/تخفيض": the preposition on the first word belongs to both.
+    const pre = a.length > 4 && a.startsWith("ب") ? "ب" : "";
+    const b = pre && !rest.startsWith(pre) ? pre + rest : rest;
+    const [shownA, shownB] = [a.slice(pre.length), b.slice(pre.length)];
+    gaps.push({ level: "warn", template: true, text: `البند يحتمل أمرين («${shownA}» أو «${shownB}»)؛ اختر المقصود ليكون القرار محدداً.`, fixes: [a, b].map((w) => title.replace(whole, w)) });
+  }
+  if (/\((…|\.\.\.)\)|…/.test(title)) gaps.push({ level: "warn", template: true, text: "في العنوان فراغات (…) لم تُكمل بعد؛ أكملها بالاسم أو المبلغ أو التاريخ قبل اعتماد الجدول." });
+  return gaps;
+}
+
 /** `year` is the last completed financial year, used in suggested titles; `listed` adds the CMA rules. */
 export function reviewItem(item: ItemDraft, { disclosures = [], year = new Date().getFullYear() - 1, listed = false }: { disclosures?: Disclosure[]; year?: number; listed?: boolean } = {}): Finding[] {
-  const text = fold(withPhraseFixes(`${item.title} ${item.description ?? ""}`));
+  // The auto-filled "المستندات الداعمة:" line lists documents, not what the item is about.
+  const about = (item.description ?? "").replace(/^المستندات الداعمة:.*$/gm, "");
+  const text = fold(withPhraseFixes(`${item.title} ${about}`));
   const base = withPhraseFixes(item.title.trim());
   const title = fold(base);
   const verbless = item.kind === "decision" && !DECISION_VERBS.some((v) => title.startsWith(fold(v)));
   const verb = verbless ? "التصويت على اعتماد " : "";
   const fullPeriod = `للسنة المالية المنتهية في 31 ديسمبر ${year}`;
-  const findings: Finding[] = [];
+  const findings: Finding[] = [...templateGaps(base)];
   if (DANGLING.test(title)) {
     const yearWord = YEAR_WORD.test(base);
     findings.push({

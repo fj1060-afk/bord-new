@@ -21,7 +21,8 @@ function overlap(a: string, b: string) {
 export function scanItem(draft: ScanDraft, standard: Template[], listed = false): ScanResult {
   const title = fold(draft.title);
   // A library item has no description yet; that is asked for when it is used in a meeting.
-  const findings = reviewItem({ title: draft.title, description: draft.needs || "-", kind: draft.kind }, { listed });
+  // Choices and blanks are expected in a library wording; they are flagged when the item is used.
+  const findings = reviewItem({ title: draft.title, description: draft.needs || "-", kind: draft.kind }, { listed }).filter((f) => !f.template);
   const vote = title.startsWith(fold("التصويت")) || title.includes(fold("التوصيه للجمعيه"));
   if (vote && draft.kind !== "decision") findings.push({ level: "warn", text: "الصيغة تطلب تصويتاً أو توصية، فيجب أن يكون الغرض «للقرار»." });
   if (draft.body !== "board" && draft.body !== "any" && title.startsWith(fold("التوصيه للجمعيه"))) {
