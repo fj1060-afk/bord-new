@@ -61,3 +61,11 @@ describe("policy items", () => {
     expect(reviewItem({ title: "التوصية للجمعية العامة باعتماد سياسة المكافآت", kind: "decision", description: "x" }).some((f) => f.level === "warn")).toBe(false);
   });
 });
+
+describe("board remuneration wording variants", () => {
+  it("sends board remuneration to the assembly however it is phrased", () => {
+    for (const title of ["التصويت على صرف مكافأة لأعضاء مجلس الإدارة", "اعتماد مكافآت أعضاء مجلس الإدارة"]) {
+      expect(reviewItem({ title, kind: "decision", description: "x" }).some((f) => f.ref === "نظام الشركات م87")).toBe(true);
+    }
+  });
+});
