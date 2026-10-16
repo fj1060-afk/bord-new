@@ -4,7 +4,10 @@ import { requirePage } from "@/lib/auth";
 import { formatDateTime } from "@/lib/format";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { aiConfig } from "@/lib/ai";
+import { serviceSettings } from "@/lib/ai-server";
 import { EndSessionButton } from "./end-session-button";
+import { ServicesForm } from "./services-form";
 
 export const metadata: Metadata = { title: "الإعدادات" };
 
@@ -14,6 +17,7 @@ const ENTITY_LABELS: Record<string, string> = {
   roles: "الأدوار",
   role_permissions: "الصلاحيات",
   sessions: "الجلسات",
+  service_settings: "الخدمات الخارجية",
 };
 const ACTION_LABELS: Record<string, string> = {
   insert: "إضافة",
@@ -36,12 +40,15 @@ export default async function SettingsPage({ searchParams }: PageProps<"/admin/s
     .limit(100);
   if (entity in ENTITY_LABELS) auditQuery = auditQuery.eq("entity_type", entity);
 
-  const [{ data: sessions }, { data: logs }] = await Promise.all([supabase.rpc("list_sessions"), auditQuery]);
+  const [{ data: sessions }, { data: logs }, services] = await Promise.all([supabase.rpc("list_sessions"), auditQuery, serviceSettings(supabase)]);
+  const { ready, host, model, provider } = aiConfig(process.env);
   const canEndAny = can(viewer.permissions, "/admin/settings", LEVELS.manage);
 
   return (
     <>
-      <PageHeader section="الإدارة" title="الإعدادات" description="الجلسات النشطة وسجل العمليات الحساسة." />
+      <PageHeader section="الإدارة" title="الإعدادات" description="الذكاء الاصطناعي والخدمات الخارجية، والجلسات النشطة، وسجل العمليات الحساسة." />
+
+      <ServicesForm settings={services} ai={{ ready, host, model, provider }} canManage={canEndAny} />
 
       <section className="mb-10">
         <h2 className="mb-3 font-display text-xl font-bold">الجلسات النشطة</h2>

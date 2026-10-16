@@ -154,7 +154,7 @@ export const navigation: NavGroup[] = [
         label: "الإعدادات",
         icon: Settings,
         phase: 1,
-        summary: "الجلسات النشطة وسجل التدقيق.",
+        summary: "الذكاء الاصطناعي والخدمات الخارجية، والجلسات النشطة وسجل التدقيق.",
       },
     ],
   },

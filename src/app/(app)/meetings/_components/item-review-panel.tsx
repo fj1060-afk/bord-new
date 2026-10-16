@@ -42,7 +42,7 @@ export function ItemReviewPanel({ meetingId, form }: { meetingId: string; form: 
       {review && (
         <div className="flex flex-col gap-3 rounded-lg border border-rule bg-paper p-4 text-sm">
           {spelling.length === 0 && review.findings.length === 0 && <p className="text-primary">لا ملاحظات.</p>}
-          {!review.online && <p className="text-xs text-ink-muted">تعذّر الوصول إلى المدقق الإملائي الكامل الآن؛ فُحصت مصطلحات الحوكمة فقط. أعد المحاولة بعد قليل.</p>}
+          {review.spellingOff ? <p className="text-xs text-ink-muted">المدقق الإملائي الخارجي موقوف من الإعدادات؛ فُحصت مصطلحات الحوكمة فقط.</p> : !review.online && <p className="text-xs text-ink-muted">تعذّر الوصول إلى المدقق الإملائي الكامل الآن؛ فُحصت مصطلحات الحوكمة فقط. أعد المحاولة بعد قليل.</p>}
           {spelling.length > 0 && (
             <ul className="flex flex-col gap-2">
               {spelling.map((m) => (
