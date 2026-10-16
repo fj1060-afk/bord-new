@@ -6,7 +6,7 @@ import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
 import { byDepartment, ownerOf, type Target } from "./agenda-targets";
 import { ItemReviewPanel } from "./item-review-panel";
-import { suggestTitles, type Template, type TitleSuggestion } from "@/lib/item-templates";
+import { suggestTitles, type Body, type Template, type TitleSuggestion } from "@/lib/item-templates";
 
 function TargetSelect({ name, targets, defaultValue, required, placeholder }: { name: string; targets: Target[]; defaultValue?: string; required?: boolean; placeholder: string }) {
   return (
@@ -76,10 +76,10 @@ function OwnerField({ targets, item }: { targets: Target[]; item?: AgendaItem })
 }
 
 /** Title input that offers standard wordings as you type; picking one also sets the item's purpose. */
-function TitleField({ defaultValue, library }: { defaultValue?: string; library?: Template[] }) {
+function TitleField({ defaultValue, library, body }: { defaultValue?: string; library?: Template[]; body?: Body }) {
   const [typed, setTyped] = useState("");
   const ref = useRef<HTMLInputElement>(null);
-  const suggestions = typed ? suggestTitles(typed, new Date(), 5, library) : [];
+  const suggestions = typed ? suggestTitles(typed, new Date(), 5, library, body) : [];
   const pick = (s: TitleSuggestion) => {
     const input = ref.current;
     if (!input) return;
@@ -88,6 +88,12 @@ function TitleField({ defaultValue, library }: { defaultValue?: string; library?
     if (kind) kind.value = s.kind;
     const description = input.form?.elements.namedItem("description") as HTMLTextAreaElement | null;
     if (description && !description.value.trim() && s.needs) description.value = `المستندات الداعمة: ${s.needs}`;
+    const en = input.form?.elements.namedItem("title_en") as HTMLInputElement | null;
+    if (en && s.en) {
+      en.value = s.en;
+      const details = en.closest("details");
+      if (details) details.open = true;
+    }
     setTyped("");
   };
   return (
@@ -122,7 +128,7 @@ export type AgendaItem = {
   owner_user_id?: string | null;
 };
 
-export function AgendaItemForm({ meetingId, item, targets, library, onDone }: { meetingId: string; item?: AgendaItem; targets: Target[]; library?: Template[]; onDone?: () => void }) {
+export function AgendaItemForm({ meetingId, item, targets, library, body, onDone }: { meetingId: string; item?: AgendaItem; targets: Target[]; library?: Template[]; body?: Body; onDone?: () => void }) {
   const [state, action] = useActionState(async (prev: Parameters<typeof saveAgendaItem>[2], form: FormData) => {
     const result = await saveAgendaItem(meetingId, item?.id ?? null, prev, form);
     if (result?.ok) onDone?.();
@@ -134,7 +140,7 @@ export function AgendaItemForm({ meetingId, item, targets, library, onDone }: { 
     <form ref={ref} action={action} className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <Field label="عنوان البند">
-          <TitleField defaultValue={item?.title} library={library} />
+          <TitleField defaultValue={item?.title} library={library} body={body} />
           <EnglishField name="title_en" defaultValue={item?.title_en} />
         </Field>
       </div>
@@ -171,12 +177,12 @@ export function AgendaItemForm({ meetingId, item, targets, library, onDone }: { 
   );
 }
 
-export function EditableAgendaItem({ meetingId, item, targets, library, children }: { meetingId: string; item: AgendaItem; targets: Target[]; library?: Template[]; children: React.ReactNode }) {
+export function EditableAgendaItem({ meetingId, item, targets, library, body, children }: { meetingId: string; item: AgendaItem; targets: Target[]; library?: Template[]; body?: Body; children: React.ReactNode }) {
   const [editing, setEditing] = useState(false);
   if (editing) {
     return (
       <div className="flex flex-col gap-3">
-        <AgendaItemForm meetingId={meetingId} item={item} targets={targets} library={library} onDone={() => setEditing(false)} />
+        <AgendaItemForm meetingId={meetingId} item={item} targets={targets} library={library} body={body} onDone={() => setEditing(false)} />
         <button type="button" onClick={() => setEditing(false)} className="w-fit text-sm text-ink-muted hover:underline">
           إلغاء
         </button>

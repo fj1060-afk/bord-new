@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATEGORIES, libraryTemplates, suggestTitles, templates } from "./item-templates";
+import { bodyOf, CATEGORIES, libraryTemplates, suggestTitles, templates } from "./item-templates";
 
 const oct2026 = new Date("2026-10-15T12:00:00+03:00");
 
@@ -41,6 +41,14 @@ describe("suggestTitles", () => {
     const own = libraryTemplates([{ title: "التصويت على اعتماد خطة السلامة المهنية", kind: "decision", category: "بنود الشركة", needs: null }]);
     expect(suggestTitles("السلا", oct2026, 5, own)[0].title).toBe("التصويت على اعتماد خطة السلامة المهنية");
     expect(templates(oct2026).every((t) => (CATEGORIES as readonly string[]).includes(t.category))).toBe(true);
+  });
+
+  it("has English for every built-in item and ranks the meeting's own items first", () => {
+    expect(templates(oct2026).every((t) => t.en)).toBe(true);
+    expect(suggestTitles("القوائم المالية", oct2026, 5, [], "audit")[0].title).toContain("والتوصية للمجلس");
+    expect(suggestTitles("القوائم المالية", oct2026, 5, [], "board")[0].title).toBe("التصويت على اعتماد القوائم المالية للسنة المالية المنتهية في 31 ديسمبر 2025");
+    expect(suggestTitles("القوائم المالية", oct2026)[0].en).toBe("Approving the financial statements for the financial year ended 31 December 2025");
+    expect(bodyOf({ board_id: null, committee_kind: "remuneration_nomination" })).toBe("nrc");
   });
 
   it("stays quiet when nothing fits", () => {

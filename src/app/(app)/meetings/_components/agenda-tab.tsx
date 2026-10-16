@@ -8,7 +8,7 @@ import { ownerOf, type Target } from "./agenda-targets";
 import { UploadDocument } from "./upload-document";
 import { ItemFindings } from "./item-review-panel";
 import { reviewItem, type Disclosure } from "@/lib/item-review";
-import type { Template } from "@/lib/item-templates";
+import type { Body, Template } from "@/lib/item-templates";
 
 type Doc = { id: string; title: string; file_name: string; size_bytes: number | null; agenda_item_id: string | null; document_request_id: string | null };
 type DocRequest = {
@@ -46,8 +46,10 @@ export function AgendaTab({
   myDepartmentIds,
   review,
   library,
+  body,
 }: {
   library?: Template[];
+  body?: Body;
   review?: { disclosures: Disclosure[]; listed: boolean; year: number };
   meetingId: string;
   items: AgendaItem[];
@@ -105,7 +107,7 @@ export function AgendaTab({
               <div className="flex gap-3">
                 <div className="min-w-0 flex-1">
                   {editable ? (
-                    <EditableAgendaItem meetingId={meetingId} item={item} targets={targets} library={library}>
+                    <EditableAgendaItem meetingId={meetingId} item={item} targets={targets} library={library} body={body}>
                       {content}
                     </EditableAgendaItem>
                   ) : (
@@ -171,7 +173,7 @@ export function AgendaTab({
         <details className="rounded-lg border border-rule bg-surface">
           <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة بند</summary>
           <div className="border-t border-rule p-5">
-            <AgendaItemForm meetingId={meetingId} targets={targets} library={library} />
+            <AgendaItemForm meetingId={meetingId} targets={targets} library={library} body={body} />
           </div>
         </details>
       )}

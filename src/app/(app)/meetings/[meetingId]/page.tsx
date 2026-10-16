@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
 import { meetingDisclosures } from "@/lib/item-review-server";
-import { libraryTemplates } from "@/lib/item-templates";
+import { bodyOf, libraryTemplates } from "@/lib/item-templates";
 import { currentYear } from "@/lib/org";
 import { InfoRequests } from "../_components/info-requests";
 import { PrintDocs } from "../_components/print-docs";
@@ -49,7 +49,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
 
   const { data: meeting } = await supabase
     .from("meetings")
-    .select("*, board:boards(name), committee:committees(name)")
+    .select("*, board:boards(name), committee:committees(name, kind)")
     .eq("id", meetingId)
     .maybeSingle();
   if (!meeting) notFound();
@@ -60,7 +60,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           supabase.rpc("list_people_by_department"),
           companyProfile(supabase),
           meetingDisclosures(supabase, meetingId),
-          supabase.from("agenda_item_library").select("title, kind, category, needs"),
+          supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
         ])
       : [{ data: [] }, null, [], { data: [] }];
   const profileDays = profile?.invite_days ?? 5;
@@ -207,6 +207,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           packPublished={Boolean(meeting.pack_published_at)}
           myDepartmentIds={(delegations ?? []).map((d) => d.department_id)}
           library={libraryTemplates(library ?? [])}
+          body={bodyOf({ board_id: meeting.board_id, committee_kind: (meeting.committee as { kind?: string } | null)?.kind })}
           review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1 } : undefined}
         />
       )}
