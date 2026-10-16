@@ -53,3 +53,11 @@ describe("reviewItem rules", () => {
     expect(reviewItem(item, { listed: true }).length).toBe(reviewItem(item).length + 1);
   });
 });
+
+describe("policy items", () => {
+  it("lists policy requirements and sends assembly policies to the assembly", () => {
+    expect(reviewItem({ title: "التصويت على اعتماد سياسة الإفصاح", kind: "decision", description: "x" }).some((f) => f.text.startsWith("اعتماد السياسات"))).toBe(true);
+    expect(reviewItem({ title: "التصويت على اعتماد سياسة المكافآت", kind: "decision", description: "x" }).some((f) => f.level === "warn" && f.ref?.includes("م58"))).toBe(true);
+    expect(reviewItem({ title: "التوصية للجمعية العامة باعتماد سياسة المكافآت", kind: "decision", description: "x" }).some((f) => f.level === "warn")).toBe(false);
+  });
+});

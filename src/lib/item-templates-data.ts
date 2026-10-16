@@ -34,6 +34,9 @@ const QUARTERS = [
 ];
 
 type T = Omit<Template, "category">;
+
+/** What a policy item needs before the board votes on it. */
+const POLICY = "مسودة السياسة النهائية؛ جدول مقارنة التعديلات ومبرراتها (عند التحديث)؛ توصية اللجنة المختصة؛ المراجعة القانونية والتوافق مع الأنظمة والنظام الأساس؛ الإدارة المالكة للسياسة وتاريخ النفاذ وموعد المراجعة القادمة";
 const group = (category: (typeof CATEGORIES)[number], items: T[]): Template[] => items.map((i) => ({ category, ...i }));
 
 /** Templates dated from `today`: `year` is the last completed financial year, `q` the last completed quarter. */
@@ -111,7 +114,7 @@ export function buildTemplates(today: Date): Template[] {
       { body: "board", keys: ["عضو لجنه", "اعضاء لجنه", "بدل", "المستقيل"], kind: "decision", title: "التصويت على تعيين (…) عضواً في لجنة (…) بدلاً من العضو المستقيل (…) لإكمال مدة اللجنة", en: "Appointing (…) as a member of the (…) committee replacing resigned member (…)", needs: "توصية لجنة الترشيحات" },
       { body: "board", keys: ["اعاده تشكيل", "تشكيل لجنه المراجعه"], kind: "decision", title: "التصويت على إعادة تشكيل لجنة المراجعة للدورة الجديدة وتحديد مهامها وضوابط عملها ومكافآت أعضائها", en: "Re-forming the audit committee for the new term and setting its duties, rules and members' remuneration", needs: "توصية لجنة الترشيحات؛ لائحة عمل اللجنة" },
       { body: "board", keys: ["لائحه عمل", "لائحه لجنه"], kind: "decision", title: `${ga} باعتماد لائحة عمل لجنة (…)`, en: `${gaEn} approving the charter of the (…) committee`, needs: "مسودة اللائحة" },
-      { body: "board", keys: ["سياسه", "سياسات", "لائحه"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة (…)", en: "Approving/updating the (…) policy", needs: "مسودة السياسة ومقارنة التعديلات" },
+      { body: "board", keys: ["سياسه", "سياسات", "لائحه"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة (…)", en: "Approving/updating the (…) policy", needs: POLICY },
       { body: "board", keys: ["الخطه الاستراتيجيه", "الاستراتيجيه", "استراتيجيه"], kind: "decision", title: `التصويت على اعتماد الخطة الاستراتيجية للأعوام ${now + 1}–${now + 3}`, en: `Approving the strategic plan for ${now + 1}–${now + 3}` },
       { body: "board", keys: ["المراجعه الداخليه", "خطه المراجعه"], kind: "decision", title: `التصويت على اعتماد خطة المراجعة الداخلية لعام ${now + 1}`, en: `Approving the internal audit plan for ${now + 1}`, needs: "توصية لجنة المراجعة" },
       { body: "board", keys: ["المخاطر", "مخاطر"], kind: "discussion", title: "مناقشة تقرير إدارة المخاطر", en: "Discussing the risk management report", needs: "تقرير لجنة/إدارة المخاطر" },
@@ -119,13 +122,13 @@ export function buildTemplates(today: Date): Template[] {
     ]),
     ...group("الحوكمة والالتزام", [
       { body: "board", keys: ["الالتزام بلائحه الحوكمه", "الحوكمه", "الالتزام"], kind: "decision", title: `التصويت على اعتماد تقرير الالتزام بلائحة حوكمة الشركات ${fy} وأسباب عدم تطبيق ما لم يُطبق من أحكامها`, en: `Approving the corporate governance compliance report ${fyEn}, with reasons for any provision not applied`, needs: "جدول الالتزام بمواد اللائحة (لائحة الحوكمة م87)" },
-      { body: "board", keys: ["سياسه الافصاح", "الافصاح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإفصاح والشفافية", en: "Approving/updating the disclosure and transparency policy", needs: "مسودة السياسة" },
-      { body: "board", keys: ["تعارض المصالح", "سياسه تعارض"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة تعارض المصالح", en: "Approving/updating the conflict of interest policy", needs: "مسودة السياسة (لائحة الحوكمة م41)" },
-      { body: "board", keys: ["المخالفات", "الابلاغ", "بلاغات"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإبلاغ عن المخالفات وحماية المبلّغين", en: "Approving/updating the whistleblowing policy", needs: "مسودة السياسة" },
+      { body: "board", keys: ["سياسه الافصاح", "الافصاح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإفصاح والشفافية", en: "Approving/updating the disclosure and transparency policy", needs: POLICY },
+      { body: "board", keys: ["تعارض المصالح", "سياسه تعارض"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة تعارض المصالح", en: "Approving/updating the conflict of interest policy", needs: `${POLICY} (لائحة الحوكمة م41)` },
+      { body: "board", keys: ["المخالفات", "الابلاغ", "بلاغات"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإبلاغ عن المخالفات وحماية المبلّغين", en: "Approving/updating the whistleblowing policy", needs: POLICY },
       { body: "board", keys: ["ميثاق", "السلوك", "قواعد السلوك"], kind: "decision", title: "التصويت على اعتماد/تحديث ميثاق السلوك المهني والأخلاقي", en: "Approving/updating the code of conduct", needs: "مسودة الميثاق" },
-      { body: "board", keys: ["سياسه توزيع الارباح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة توزيع الأرباح", en: "Approving/updating the dividend policy", needs: "مسودة السياسة" },
-      { body: "board", keys: ["اصحاب المصالح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة العلاقة مع أصحاب المصالح", en: "Approving/updating the stakeholder relations policy", needs: "مسودة السياسة" },
-      { body: "board", keys: ["البيانات الشخصيه", "حمايه البيانات", "الخصوصيه"], kind: "decision", title: "التصويت على اعتماد سياسة حماية البيانات الشخصية", en: "Approving the personal data protection policy", needs: "مسودة السياسة؛ متطلبات نظام حماية البيانات الشخصية" },
+      { body: "board", keys: ["سياسه توزيع الارباح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة توزيع الأرباح", en: "Approving/updating the dividend policy", needs: POLICY },
+      { body: "board", keys: ["اصحاب المصالح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة العلاقة مع أصحاب المصالح", en: "Approving/updating the stakeholder relations policy", needs: POLICY },
+      { body: "board", keys: ["البيانات الشخصيه", "حمايه البيانات", "الخصوصيه"], kind: "decision", title: "التصويت على اعتماد سياسة حماية البيانات الشخصية", en: "Approving the personal data protection policy", needs: `${POLICY}؛ متطلبات نظام حماية البيانات الشخصية` },
       { body: "board", keys: ["استمراريه الاعمال", "الطوارئ"], kind: "decision", title: "التصويت على اعتماد خطة استمرارية الأعمال", en: "Approving the business continuity plan", needs: "الخطة؛ نتائج آخر اختبار" },
       { body: "board", keys: ["مخالفه", "غرامه", "جزاء", "عقوبه"], kind: "information", title: "الاطلاع على المخالفات والغرامات النظامية المفروضة على الشركة والإجراءات المتخذة", en: "Reviewing regulatory violations and penalties imposed on the company and the actions taken", needs: "بيان المخالفات؛ رأي الإدارة القانونية" },
     ]),
