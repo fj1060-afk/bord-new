@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { COMPANY_TYPES, type CompanyProfile } from "@/lib/company";
@@ -24,7 +25,7 @@ export function CompanyForm({ profile, people, canEdit }: { profile: CompanyProf
     </Field>
   );
   return (
-    <form action={action} className="flex flex-col gap-6">
+    <ActionForm action={action} state={state} className="flex flex-col gap-6">
       <fieldset disabled={!canEdit} className="flex flex-col gap-6">
         <Section title="الشركة">
           <Field label="اسم الشركة">
@@ -99,6 +100,6 @@ export function CompanyForm({ profile, people, canEdit }: { profile: CompanyProf
           </SubmitButton>
         </div>
       )}
-    </form>
+    </ActionForm>
   );
 }

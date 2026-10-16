@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { addDelegate, createDepartment } from "./actions";
@@ -7,7 +8,7 @@ import { addDelegate, createDepartment } from "./actions";
 export function CreateDepartmentForm() {
   const [state, action] = useActionState(createDepartment, null);
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-[1fr_10rem_auto] sm:items-end">
+    <ActionForm action={action} state={state} className="grid gap-4 sm:grid-cols-[1fr_10rem_auto] sm:items-end">
       <Field label="اسم الإدارة">
         <input name="name" required className={inputClass} />
       </Field>
@@ -18,7 +19,7 @@ export function CreateDepartmentForm() {
       <div className="sm:col-span-3">
         <FormMessage state={state} />
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -31,7 +32,7 @@ export function AddDelegateForm({
 }) {
   const [state, action] = useActionState(addDelegate.bind(null, departmentId), null);
   return (
-    <form action={action} className="flex flex-col gap-2">
+    <ActionForm action={action} state={state} className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
         <select name="user_id" required defaultValue="" className={`${inputClass} min-w-0 flex-1`}>
           <option value="" disabled>
@@ -48,6 +49,6 @@ export function AddDelegateForm({
         </SubmitButton>
       </div>
       <FormMessage state={state} />
-    </form>
+    </ActionForm>
   );
 }

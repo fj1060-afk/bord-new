@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useState } from "react";
 import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { fileDisclosure, savePerson } from "./actions";
@@ -27,7 +28,7 @@ export function PersonForm({
 }) {
   const [state, action] = useActionState(savePerson.bind(null, person.id), null);
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-2">
+    <ActionForm action={action} state={state} className="grid gap-4 sm:grid-cols-2">
       <Field label="الاسم الكامل">
         <input name="full_name" defaultValue={person.full_name} required className={inputClass} />
         <EnglishField name="full_name_en" defaultValue={person.full_name_en} />
@@ -68,7 +69,7 @@ export function PersonForm({
           حفظ البيانات
         </SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -76,7 +77,7 @@ export function DisclosureForm({ personId, year }: { personId: string; year: num
   const [state, action] = useActionState(fileDisclosure.bind(null, personId), null);
   const [conflict, setConflict] = useState("no");
   return (
-    <form action={action} className="flex flex-col gap-4 rounded-lg border border-brass bg-surface p-5">
+    <ActionForm action={action} state={state} className="flex flex-col gap-4 rounded-lg border border-brass bg-surface p-5">
       <p className="font-medium">
         إفصاح عام <span className="font-mono">{year}</span>
       </p>
@@ -108,6 +109,6 @@ export function DisclosureForm({ personId, year }: { personId: string; year: num
       <SubmitButton pendingLabel="جارٍ التقديم…" className="w-fit">
         تقديم الإفصاح
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

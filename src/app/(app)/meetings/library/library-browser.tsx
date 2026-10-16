@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useRef, useState } from "react";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
@@ -104,7 +105,7 @@ function AddItemForm({ standard, listed }: { standard: Template[]; listed: boole
   return (
     <details className="rounded-lg border border-rule bg-surface">
       <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة صيغة للمستودع</summary>
-      <form ref={ref} action={action} onInput={read} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
+      <ActionForm ref={ref} action={action} state={state} onInput={read} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field label="صيغة البند" hint="استخدم (…) للأجزاء التي تُكمل عند كل اجتماع.">
             <input name="title" required spellCheck lang="ar" className={inputClass} />
@@ -161,7 +162,7 @@ function AddItemForm({ standard, listed }: { standard: Template[]; listed: boole
             فحص وحفظ
           </SubmitButton>
         </div>
-      </form>
+      </ActionForm>
     </details>
   );
 }

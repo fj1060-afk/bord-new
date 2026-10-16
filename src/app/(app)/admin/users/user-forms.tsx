@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useTransition } from "react";
 import { UserPlus } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
@@ -30,7 +31,7 @@ export function CreateUserForm({ roles }: { roles: RoleOption[] }) {
         <UserPlus size={16} aria-hidden="true" />
         إضافة مستخدم
       </summary>
-      <form action={action} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
+      <ActionForm action={action} state={state} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
         <Field label="الاسم الكامل">
           <input name="full_name" required className={inputClass} />
         </Field>
@@ -57,7 +58,7 @@ export function CreateUserForm({ roles }: { roles: RoleOption[] }) {
             </SubmitButton>
           </div>
         </div>
-      </form>
+      </ActionForm>
     </details>
   );
 }
@@ -109,7 +110,7 @@ export function UserRow({
         <div className="flex flex-col gap-4 border-t border-rule bg-paper px-5 py-4">
           {user.job_title && <p className="text-sm text-ink-muted">المسمى الوظيفي: {user.job_title}</p>}
           {canManage && !isSelf && !disabled && (
-            <form action={inviteAction} className="flex flex-col gap-2">
+            <ActionForm action={inviteAction} state={inviteState} className="flex flex-col gap-2">
               <p className="text-sm text-ink-muted">
                 {user.invited_at ? `آخر دعوة: ${formatDateTime(new Date(user.invited_at))}` : "لم تُرسل الدعوة بعد."}
               </p>
@@ -117,16 +118,16 @@ export function UserRow({
                 {user.invited_at ? "إعادة إرسال الدعوة" : "إرسال الدعوة"}
               </SubmitButton>
               <FormMessage state={inviteState} />
-            </form>
+            </ActionForm>
           )}
           {canManage && !isSelf && (
-            <form action={action} className="flex flex-col gap-3">
+            <ActionForm action={action} state={state} className="flex flex-col gap-3">
               <RoleChecklist roles={roles} selected={user.roleIds} />
               <FormMessage state={state} />
               <SubmitButton variant="secondary" pendingLabel="جارٍ الحفظ…" className="w-fit">
                 حفظ الأدوار
               </SubmitButton>
-            </form>
+            </ActionForm>
           )}
           {canEdit && !isSelf && (
             <button

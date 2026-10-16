@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { AuthCard } from "@/components/auth/auth-card";
 import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
@@ -10,7 +11,7 @@ export default function SetPasswordPage() {
 
   return (
     <AuthCard title="تعيين كلمة المرور" description="اختر كلمة مرور من 10 أحرف على الأقل.">
-      <form action={action} className="flex flex-col gap-4">
+      <ActionForm action={action} state={state} className="flex flex-col gap-4">
         <Field label="كلمة المرور الجديدة">
           <input name="password" type="password" autoComplete="new-password" dir="ltr" minLength={10} required className={inputClass} />
         </Field>
@@ -19,7 +20,7 @@ export default function SetPasswordPage() {
         </Field>
         <FormMessage state={state} />
         <SubmitButton pendingLabel="جارٍ الحفظ…">حفظ والدخول</SubmitButton>
-      </form>
+      </ActionForm>
     </AuthCard>
   );
 }

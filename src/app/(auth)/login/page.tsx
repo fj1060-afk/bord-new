@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { Suspense, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -12,7 +13,7 @@ export default function LoginPage() {
 
   return (
     <AuthCard title="تسجيل الدخول" description="منصة حوكمة المجالس واللجان">
-      <form action={action} className="flex flex-col gap-4">
+      <ActionForm action={action} state={state} className="flex flex-col gap-4">
         <Field label="البريد الإلكتروني">
           <input name="email" type="email" autoComplete="email" dir="ltr" required className={inputClass} />
         </Field>
@@ -27,7 +28,7 @@ export default function LoginPage() {
         <Link href="/forgot-password" className="text-center text-sm text-primary hover:underline">
           نسيت كلمة المرور؟
         </Link>
-      </form>
+      </ActionForm>
     </AuthCard>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { FormMessage, inputClass, SubmitButton, type ActionState } from "@/components/ui/form";
 import { buttonClass } from "@/components/ui/styles";
@@ -101,34 +102,34 @@ export function ProxySelect({
 export function StartMeetingButton({ meetingId, ready }: { meetingId: string; ready: boolean }) {
   const [state, action] = useActionState(() => startMeeting(meetingId), null);
   return (
-    <form action={action} className="flex flex-col gap-2">
+    <ActionForm action={action} state={state} className="flex flex-col gap-2">
       <SubmitButton disabled={!ready} pendingLabel="جارٍ البدء…" className="w-full">
         بدء الاجتماع
       </SubmitButton>
       {!ready && <p className="text-xs text-ink-muted">يُفعَّل بعد اكتمال النصاب، ويسجّل وقت البدء الفعلي.</p>}
       <FormMessage state={state} />
-    </form>
+    </ActionForm>
   );
 }
 
 export function QuorumOverrideForm({ meetingId, value }: { meetingId: string; value: number | null }) {
   const [state, action] = useActionState(setQuorumRequired.bind(null, meetingId), null);
   return (
-    <form action={action} className="flex flex-col gap-2 text-sm">
+    <ActionForm action={action} state={state} className="flex flex-col gap-2 text-sm">
       <label className="flex items-center gap-2">
         النصاب المطلوب
         <input name="quorum_required" type="number" min={1} defaultValue={value ?? ""} placeholder="تلقائي" className={`${inputClass} w-24`} />
       </label>
       <button className={buttonClass("secondary", "w-fit px-3 py-1 text-xs")}>حفظ</button>
       <FormMessage state={state} />
-    </form>
+    </ActionForm>
   );
 }
 
 export function CloseItemForm({ meetingId, itemId }: { meetingId: string; itemId: string }) {
   const [state, action] = useActionState(closeItem.bind(null, meetingId, itemId), null);
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <ActionForm action={action} state={state} className="flex flex-col gap-3">
       <textarea spellCheck lang="ar" name="outcome" rows={3} placeholder="ملخص ما انتهى إليه البند (يُنقل لاحقاً إلى المحضر)" className={inputClass} />
       <div className="flex flex-wrap gap-2">
         <SubmitButton name="status" value="discussed" pendingLabel="…">
@@ -139,6 +140,6 @@ export function CloseItemForm({ meetingId, itemId }: { meetingId: string; itemId
         </SubmitButton>
       </div>
       <FormMessage state={state} />
-    </form>
+    </ActionForm>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useState } from "react";
 import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { ITEM_KINDS, MEETING_MODES, MEETING_TYPES, RSVP, riyadhParts } from "@/lib/meetings";
@@ -40,7 +41,7 @@ export function MeetingDetailsForm({ meeting, bodies }: { meeting?: Meeting; bod
   const when = meeting ? riyadhParts(meeting.starts_at) : { date: "", time: "10:00" };
 
   return (
-    <form action={formAction} className="grid gap-5 sm:grid-cols-2">
+    <ActionForm action={formAction} state={state} className="grid gap-5 sm:grid-cols-2">
       {bodies && (
         <Field label="الجهة">
           <select name="body" required defaultValue="" className={inputClass}>
@@ -92,14 +93,14 @@ export function MeetingDetailsForm({ meeting, bodies }: { meeting?: Meeting; bod
           {meeting ? "حفظ التعديلات" : "إنشاء الاجتماع"}
         </SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
 export function AddGuestForm({ meetingId, people }: { meetingId: string; people: { id: string; full_name: string }[] }) {
   const [state, action] = useActionState(addGuest.bind(null, meetingId), null);
   return (
-    <form action={action} className="flex flex-col gap-2">
+    <ActionForm action={action} state={state} className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
         <select name="person_id" required defaultValue="" className={`${inputClass} min-w-0 flex-1`}>
           <option value="" disabled>
@@ -116,14 +117,14 @@ export function AddGuestForm({ meetingId, people }: { meetingId: string; people:
         </SubmitButton>
       </div>
       <FormMessage state={state} />
-    </form>
+    </ActionForm>
   );
 }
 
 export function RsvpForm({ meetingId, current }: { meetingId: string; current: string }) {
   const [state, action] = useActionState(respondRsvp.bind(null, meetingId), null);
   return (
-    <form action={action} className="flex flex-col gap-3 rounded-lg border border-brass bg-surface p-5">
+    <ActionForm action={action} state={state} className="flex flex-col gap-3 rounded-lg border border-brass bg-surface p-5">
       <p className="font-medium">ردك على الدعوة: <span className="text-brass">{RSVP[current as keyof typeof RSVP]}</span></p>
       <div className="flex flex-wrap gap-4 text-sm">
         {(["accepted", "tentative", "declined"] as const).map((value) => (
@@ -138,14 +139,14 @@ export function RsvpForm({ meetingId, current }: { meetingId: string; current: s
       <SubmitButton pendingLabel="…" className="w-fit">
         إرسال الرد
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }
 
 export function AgendaRequestForm({ departments, bodies }: { departments: Option[]; bodies: Body[] }) {
   const [state, action] = useActionState(submitAgendaRequest, null);
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-2">
+    <ActionForm action={action} state={state} className="grid gap-4 sm:grid-cols-2">
       <Field label="الإدارة">
         <select name="department_id" required defaultValue={departments.length === 1 ? departments[0].id : ""} className={inputClass}>
           <option value="" disabled>
@@ -187,7 +188,7 @@ export function AgendaRequestForm({ departments, bodies }: { departments: Option
           إرسال الطلب
         </SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -195,7 +196,7 @@ export function ReviewAgendaRequestForm({ requestId, meetings }: { requestId: st
   const [state, action] = useActionState(reviewAgendaRequest.bind(null, requestId), null);
   const [decision, setDecision] = useState("accepted");
   return (
-    <form action={action} className="mt-3 flex flex-col gap-3 border-t border-rule pt-3">
+    <ActionForm action={action} state={state} className="mt-3 flex flex-col gap-3 border-t border-rule pt-3">
       <div className="flex flex-wrap gap-4 text-sm">
         {[
           ["accepted", "قبول وإضافة لاجتماع"],
@@ -224,6 +225,6 @@ export function ReviewAgendaRequestForm({ requestId, meetings }: { requestId: st
       <SubmitButton variant="secondary" pendingLabel="…" className="w-fit">
         حفظ القرار
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

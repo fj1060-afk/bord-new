@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useRef, useState } from "react";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton, type ActionState } from "@/components/ui/form";
 import { MAX_UPLOAD_BYTES, storagePath } from "@/lib/meetings";
@@ -19,7 +20,7 @@ export function AddTaskForm({
   return (
     <details className="rounded-lg border border-rule bg-surface">
       <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة مهمة</summary>
-      <form action={action} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
+      <ActionForm action={action} state={state} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field label="المهمة">
             <input name="title" spellCheck lang="ar" required className={inputClass} />
@@ -60,7 +61,7 @@ export function AddTaskForm({
             إضافة المهمة
           </SubmitButton>
         </div>
-      </form>
+      </ActionForm>
     </details>
   );
 }

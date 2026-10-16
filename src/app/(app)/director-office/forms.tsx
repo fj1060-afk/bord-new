@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { saveContact, saveCorrespondence } from "./actions";
@@ -13,7 +14,7 @@ export function CorrespondenceForm({ direction, contacts, letter, label }: { dir
   return (
     <details className={letter ? "" : "mb-4 rounded-lg border border-rule bg-surface"}>
       <summary className={buttonClass(letter ? "secondary" : "primary", letter ? "cursor-pointer list-none px-3 py-1 text-xs" : "m-4 w-fit cursor-pointer list-none")}>{label}</summary>
-      <form action={action} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
+      <ActionForm action={action} state={state} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field label="الموضوع">
             <input name="subject" spellCheck lang="ar" required defaultValue={letter?.subject} className={inputClass} />
@@ -52,7 +53,7 @@ export function CorrespondenceForm({ direction, contacts, letter, label }: { dir
             حفظ
           </SubmitButton>
         </div>
-      </form>
+      </ActionForm>
     </details>
   );
 }
@@ -62,7 +63,7 @@ export function ContactForm() {
   return (
     <details className="mb-4 rounded-lg border border-rule bg-surface">
       <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة جهة اتصال</summary>
-      <form action={action} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
+      <ActionForm action={action} state={state} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
         {[
           ["name", "الاسم", "text"],
           ["organization", "الجهة", "text"],
@@ -83,7 +84,7 @@ export function ContactForm() {
             حفظ
           </SubmitButton>
         </div>
-      </form>
+      </ActionForm>
     </details>
   );
 }

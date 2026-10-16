@@ -2,6 +2,7 @@
 
 import type { ComponentProps, ReactNode } from "react";
 import { useFormStatus } from "react-dom";
+import { useActionFormPending } from "./action-form";
 import clsx from "clsx";
 import { buttonClass, inputClass, type ButtonVariant } from "./styles";
 
@@ -21,7 +22,8 @@ type ButtonProps = ComponentProps<"button"> & { variant?: ButtonVariant };
 
 /** Submit button that disables itself while its form's action runs. */
 export function SubmitButton({ children, pendingLabel, variant, className, ...props }: ButtonProps & { pendingLabel?: string }) {
-  const { pending } = useFormStatus();
+  const native = useFormStatus().pending;
+  const pending = useActionFormPending() ?? native;
   return (
     <button type="submit" disabled={pending} className={buttonClass(variant, className)} {...props}>
       {pending && pendingLabel ? pendingLabel : children}

@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useDeferredValue, useState } from "react";
 import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { EnglishRichField, RichTextField } from "@/components/ui/rich-text-field";
@@ -10,10 +11,10 @@ import { createMinutes, saveMinutes, saveResolution, signMinutes } from "../_act
 export function CreateMinutesButton({ meetingId }: { meetingId: string }) {
   const [state, action] = useActionState(() => createMinutes(meetingId), null);
   return (
-    <form action={action} className="flex flex-col items-center gap-3">
+    <ActionForm action={action} state={state} className="flex flex-col items-center gap-3">
       <SubmitButton pendingLabel="جارٍ الإعداد…">إعداد المحضر</SubmitButton>
       <FormMessage state={state} />
-    </form>
+    </ActionForm>
   );
 }
 
@@ -22,7 +23,7 @@ type Item = { id: string; position: number; title: string; deliberation: string 
 export function MinutesEditor({ meetingId, minutesId, intro, closing, introEn, closingEn, items }: { meetingId: string; minutesId: string; intro: string | null; closing: string | null; introEn?: string | null; closingEn?: string | null; items: Item[] }) {
   const [state, action] = useActionState(saveMinutes.bind(null, meetingId, minutesId), null);
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <ActionForm action={action} state={state} className="flex flex-col gap-5">
       <Field label="الافتتاحية">
         <RichTextField name="intro" defaultValue={intro} label="الافتتاحية" />
         <EnglishRichField name="intro_en" defaultValue={introEn} />
@@ -41,7 +42,7 @@ export function MinutesEditor({ meetingId, minutesId, intro, closing, introEn, c
       <SubmitButton pendingLabel="جارٍ الحفظ…" className="w-fit">
         حفظ المحضر
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -52,7 +53,7 @@ export function ResolutionForm({ meetingId, agendaItemId, resolution }: { meetin
   const [text, setText] = useState(resolution?.text ?? "");
   const hints = draftingHints(useDeferredValue(text));
   return (
-    <form action={action} className="flex flex-col gap-3 rounded-md bg-paper p-4">
+    <ActionForm action={action} state={state} className="flex flex-col gap-3 rounded-md bg-paper p-4">
       <Field label="نص القرار">
         <textarea name="text" rows={3} value={text} onChange={(e) => setText(e.target.value)} required spellCheck lang="ar" className={inputClass} />
       </Field>
@@ -88,19 +89,19 @@ export function ResolutionForm({ meetingId, agendaItemId, resolution }: { meetin
       <SubmitButton variant="secondary" pendingLabel="…" className="w-fit">
         {resolution ? "حفظ القرار" : "تسجيل القرار"}
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }
 
 export function SignMinutesButton({ meetingId, minutesId }: { meetingId: string; minutesId: string }) {
   const [state, action] = useActionState(() => signMinutes(meetingId, minutesId), null);
   return (
-    <form action={action} className="flex flex-col gap-2">
+    <ActionForm action={action} state={state} className="flex flex-col gap-2">
       <p className="text-sm">بالتوقيع تؤكد أن المحضر يعكس ما دار في الاجتماع.</p>
       <SubmitButton pendingLabel="جارٍ التوقيع…" className="w-fit">
         توقيع المحضر
       </SubmitButton>
       <FormMessage state={state} />
-    </form>
+    </ActionForm>
   );
 }

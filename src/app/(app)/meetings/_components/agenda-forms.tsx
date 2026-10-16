@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useRef, useState, useTransition } from "react";
 import { EnglishField, buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { ITEM_KINDS } from "@/lib/meetings";
@@ -137,7 +138,7 @@ export function AgendaItemForm({ meetingId, item, targets, library, body, onDone
   const ref = useRef<HTMLFormElement>(null);
 
   return (
-    <form ref={ref} action={action} className="grid gap-4 sm:grid-cols-2">
+    <ActionForm ref={ref} action={action} state={state} className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <Field label="عنوان البند">
           <TitleField defaultValue={item?.title} library={library} body={body} />
@@ -173,7 +174,7 @@ export function AgendaItemForm({ meetingId, item, targets, library, body, onDone
           {item ? "حفظ البند" : "إضافة البند"}
         </SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -204,7 +205,7 @@ export function DocumentRequestForm({ meetingId, itemId, targets, owner, dueDate
   return (
     <details>
       <summary className="cursor-pointer text-sm text-primary">طلب مستند داعم من المسؤول</summary>
-      <form action={action} className="mt-3 grid gap-3 sm:grid-cols-3">
+      <ActionForm action={action} state={state} className="mt-3 grid gap-3 sm:grid-cols-3">
         <input name="title" spellCheck lang="ar" placeholder="المستند المطلوب" required className={inputClass} />
         <TargetSelect name="target" targets={targets} defaultValue={owner} required placeholder="المطلوب منه" />
         <input name="due_date" type="date" aria-label="آخر موعد" defaultValue={dueDate} className={inputClass} />
@@ -214,7 +215,7 @@ export function DocumentRequestForm({ meetingId, itemId, targets, owner, dueDate
             إرسال الطلب
           </SubmitButton>
         </div>
-      </form>
+      </ActionForm>
     </details>
   );
 }

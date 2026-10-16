@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { createCircular, ratifyCircular } from "./actions";
@@ -9,7 +10,7 @@ export function CircularForm({ bodies }: { bodies: { value: string; label: strin
   return (
     <details className="mb-6 rounded-lg border border-rule bg-surface">
       <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>قرار جديد بالتمرير</summary>
-      <form action={action} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
+      <ActionForm action={action} state={state} className="grid gap-4 border-t border-rule p-5 sm:grid-cols-2">
         <Field label="الجهة">
           <select name="body" required defaultValue="" className={inputClass}>
             <option value="" disabled>
@@ -41,7 +42,7 @@ export function CircularForm({ bodies }: { bodies: { value: string; label: strin
             طرح للتصويت
           </SubmitButton>
         </div>
-      </form>
+      </ActionForm>
     </details>
   );
 }
@@ -49,7 +50,7 @@ export function CircularForm({ bodies }: { bodies: { value: string; label: strin
 export function RatifyForm({ circularId, meetings }: { circularId: string; meetings: { id: string; label: string }[] }) {
   const [state, action] = useActionState(ratifyCircular.bind(null, circularId), null);
   return (
-    <form action={action} className="flex flex-wrap items-center gap-2">
+    <ActionForm action={action} state={state} className="flex flex-wrap items-center gap-2">
       <select name="meeting_id" required defaultValue="" className={inputClass + " w-auto"}>
         <option value="" disabled>
           الاجتماع الذي أُثبت فيه
@@ -64,6 +65,6 @@ export function RatifyForm({ circularId, meetings }: { circularId: string; meeti
         إثبات
       </SubmitButton>
       <FormMessage state={state} />
-    </form>
+    </ActionForm>
   );
 }

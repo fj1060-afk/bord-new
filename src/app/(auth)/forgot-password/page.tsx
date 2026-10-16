@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/auth-card";
@@ -11,7 +12,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthCard title="نسيت كلمة المرور" description="أدخل بريدك وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.">
-      <form action={action} className="flex flex-col gap-4">
+      <ActionForm action={action} state={state} className="flex flex-col gap-4">
         <Field label="البريد الإلكتروني">
           <input name="email" type="email" autoComplete="email" dir="ltr" required className={inputClass} />
         </Field>
@@ -20,7 +21,7 @@ export default function ForgotPasswordPage() {
         <Link href="/login" className="text-center text-sm text-primary hover:underline">
           العودة لتسجيل الدخول
         </Link>
-      </form>
+      </ActionForm>
     </AuthCard>
   );
 }

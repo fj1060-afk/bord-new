@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { REMARK_KINDS } from "@/lib/secretary";
@@ -12,7 +13,7 @@ export function RemarkForm({ meetingId, minutesId, mode, people, resolutions }: 
   return (
     <details>
       <summary className={buttonClass("secondary", "w-fit cursor-pointer list-none px-3 py-1 text-xs")}>{mode === "comment" ? "إضافة ملاحظة على المسودة" : "تسجيل تحفظ أو رأي مخالف"}</summary>
-      <form action={action} className="mt-3 grid gap-3 sm:grid-cols-3">
+      <ActionForm action={action} state={state} className="mt-3 grid gap-3 sm:grid-cols-3">
         {mode === "comment" ? (
           <input type="hidden" name="kind" value="comment" />
         ) : (
@@ -63,7 +64,7 @@ export function RemarkForm({ meetingId, minutesId, mode, people, resolutions }: 
             حفظ
           </SubmitButton>
         </div>
-      </form>
+      </ActionForm>
     </details>
   );
 }

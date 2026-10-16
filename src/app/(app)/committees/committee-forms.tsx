@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { PersonPicker } from "@/components/org/person-picker";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
@@ -9,7 +10,7 @@ import { addCommitteeMember, saveCommittee } from "./actions";
 export function CommitteeForm({ committee }: { committee?: { id: string; name: string; mandate: string | null; kind?: string } }) {
   const [state, action] = useActionState(saveCommittee.bind(null, committee?.id ?? null), null);
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <ActionForm action={action} state={state} className="flex flex-col gap-4">
       <Field label="اسم اللجنة">
         <input name="name" defaultValue={committee?.name} required className={inputClass} />
       </Field>
@@ -29,7 +30,7 @@ export function CommitteeForm({ committee }: { committee?: { id: string; name: s
       <SubmitButton pendingLabel="جارٍ الحفظ…" className="w-fit">
         {committee ? "حفظ التعديلات" : "إنشاء اللجنة"}
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -44,7 +45,7 @@ export function AddCommitteeMemberForm({
   return (
     <details className="rounded-lg border border-rule bg-surface">
       <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة عضو</summary>
-      <form action={action} className="flex flex-col gap-4 border-t border-rule p-5">
+      <ActionForm action={action} state={state} className="flex flex-col gap-4 border-t border-rule p-5">
         <PersonPicker people={people} />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="المنصب">
@@ -64,7 +65,7 @@ export function AddCommitteeMemberForm({
         <SubmitButton pendingLabel="جارٍ الإضافة…" className="w-fit">
           إضافة العضو
         </SubmitButton>
-      </form>
+      </ActionForm>
     </details>
   );
 }

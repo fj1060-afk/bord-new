@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { navigation } from "@/config/navigation";
@@ -20,7 +21,7 @@ export function PermissionsForm({
   const [state, action] = useActionState(savePermissions.bind(null, roleId), null);
 
   return (
-    <form action={action} className="mt-5 flex flex-col gap-6">
+    <ActionForm action={action} state={state} className="mt-5 flex flex-col gap-6">
       {navigation.map((group) => (
         <fieldset key={group.label} disabled={locked}>
           <legend className="mb-2 text-xs font-medium text-brass">{group.label}</legend>
@@ -57,14 +58,14 @@ export function PermissionsForm({
           </SubmitButton>
         </div>
       )}
-    </form>
+    </ActionForm>
   );
 }
 
 export function CreateRoleForm() {
   const [state, action] = useActionState(createRole, null);
   return (
-    <form action={action} className="flex flex-col gap-3 rounded-lg border border-rule bg-surface p-4">
+    <ActionForm action={action} state={state} className="flex flex-col gap-3 rounded-lg border border-rule bg-surface p-4">
       <p className="text-sm font-medium">دور جديد</p>
       <Field label="الاسم">
         <input name="name" required className={inputClass} />
@@ -76,6 +77,6 @@ export function CreateRoleForm() {
       <SubmitButton variant="secondary" pendingLabel="جارٍ الإنشاء…">
         إنشاء الدور
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

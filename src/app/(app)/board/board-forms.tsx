@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useState } from "react";
 import { PersonPicker } from "@/components/org/person-picker";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
@@ -16,7 +17,7 @@ export function BoardForm({ board, maxYears = 4 }: { board?: Board; maxYears?: n
   const end = termEnd(start, years);
 
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-3">
+    <ActionForm action={action} state={state} className="grid gap-4 sm:grid-cols-3">
       <Field label="اسم المجلس">
         <input name="name" defaultValue={board?.name} required className={inputClass} />
       </Field>
@@ -54,7 +55,7 @@ export function BoardForm({ board, maxYears = 4 }: { board?: Board; maxYears?: n
           {board ? "حفظ التعديلات" : "إنشاء المجلس"}
         </SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -63,7 +64,7 @@ export function AddBoardMemberForm({ boardId, people }: { boardId: string; peopl
   return (
     <details className="rounded-lg border border-rule bg-surface">
       <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة عضو</summary>
-      <form action={action} className="flex flex-col gap-4 border-t border-rule p-5">
+      <ActionForm action={action} state={state} className="flex flex-col gap-4 border-t border-rule p-5">
         <PersonPicker people={people} />
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="المنصب">
@@ -92,7 +93,7 @@ export function AddBoardMemberForm({ boardId, people }: { boardId: string; peopl
         <SubmitButton pendingLabel="جارٍ الإضافة…" className="w-fit">
           إضافة العضو
         </SubmitButton>
-      </form>
+      </ActionForm>
     </details>
   );
 }
@@ -102,7 +103,7 @@ export function AddExecutiveForm({ people }: { people: { id: string; full_name: 
   return (
     <details>
       <summary className={buttonClass("secondary", "m-4 w-fit cursor-pointer list-none")}>إضافة تنفيذي</summary>
-      <form action={action} className="flex flex-col gap-4 border-t border-rule p-5">
+      <ActionForm action={action} state={state} className="flex flex-col gap-4 border-t border-rule p-5">
         <PersonPicker people={people} />
         <Field label="المسمى التنفيذي">
           <input name="executive_title" required placeholder="الرئيس التنفيذي، المدير المالي…" className={inputClass} />
@@ -111,7 +112,7 @@ export function AddExecutiveForm({ people }: { people: { id: string; full_name: 
         <SubmitButton pendingLabel="…" className="w-fit">
           إضافة
         </SubmitButton>
-      </form>
+      </ActionForm>
     </details>
   );
 }
