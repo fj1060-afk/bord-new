@@ -1,11 +1,11 @@
 // Built-in library items, part 2: committees, policies, governance, contracts and banking.
 
 import type { Part } from "./item-templates-data";
-import { after, bylawsPower, chk, disclose, doc, fy, fyEn, ga, gaEn, noInterest, policy, POLICY_REQS, rec } from "./item-templates-kit";
+import { after, bylawsPower, chk, disclose, doc, fy, fyEn, ga, gaEn, noInterest, policy, POLICY_REQS, rec, toGa } from "./item-templates-kit";
 
 export const partTwo = (): Part => [
   ["اللجان والسياسات والخطط", [
-    { body: "board", keys: ["تشكيل", "لجنه", "اللجان"], kind: "decision", title: "التصويت على تشكيل لجان المجلس وتعيين أعضائها وتحديد مهامها ومدتها", en: "Forming the board committees, appointing their members and defining their duties and terms", reqs: [
+    { body: "board", keys: ["تشكيل", "لجنه", "اللجان"], kind: "decision", title: "التصويت على تشكيل لجان المجلس وتعيين أعضائها وتحديد مهامها ومدتها", en: "Forming the board committees, appointing their members and defining their duties and terms", authority: "board", authorityRef: "لائحة الحوكمة م47", reqs: [
       rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
       after("الإبلاغ خلال 5 أيام للشركات المدرجة", "Notify the CMA within 5 days (listed companies)", "5d", "secretary"),
       doc("لوائح عمل اللجان", "Committee charters", "secretary"),
@@ -13,14 +13,14 @@ export const partTwo = (): Part => [
       chk("التحقق من شروط العضوية (لائحة الحوكمة م48/م51)", "Membership requirements met (CGR Arts. 48/51)"),
       disclose("الإفصاح عن تشكيل لجنة المراجعة (قواعد الطرح م80)", "Disclosure of the audit committee's formation (OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["رئيس لجنه المراجعه", "لجنه المراجعه", "رئيس لجنه"], kind: "decision", title: "التصويت على تعيين (…) رئيساً للجنة المراجعة", en: "Appointing (…) as chair of the audit committee", reqs: [
+    { body: "board", keys: ["رئيس لجنه المراجعه", "لجنه المراجعه", "رئيس لجنه"], kind: "decision", title: "التصويت على تعيين (…) رئيساً للجنة المراجعة", en: "Appointing (…) as chair of the audit committee", authority: "board", authorityRef: "لائحة الحوكمة م51", reqs: [
       rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
       doc("ما يثبت الاستقلال والخبرة المالية", "Evidence of independence and financial expertise", "secretary"),
       chk("ألا يكون رئيس المجلس (لائحة الحوكمة م48/م51)", "Not the chairman of the board (CGR Arts. 48/51)"),
       after("الإبلاغ خلال 5 أيام", "Notify the CMA within 5 days", "5d", "secretary"),
       disclose("الإفصاح الفوري للمدرجة", "Immediate disclosure (listed companies)"),
     ] },
-    { body: "board", keys: ["عضو لجنه المراجعه", "لجنه المراجعه", "بدل", "المستقيل"], kind: "decision", title: "التصويت على تعيين (…) عضواً في لجنة المراجعة بدلاً من العضو المستقيل (…) لإكمال مدة اللجنة", en: "Appointing (…) as an audit committee member replacing resigned member (…) for the remainder of the term", reqs: [
+    { body: "board", keys: ["عضو لجنه المراجعه", "لجنه المراجعه", "بدل", "المستقيل"], kind: "decision", title: "التصويت على تعيين (…) عضواً في لجنة المراجعة بدلاً من العضو المستقيل (…) لإكمال مدة اللجنة", en: "Appointing (…) as an audit committee member replacing resigned member (…) for the remainder of the term", authority: "board", authorityRef: "لائحة الحوكمة م51", reqs: [
       rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
       doc("السيرة الذاتية وإقرار الاستقلال", "CV and independence declaration", "secretary"),
       chk("ألا يكون قد عمل في الإدارة المالية أو التنفيذية أو لدى المراجع خلال السنتين السابقتين (لائحة الحوكمة م51)", "Has not worked in finance, executive management or for the auditor in the past two years (CGR Art. 51)"),
@@ -28,19 +28,19 @@ export const partTwo = (): Part => [
       after("الإبلاغ خلال 5 أيام (لائحة الحوكمة م47)", "Notify the CMA within 5 days (CGR Art. 47)", "5d", "secretary"),
       disclose("الإفصاح الفوري للمدرجة (قواعد الطرح م80)", "Immediate disclosure (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["رئيس لجنه", "لجنه المكافات", "لجنه الترشيحات", "لجنه المخاطر", "اللجنه التنفيذيه"], kind: "decision", title: "التصويت على تعيين (…) رئيساً للجنة (…)", en: "Appointing (…) as chair of the (…) committee", reqs: [
+    { body: "board", keys: ["رئيس لجنه", "لجنه المكافات", "لجنه الترشيحات", "لجنه المخاطر", "اللجنه التنفيذيه"], kind: "decision", title: "التصويت على تعيين (…) رئيساً للجنة (…)", en: "Appointing (…) as chair of the (…) committee", authority: "board", authorityRef: "لائحة الحوكمة م47", reqs: [
       rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
       doc("السيرة الذاتية وإقرار الاستقلال", "CV and independence declaration", "secretary"),
       chk("التحقق من شروط الرئاسة في لائحة اللجنة (لائحة الحوكمة م48)", "Chair requirements in the committee charter met (CGR Art. 48)"),
       after("الإبلاغ خلال 5 أيام للشركات المدرجة", "Notify the CMA within 5 days (listed companies)", "5d", "secretary"),
     ] },
-    { body: "board", keys: ["عضو لجنه", "اعضاء لجنه", "بدل", "المستقيل"], kind: "decision", title: "التصويت على تعيين (…) عضواً في لجنة (…) بدلاً من العضو المستقيل (…) لإكمال مدة اللجنة", en: "Appointing (…) as a member of the (…) committee replacing resigned member (…)", reqs: [
+    { body: "board", keys: ["عضو لجنه", "اعضاء لجنه", "بدل", "المستقيل"], kind: "decision", title: "التصويت على تعيين (…) عضواً في لجنة (…) بدلاً من العضو المستقيل (…) لإكمال مدة اللجنة", en: "Appointing (…) as a member of the (…) committee replacing resigned member (…)", authority: "board", authorityRef: "لائحة الحوكمة م47", reqs: [
       rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
       doc("السيرة الذاتية وإقرار الاستقلال", "CV and independence declaration", "secretary"),
       chk("التحقق من شروط العضوية في لائحة اللجنة", "Membership requirements in the committee charter met"),
       after("الإبلاغ خلال 5 أيام للشركات المدرجة", "Notify the CMA within 5 days (listed companies)", "5d", "secretary"),
     ] },
-    { body: "board", keys: ["اعاده تشكيل", "تشكيل لجنه المراجعه"], kind: "decision", title: "التصويت على إعادة تشكيل لجنة المراجعة للدورة الجديدة وتحديد مهامها وضوابط عملها ومكافآت أعضائها", en: "Re-forming the audit committee for the new term and setting its duties, rules and members' remuneration", reqs: [
+    { body: "board", keys: ["اعاده تشكيل", "تشكيل لجنه المراجعه"], kind: "decision", title: "التصويت على إعادة تشكيل لجنة المراجعة للدورة الجديدة وفق لائحة عمل اللجنة المعتمدة من الجمعية العامة", en: "Re-forming the audit committee for the new term under its charter approved by the General Assembly", authority: "board", authorityRef: "لائحة الحوكمة م51", reqs: [
       rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
       doc("لائحة عمل اللجنة", "Committee charter", "secretary"),
       doc("السير الذاتية وإقرارات الاستقلال", "CVs and independence declarations", "secretary"),
@@ -48,7 +48,7 @@ export const partTwo = (): Part => [
       after("الإبلاغ للمدرجة", "Notify the CMA (listed companies)", "5d", "secretary"),
       disclose(),
     ] },
-    { body: "board", keys: ["لائحه عمل", "لائحه لجنه"], kind: "decision", title: `${ga} باعتماد لائحة عمل لجنة (…)`, en: `${gaEn} approving the charter of the (…) committee`, reqs: [
+    { body: "board", keys: ["لائحه عمل", "لائحه لجنه"], kind: "decision", title: `${ga} باعتماد لائحة عمل لجنة (…)`, en: `${gaEn} approving the charter of the (…) committee`, authority: "ga_ordinary", authorityRef: "لائحة الحوكمة م51/م57/م61", reqs: [
       doc("مسودة اللائحة", "Draft charter"),
       doc("مقارنة التعديلات (عند التحديث)", "Comparison of changes (for updates)"),
       rec("توصية اللجنة المعنية", "Recommendation of the committee concerned"),
@@ -56,8 +56,19 @@ export const partTwo = (): Part => [
       chk("تعتمد الجمعية لوائح لجان المراجعة والمكافآت والترشيحات فقط (لائحة الحوكمة م51/م57/م61)، أما لوائح اللجان الأخرى فيعتمدها المجلس (لائحة الحوكمة م47)", "The General Assembly approves only the audit, remuneration and nomination committee charters (CGR Arts. 51/57/61); the board approves the others (CGR Art. 47)"),
       after("إدراجها في دعوة الجمعية", "Include in the General Assembly invitation", "before_ga", "secretary"),
     ] },
-    { body: "board", keys: ["سياسه", "سياسات", "لائحه"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة (…)", en: "Approving/updating the (…) policy", reqs: POLICY_REQS },
-    { body: "board", keys: ["الخطه الاستراتيجيه", "الاستراتيجيه", "استراتيجيه"], kind: "decision", title: `التصويت على اعتماد الخطة الاستراتيجية للأعوام (…)`, en: `Approving the strategic plan for (…)`, reqs: [
+    { body: "board", keys: ["سياسه المكافات", "سياسه مكافات", "مكافات المجلس"], kind: "decision", title: `${ga} باعتماد/تحديث سياسة مكافآت أعضاء مجلس الإدارة واللجان والإدارة التنفيذية`, en: `${gaEn} approving/updating the remuneration policy for board members, committees and executive management`, authority: "ga_ordinary", authorityRef: "لائحة الحوكمة م58", reqs: [
+      rec("توصية لجنة المكافآت بالسياسة (لائحة الحوكمة م58)", "Remuneration committee recommendation on the policy (CGR Art. 58)", "nrc"),
+      doc("مسودة السياسة ومقارنة التعديلات", "Draft policy and comparison of changes", "secretary"),
+      chk("ربط المكافآت بالأداء وحدود النظام الأساس (نظام الشركات م76)", "Remuneration linked to performance and within the bylaws (Companies Law Art. 76)"),
+      after("إدراجها بنداً في دعوة الجمعية العامة", "Include it as an item in the General Assembly invitation", "before_ga", "secretary"),
+    ] },
+    { body: "board", keys: ["سياسه المسؤوليه الاجتماعيه", "المسؤوليه الاجتماعيه"], kind: "decision", title: `${ga} باعتماد/تحديث سياسة المسؤولية الاجتماعية للشركة`, en: `${gaEn} approving/updating the company's social responsibility policy`, authority: "ga_ordinary", authorityRef: "لائحة الحوكمة م84", reqs: [
+      doc("مسودة السياسة ومقارنة التعديلات", "Draft policy and comparison of changes", "secretary"),
+      doc("برامج المسؤولية الاجتماعية المقترحة ومؤشراتها", "Proposed social responsibility programs and indicators"),
+      after("إدراجها بنداً في دعوة الجمعية العامة", "Include it as an item in the General Assembly invitation", "before_ga", "secretary"),
+    ] },
+    { body: "board", keys: ["سياسه", "سياسات", "لائحه"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة (…)", en: "Approving/updating the (…) policy", authority: "board", authorityRef: "لائحة الحوكمة م21", reqs: POLICY_REQS },
+    { body: "board", keys: ["الخطه الاستراتيجيه", "الاستراتيجيه", "استراتيجيه"], kind: "decision", title: `التصويت على اعتماد الخطة الاستراتيجية للأعوام (…)`, en: `Approving the strategic plan for (…)`, authority: "board", authorityRef: "لائحة الحوكمة م21", reqs: [
       doc("مسودة الخطة الاستراتيجية", "Draft strategic plan"),
       doc("تحليل البيئة الداخلية والخارجية", "Internal and external environment analysis"),
       doc("الأهداف ومؤشرات الأداء", "Objectives and KPIs"),
@@ -65,18 +76,18 @@ export const partTwo = (): Part => [
       doc("المخاطر الرئيسة ومستوى قبولها", "Key risks and risk appetite"),
       doc("آلية المتابعة الدورية", "Periodic monitoring mechanism"),
     ] },
-    { body: "board", keys: ["المراجعه الداخليه", "خطه المراجعه"], kind: "decision", title: `التصويت على اعتماد خطة المراجعة الداخلية لعام (…)`, en: `Approving the internal audit plan for (…)`, reqs: [
-      rec("توصية لجنة المراجعة", "Audit committee recommendation", "audit"),
+    { body: "board", keys: ["المراجعه الداخليه", "خطه المراجعه"], kind: "information", title: `الاطلاع على خطة المراجعة الداخلية لعام (…) المعتمدة من لجنة المراجعة`, en: `Reviewing the internal audit plan for (…) approved by the audit committee`, authority: "board", authorityRef: "لائحة الحوكمة م74", reqs: [
+      rec("قرار لجنة المراجعة باعتماد الخطة", "Audit committee decision approving the plan", "audit"),
       doc("الخطة المبنية على المخاطر بما فيها أنشطة المخاطر والالتزام (لائحة الحوكمة م74)", "Risk-based plan including risk and compliance activities (CGR Art. 74)"),
       doc("الموارد والميزانية", "Resources and budget"),
     ] },
-    { body: "board", keys: ["المخاطر", "مخاطر"], kind: "discussion", title: "مناقشة تقرير إدارة المخاطر", en: "Discussing the risk management report", reqs: [
+    { body: "board", keys: ["المخاطر", "مخاطر"], kind: "discussion", title: "مناقشة تقرير إدارة المخاطر", en: "Discussing the risk management report", authority: "board", reqs: [
       doc("تقرير لجنة/إدارة المخاطر", "Risk committee/management report"),
       doc("المخاطر الرئيسة ومؤشراتها مقارنة بمستوى القبول", "Key risks and indicators against risk appetite"),
       doc("المخاطر المستجدة", "Emerging risks"),
       doc("خطط المعالجة ومسؤولوها", "Mitigation plans and their owners"),
     ] },
-    { body: "board", keys: ["الاحلال", "التعاقب", "خطه الاحلال"], kind: "decision", title: "التصويت على اعتماد خطة الإحلال والتعاقب للمناصب القيادية", en: "Approving the succession plan for leadership positions", reqs: [
+    { body: "board", keys: ["الاحلال", "التعاقب", "خطه الاحلال"], kind: "decision", title: "التصويت على اعتماد خطة الإحلال والتعاقب للمناصب القيادية", en: "Approving the succession plan for leadership positions", authority: "board", reqs: [
       rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
       doc("المناصب المشمولة والمرشحون الداخليون وجاهزيتهم", "Positions covered, internal candidates and their readiness", "hr"),
       doc("خطط التطوير", "Development plans", "hr"),
@@ -84,25 +95,25 @@ export const partTwo = (): Part => [
     ] },
   ]],
   ["الحوكمة والالتزام", [
-    { body: "board", keys: ["الالتزام بلائحه الحوكمه", "الحوكمه", "الالتزام"], kind: "decision", title: `التصويت على اعتماد تقرير الالتزام بلائحة حوكمة الشركات ${fy} وأسباب عدم تطبيق ما لم يُطبق من أحكامها`, en: `Approving the corporate governance compliance report ${fyEn}, with reasons for any provision not applied`, reqs: [
+    { body: "board", keys: ["الالتزام بلائحه الحوكمه", "الحوكمه", "الالتزام"], kind: "decision", title: `التصويت على اعتماد تقرير الالتزام بلائحة حوكمة الشركات ${fy} وأسباب عدم تطبيق ما لم يُطبق من أحكامها`, en: `Approving the corporate governance compliance report ${fyEn}, with reasons for any provision not applied`, authority: "board_then_ga", authorityRef: "لائحة الحوكمة م87", reqs: [
       doc("جدول الالتزام بمواد اللائحة (لائحة الحوكمة م87)", "Compliance table against the regulations' articles (CGR Art. 87)"),
       doc("أسباب عدم تطبيق ما لم يُطبق والبدائل المتخذة", "Reasons for any provision not applied and the alternatives adopted"),
       rec("مراجعة لجنة المراجعة أو لجنة الحوكمة", "Review by the audit or governance committee"),
       after("إدراجه في تقرير المجلس", "Include in the board report", undefined, "secretary"),
     ] },
-    { body: "board", keys: ["سياسه الافصاح", "الافصاح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإفصاح والشفافية", en: "Approving/updating the disclosure and transparency policy", reqs: policy({ ar: "(لائحة الحوكمة م86)", en: "(CGR Art. 86)" }) },
-    { body: "board", keys: ["تعارض المصالح", "سياسه تعارض"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة تعارض المصالح", en: "Approving/updating the conflict of interest policy", reqs: policy({ ar: "(لائحة الحوكمة م41)", en: "(CGR Art. 41)" }) },
-    { body: "board", keys: ["المخالفات", "الابلاغ", "بلاغات"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإبلاغ عن المخالفات وحماية المبلّغين", en: "Approving/updating the whistleblowing policy", reqs: policy(undefined, rec("اقتراح لجنة المراجعة (لائحة الحوكمة م81)", "Audit committee proposal (CGR Art. 81)", "audit")) },
-    { body: "board", keys: ["ميثاق", "السلوك", "قواعد السلوك"], kind: "decision", title: "التصويت على اعتماد/تحديث ميثاق السلوك المهني والأخلاقي", en: "Approving/updating the code of conduct", reqs: [
+    { body: "board", keys: ["سياسه الافصاح", "الافصاح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإفصاح والشفافية", en: "Approving/updating the disclosure and transparency policy", authority: "board", authorityRef: "لائحة الحوكمة م86", reqs: policy({ ar: "(لائحة الحوكمة م86)", en: "(CGR Art. 86)" }) },
+    { body: "board", keys: ["تعارض المصالح", "سياسه تعارض"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة تعارض المصالح", en: "Approving/updating the conflict of interest policy", authority: "board", authorityRef: "لائحة الحوكمة م41", reqs: policy({ ar: "(لائحة الحوكمة م41)", en: "(CGR Art. 41)" }) },
+    { body: "board", keys: ["المخالفات", "الابلاغ", "بلاغات"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإبلاغ عن المخالفات وحماية المبلّغين", en: "Approving/updating the whistleblowing policy", authority: "board", authorityRef: "لائحة الحوكمة م81", reqs: policy(undefined, rec("اقتراح لجنة المراجعة (لائحة الحوكمة م81)", "Audit committee proposal (CGR Art. 81)", "audit")) },
+    { body: "board", keys: ["ميثاق", "السلوك", "قواعد السلوك"], kind: "decision", title: "التصويت على اعتماد/تحديث ميثاق السلوك المهني والأخلاقي", en: "Approving/updating the code of conduct", authority: "board", authorityRef: "لائحة الحوكمة م83", reqs: [
       doc("مسودة الميثاق النهائية", "Final draft code"),
       doc("جدول مقارنة التعديلات (عند التحديث)", "Comparison of changes (for updates)"),
       doc("المراجعة القانونية", "Legal review", "legal"),
       doc("آلية الإقرار السنوي من الأعضاء والموظفين ومتابعة الالتزام (لائحة الحوكمة م83)", "Annual acknowledgement by members and employees and compliance monitoring (CGR Art. 83)"),
     ] },
-    { body: "board", keys: ["سياسه توزيع الارباح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة توزيع الأرباح", en: "Approving/updating the dividend policy", reqs: policy({ ar: "(لائحة الحوكمة م9)", en: "(CGR Art. 9)" }) },
-    { body: "board", keys: ["اصحاب المصالح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة العلاقة مع أصحاب المصالح", en: "Approving/updating the stakeholder relations policy", reqs: policy({ ar: "(لائحة الحوكمة م80)", en: "(CGR Art. 80)" }) },
-    { body: "board", keys: ["البيانات الشخصيه", "حمايه البيانات", "الخصوصيه"], kind: "decision", title: "التصويت على اعتماد سياسة حماية البيانات الشخصية", en: "Approving the personal data protection policy", reqs: policy(undefined, undefined, doc("متطلبات نظام حماية البيانات الشخصية", "Personal Data Protection Law requirements", "legal")) },
-    { body: "board", keys: ["استمراريه الاعمال", "الطوارئ"], kind: "decision", title: "التصويت على اعتماد خطة استمرارية الأعمال", en: "Approving the business continuity plan", reqs: [
+    { body: "board", keys: ["سياسه توزيع الارباح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة توزيع الأرباح", en: "Approving/updating the dividend policy", authority: "board", authorityRef: "لائحة الحوكمة م9", reqs: policy({ ar: "(لائحة الحوكمة م9)", en: "(CGR Art. 9)" }) },
+    { body: "board", keys: ["اصحاب المصالح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة العلاقة مع أصحاب المصالح", en: "Approving/updating the stakeholder relations policy", authority: "board", authorityRef: "لائحة الحوكمة م80", reqs: policy({ ar: "(لائحة الحوكمة م80)", en: "(CGR Art. 80)" }) },
+    { body: "board", keys: ["البيانات الشخصيه", "حمايه البيانات", "الخصوصيه"], kind: "decision", title: "التصويت على اعتماد سياسة حماية البيانات الشخصية", en: "Approving the personal data protection policy", authority: "board", reqs: policy(undefined, undefined, doc("متطلبات نظام حماية البيانات الشخصية", "Personal Data Protection Law requirements", "legal")) },
+    { body: "board", keys: ["استمراريه الاعمال", "الطوارئ"], kind: "decision", title: "التصويت على اعتماد خطة استمرارية الأعمال", en: "Approving the business continuity plan", authority: "board", reqs: [
       doc("الخطة", "The plan"),
       doc("نتائج آخر اختبار", "Latest test results"),
       doc("تحليل أثر الأعمال والأنظمة الحرجة", "Business impact analysis and critical systems"),
@@ -110,7 +121,7 @@ export const partTwo = (): Part => [
       doc("أدوار فريق إدارة الأزمات", "Crisis management team roles"),
       chk("متطلبات الجهة الرقابية للقطاع", "Sector regulator requirements met"),
     ] },
-    { body: "board", keys: ["مخالفه", "غرامه", "جزاء", "عقوبه"], kind: "information", title: "الاطلاع على المخالفات والغرامات النظامية المفروضة على الشركة والإجراءات المتخذة", en: "Reviewing regulatory violations and penalties imposed on the company and the actions taken", reqs: [
+    { body: "board", keys: ["مخالفه", "غرامه", "جزاء", "عقوبه"], kind: "information", title: "الاطلاع على المخالفات والغرامات النظامية المفروضة على الشركة والإجراءات المتخذة", en: "Reviewing regulatory violations and penalties imposed on the company and the actions taken", authority: "board", reqs: [
       doc("بيان المخالفات", "Statement of violations"),
       doc("رأي الإدارة القانونية", "Legal department's opinion", "legal"),
       doc("قيمة الغرامات وأثرها المالي", "Penalty amounts and financial impact", "finance"),
@@ -119,7 +130,7 @@ export const partTwo = (): Part => [
     ] },
   ]],
   ["العقود والتمويل والاستثمار", [
-    { body: "board", keys: ["عقد", "توقيع عقد", "ترسيه", "اتفاقيه"], kind: "decision", title: "التصويت على الموافقة على توقيع عقد (…) مع (…) بقيمة (…) ريال ولمدة (…)", en: "Approving the signing of a (…) contract with (…) of SAR (…) for (…)", reqs: [
+    { body: "board", keys: ["عقد", "توقيع عقد", "ترسيه", "اتفاقيه"], kind: "decision", title: "التصويت على الموافقة على توقيع عقد (…) مع (…) بقيمة (…) ريال ولمدة (…)", en: "Approving the signing of a (…) contract with (…) of SAR (…) for (…)", authority: "board", authorityRef: "نظام الشركات م77", reqs: [
       doc("مسودة العقد", "Draft contract"),
       doc("المراجعة القانونية", "Legal review", "legal"),
       doc("الأثر المالي", "Financial impact", "finance"),
@@ -127,14 +138,14 @@ export const partTwo = (): Part => [
       doc("مقارنة العروض أو مبررات التعاقد المباشر", "Comparison of bids or justification for direct award"),
       disclose("الإفصاح للمدرجة إن بلغت إيراداته 5% من الإيرادات (قواعد الطرح م80)", "Disclosure if its revenue reaches 5% of revenue (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["تجديد", "عقد", "اتفاقيه"], kind: "decision", title: "التصويت على تجديد عقد/اتفاقية (…) مع (…) بقيمة (…) ريال لمدة (…)", en: "Renewing the (…) contract/agreement with (…) of SAR (…) for (…)", reqs: [
+    { body: "board", keys: ["تجديد", "عقد", "اتفاقيه"], kind: "decision", title: "التصويت على تجديد عقد/اتفاقية (…) مع (…) بقيمة (…) ريال لمدة (…)", en: "Renewing the (…) contract/agreement with (…) of SAR (…) for (…)", authority: "board", authorityRef: "نظام الشركات م77", reqs: [
       doc("تقييم أداء الطرف الآخر", "Counterparty performance assessment"),
       doc("الشروط المعدلة", "Amended terms"),
       doc("الأثر المالي", "Financial impact", "finance"),
       doc("المراجعة القانونية", "Legal review", "legal"),
       noInterest(),
     ] },
-    { body: "board", keys: ["مناقصه", "ترسيه", "عروض"], kind: "decision", title: "التصويت على ترسية مناقصة (…) على (…) بقيمة (…) ريال", en: "Awarding the (…) tender to (…) for SAR (…)", reqs: [
+    { body: "board", keys: ["مناقصه", "ترسيه", "عروض"], kind: "decision", title: "التصويت على ترسية مناقصة (…) على (…) بقيمة (…) ريال", en: "Awarding the (…) tender to (…) for SAR (…)", authority: "board", reqs: [
       doc("محضر لجنة فحص العروض", "Bid evaluation committee minutes"),
       doc("مقارنة العروض", "Comparison of bids"),
       doc("كراسة الشروط", "Tender documents"),
@@ -142,13 +153,13 @@ export const partTwo = (): Part => [
       doc("توافر الاعتماد في الموازنة", "Budget availability", "finance"),
       noInterest("التحقق من عدم وجود مصلحة لعضو (والمناقصات العامة مستثناة من ترخيص الجمعية، نظام الشركات م27/5)", "Confirm no board member has an interest (public tenders are exempt from General Assembly authorization, Companies Law Art. 27(5))"),
     ] },
-    { body: "board", keys: ["مذكره تفاهم", "تفاهم"], kind: "decision", title: "التصويت على الموافقة على توقيع مذكرة تفاهم غير ملزمة مع (…) بشأن (…)", en: "Approving the signing of a non-binding memorandum of understanding with (…) regarding (…)", reqs: [
+    { body: "board", keys: ["مذكره تفاهم", "تفاهم"], kind: "decision", title: "التصويت على الموافقة على توقيع مذكرة تفاهم غير ملزمة مع (…) بشأن (…)", en: "Approving the signing of a non-binding memorandum of understanding with (…) regarding (…)", authority: "board", reqs: [
       doc("مسودة المذكرة", "Draft memorandum"),
       disclose("تقييم الإفصاح إن كانت جوهرية", "Assess disclosure if material"),
       doc("المراجعة القانونية لعدم الإلزام وبنود السرية والحصرية", "Legal review of the non-binding nature, confidentiality and exclusivity clauses", "legal"),
       noInterest(),
     ] },
-    { body: "board", keys: ["شراكه", "مشروع مشترك", "تحالف"], kind: "decision", title: "التصويت على الموافقة على الدخول في اتفاقية شراكة/تحالف مع (…) بشأن (…)", en: "Approving entry into a partnership/alliance agreement with (…) regarding (…)", reqs: [
+    { body: "board", keys: ["شراكه", "مشروع مشترك", "تحالف"], kind: "decision", title: "التصويت على الموافقة على الدخول في اتفاقية شراكة/تحالف مع (…) بشأن (…)", en: "Approving entry into a partnership/alliance agreement with (…) regarding (…)", authority: "board", reqs: [
       doc("دراسة الجدوى", "Feasibility study"),
       doc("المراجعة القانونية", "Legal review", "legal"),
       doc("هيكل الملكية", "Ownership structure"),
@@ -157,7 +168,7 @@ export const partTwo = (): Part => [
       noInterest(),
       after("موافقة الهيئة العامة للمنافسة عند الاقتضاء", "General Authority for Competition approval where required", undefined, "legal"),
     ] },
-    { body: "board", keys: ["تسهيلات", "قرض", "قروض", "تمويل", "بنك"], kind: "decision", title: "التصويت على الموافقة على توقيع اتفاقية تسهيلات ائتمانية متوافقة مع أحكام الشريعة مع (…) بمبلغ (…) ريال ولمدة (…)", en: "Approving a Sharia-compliant credit facility agreement with (…) of SAR (…) for (…)", reqs: [
+    { body: "board", keys: ["تسهيلات", "قرض", "قروض", "تمويل", "بنك"], kind: "decision", title: "التصويت على الموافقة على توقيع اتفاقية تسهيلات ائتمانية متوافقة مع أحكام الشريعة مع (…) بمبلغ (…) ريال ولمدة (…)", en: "Approving a Sharia-compliant credit facility agreement with (…) of SAR (…) for (…)", authority: "bylaws", authorityRef: "نظام الشركات م74", power: "loans", alt: toGa("بالموافقة على توقيع اتفاقية تسهيلات ائتمانية متوافقة مع أحكام الشريعة مع (…) بمبلغ (…) ريال ولمدة (…)", "approving a Sharia-compliant credit facility agreement with (…) of SAR (…) for (…)"), reqs: [
       doc("عرض الجهة الممولة", "Lender's offer", "finance"),
       doc("الضمانات المطلوبة", "Required collateral", "finance"),
       doc("الأثر على السيولة والتعهدات المالية", "Impact on liquidity and financial covenants", "finance"),
@@ -165,7 +176,7 @@ export const partTwo = (): Part => [
       bylawsPower("صلاحية المجلس وفق النظام الأساس (نظام الشركات م74)", "Board's power under the bylaws (Companies Law Art. 74)"),
       disclose("تقييم الإفصاح للمدرجة (قواعد الطرح م80)", "Assess disclosure (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["تجديد", "تسهيلات", "قرض", "اعاده تمويل", "جدوله"], kind: "decision", title: "التصويت على تجديد/جدولة التسهيلات الائتمانية القائمة مع (…) بمبلغ (…) ريال ولمدة (…)", en: "Renewing/rescheduling the existing credit facilities with (…) of SAR (…) for (…)", reqs: [
+    { body: "board", keys: ["تجديد", "تسهيلات", "قرض", "اعاده تمويل", "جدوله"], kind: "decision", title: "التصويت على تجديد/جدولة التسهيلات الائتمانية القائمة مع (…) بمبلغ (…) ريال ولمدة (…)", en: "Renewing/rescheduling the existing credit facilities with (…) of SAR (…) for (…)", authority: "bylaws", authorityRef: "نظام الشركات م74", power: "loans", alt: toGa("بتجديد/جدولة التسهيلات الائتمانية القائمة مع (…) بمبلغ (…) ريال ولمدة (…)", "renewing/rescheduling the existing credit facilities with (…) of SAR (…) for (…)"), reqs: [
       doc("الشروط الحالية والمقترحة", "Current and proposed terms", "finance"),
       doc("مبررات التجديد أو إعادة الجدولة", "Rationale for renewal or rescheduling", "finance"),
       doc("الأثر على التدفقات النقدية والتعهدات المالية", "Impact on cash flows and financial covenants", "finance"),
@@ -173,7 +184,7 @@ export const partTwo = (): Part => [
       doc("المراجعة القانونية", "Legal review", "legal"),
       disclose("تقييم الإفصاح للمدرجة", "Assess disclosure (listed companies)"),
     ] },
-    { body: "board", keys: ["ضمان", "كفاله", "سند لامر", "تابعه"], kind: "decision", title: "التصويت على تقديم كفالة/ضمان لصالح (…) لتسهيلات الشركة التابعة (…) بمبلغ (…) ريال", en: "Providing a guarantee in favour of (…) for the facilities of subsidiary (…) of SAR (…)", reqs: [
+    { body: "board", keys: ["ضمان", "كفاله", "سند لامر", "تابعه"], kind: "decision", title: "التصويت على تقديم كفالة/ضمان لصالح (…) لتسهيلات الشركة التابعة (…) بمبلغ (…) ريال", en: "Providing a guarantee in favour of (…) for the facilities of subsidiary (…) of SAR (…)", authority: "bylaws", power: "guarantees", alt: toGa("بتقديم كفالة/ضمان لصالح (…) لتسهيلات الشركة التابعة (…) بمبلغ (…) ريال", "providing a guarantee in favour of (…) for the facilities of subsidiary (…) of SAR (…)"), reqs: [
       doc("حجم الالتزام", "Size of the commitment", "finance"),
       doc("الوضع المالي للشركة التابعة", "Subsidiary's financial position", "finance"),
       doc("نسبة الملكية وحصة بقية الشركاء من الضمان", "Ownership share and the other partners' share of the guarantee", "finance"),
@@ -181,14 +192,14 @@ export const partTwo = (): Part => [
       doc("المراجعة القانونية", "Legal review", "legal"),
       chk("ألا يكون الضمان لقرض عضو أو قريبه (نظام الشركات م72)", "The guarantee is not for a loan to a member or a relative (Companies Law Art. 72)"),
     ] },
-    { body: "board", keys: ["رهن", "ضمانات", "اصول"], kind: "decision", title: "التصويت على رهن (…) لصالح (…) ضماناً لتسهيلات بمبلغ (…) ريال", en: "Pledging (…) in favour of (…) as security for facilities of SAR (…)", reqs: [
+    { body: "board", keys: ["رهن", "ضمانات", "اصول"], kind: "decision", title: "التصويت على رهن (…) لصالح (…) ضماناً لتسهيلات بمبلغ (…) ريال", en: "Pledging (…) in favour of (…) as security for facilities of SAR (…)", authority: "bylaws", authorityRef: "نظام الشركات م74", power: "pledges", alt: toGa("برهن (…) لصالح (…) ضماناً لتسهيلات بمبلغ (…) ريال", "pledging (…) in favour of (…) as security for facilities of SAR (…)"), reqs: [
       doc("تقييم الأصل", "Asset valuation"),
       doc("شروط الرهن", "Pledge terms", "finance"),
       bylawsPower("صلاحية المجلس وفق النظام الأساس (نظام الشركات م74)", "Board's power under the bylaws (Companies Law Art. 74)"),
       doc("القيود القائمة على الأصل", "Existing encumbrances on the asset", "legal"),
       disclose("الإفصاح للمدرجة إن بلغت قيمته 10% من صافي الأصول (قواعد الطرح م80)", "Disclosure if its value reaches 10% of net assets (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["صكوك", "ادوات دين", "سندات"], kind: "decision", title: "التصويت على إصدار صكوك/سندات بقيمة (…) ريال لمدة (…) لغرض (…)", en: "Issuing sukuk/bonds of SAR (…) with a term of (…) to fund (…)", reqs: [
+    { body: "board", keys: ["صكوك", "ادوات دين", "سندات"], kind: "decision", title: "التصويت على إصدار صكوك/سندات بقيمة (…) ريال لمدة (…) لغرض (…)", en: "Issuing sukuk/bonds of SAR (…) with a term of (…) to fund (…)", authority: "bylaws", authorityRef: "نظام الشركات م117", power: "loans", alt: toGa("بإصدار صكوك/سندات بقيمة (…) ريال لمدة (…) لغرض (…)", "issuing sukuk/bonds of SAR (…) with a term of (…) to fund (…)"), reqs: [
       doc("المستشار المالي", "Financial adviser", "finance"),
       doc("هيكل الإصدار", "Issue structure", "finance"),
       after("الموافقات النظامية وفق نظام السوق المالية (نظام الشركات م117)", "Regulatory approvals under the Capital Market Law (Companies Law Art. 117)", undefined, "legal"),
@@ -196,7 +207,7 @@ export const partTwo = (): Part => [
       doc("استخدام المتحصلات والأثر على المديونية", "Use of proceeds and impact on leverage", "finance"),
       chk("قرار الجمعية غير العادية إن كانت قابلة للتحويل إلى أسهم (نظام الشركات م117)", "Extraordinary General Assembly resolution if convertible into shares (Companies Law Art. 117)"),
     ] },
-    { body: "board", keys: ["استحواذ", "شراء حصه", "تملك"], kind: "decision", title: "التصويت على الاستحواذ على (…)% من حصص/أسهم شركة (…) بقيمة (…) ريال", en: "Acquiring (…)% of the shares of (…) for SAR (…)", reqs: [
+    { body: "board", keys: ["استحواذ", "شراء حصه", "تملك"], kind: "decision", title: "التصويت على الاستحواذ على (…)% من حصص/أسهم شركة (…) بقيمة (…) ريال", en: "Acquiring (…)% of the shares of (…) for SAR (…)", authority: "board", authorityRef: "لائحة الحوكمة م21", reqs: [
       doc("الفحص النافي للجهالة", "Due diligence"),
       doc("التقييم المستقل", "Independent valuation"),
       doc("المراجعة القانونية", "Legal review", "legal"),
@@ -205,7 +216,7 @@ export const partTwo = (): Part => [
       after("موافقة الهيئة العامة للمنافسة عند الاقتضاء", "General Authority for Competition approval where required", undefined, "legal"),
       disclose("الإفصاح للمدرجة (قواعد الطرح م80)", "Disclosure (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["استثمار", "محفظه", "ودائع"], kind: "decision", title: "التصويت على استثمار مبلغ (…) ريال في (…) لمدة (…) بعائد متوقع (…)، وفق سياسة الاستثمار المعتمدة", en: "Investing SAR (…) in (…) for (…) with an expected return of (…), in line with the approved investment policy", reqs: [
+    { body: "board", keys: ["استثمار", "محفظه", "ودائع"], kind: "decision", title: "التصويت على استثمار مبلغ (…) ريال في (…) لمدة (…) بعائد متوقع (…)، وفق سياسة الاستثمار المعتمدة", en: "Investing SAR (…) in (…) for (…) with an expected return of (…), in line with the approved investment policy", authority: "board", reqs: [
       doc("سياسة الاستثمار", "Investment policy", "finance"),
       doc("تقييم المخاطر والعائد", "Risk and return assessment", "finance"),
       doc("وصف أداة الاستثمار وسيولتها", "Description of the instrument and its liquidity", "finance"),
@@ -213,14 +224,14 @@ export const partTwo = (): Part => [
       chk("الضوابط الشرعية", "Sharia controls met"),
       noInterest(),
     ] },
-    { body: "board", keys: ["عقار", "ارض", "شراء", "بيع"], kind: "decision", title: "التصويت على شراء/بيع العقار (…) بقيمة (…) ريال", en: "Purchasing/selling the property (…) for SAR (…)", reqs: [
+    { body: "board", keys: ["عقار", "ارض", "شراء", "بيع"], kind: "decision", title: "التصويت على شراء/بيع العقار (…) بقيمة (…) ريال", en: "Purchasing/selling the property (…) for SAR (…)", authority: "bylaws", authorityRef: "نظام الشركات م74/م75", power: "asset_sale", alt: toGa("بشراء/بيع العقار (…) بقيمة (…) ريال", "purchasing/selling the property (…) for SAR (…)"), reqs: [
       doc("تقييم من مقيّم معتمد", "Valuation by an accredited valuer"),
       doc("المراجعة القانونية للصك", "Legal review of the title deed", "legal"),
       doc("المبررات والأثر المالي", "Rationale and financial impact", "finance"),
       noInterest("التحقق من عدم وجود مصلحة لعضو في الطرف الآخر", "Confirm no board member has an interest in the counterparty"),
       disclose("الإفصاح للمدرجة إن بلغت القيمة 10% من صافي الأصول (قواعد الطرح م80)", "Disclosure if the value reaches 10% of net assets (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["ديون", "شطب", "معدومه", "اعفاء"], kind: "decision", title: "التصويت على شطب ديون معدومة بقيمة (…) ريال مستحقة على (…) لتعذّر تحصيلها بعد استنفاد إجراءات التحصيل", en: "Writing off bad debts of SAR (…) owed by (…), uncollectible after all collection steps were exhausted", reqs: [
+    { body: "board", keys: ["ديون", "شطب", "معدومه", "اعفاء"], kind: "decision", title: "التصويت على شطب ديون معدومة بقيمة (…) ريال مستحقة على (…) لتعذّر تحصيلها بعد استنفاد إجراءات التحصيل", en: "Writing off bad debts of SAR (…) owed by (…), uncollectible after all collection steps were exhausted", authority: "bylaws", authorityRef: "نظام الشركات م74", power: "debt_relief", alt: toGa("بشطب ديون معدومة بقيمة (…) ريال مستحقة على (…) لتعذّر تحصيلها بعد استنفاد إجراءات التحصيل", "writing off bad debts of SAR (…) owed by (…), uncollectible after all collection steps were exhausted"), reqs: [
       doc("تقرير التحصيل", "Collection report", "finance"),
       doc("رأي مراجع الحسابات", "External auditor's opinion", "finance"),
       doc("ما يثبت استنفاد إجراءات التحصيل", "Evidence that collection efforts were exhausted", "finance"),
@@ -229,14 +240,14 @@ export const partTwo = (): Part => [
       bylawsPower("صلاحية المجلس في الإبراء وفق النظام الأساس (نظام الشركات م74)", "Board's power to release debts under the bylaws (Companies Law Art. 74)"),
       noInterest(),
     ] },
-    { body: "board", keys: ["دعوي", "نزاع", "تسويه", "قضيه"], kind: "decision", title: "التصويت على تسوية النزاع/الدعوى (…) مع (…) بمبلغ (…) ريال", en: "Settling the dispute/lawsuit (…) with (…) for SAR (…)", reqs: [
+    { body: "board", keys: ["دعوي", "نزاع", "تسويه", "قضيه"], kind: "decision", title: "التصويت على تسوية النزاع/الدعوى (…) مع (…) بمبلغ (…) ريال", en: "Settling the dispute/lawsuit (…) with (…) for SAR (…)", authority: "board", reqs: [
       doc("رأي المستشار القانوني", "Legal counsel's opinion", "legal"),
       doc("الأثر المالي", "Financial impact", "finance"),
       doc("مسودة اتفاقية التسوية", "Draft settlement agreement", "legal"),
       doc("مقارنتها بنتيجة الاستمرار في النزاع", "Comparison with the likely outcome of continuing the dispute", "legal"),
       disclose("الإفصاح للمدرجة إن بلغت قيمة النزاع 5% من صافي الأصول (قواعد الطرح م80)", "Disclosure if the amount in dispute reaches 5% of net assets (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["تبرع", "تبرعات", "المسؤوليه الاجتماعيه"], kind: "decision", title: "التصويت على اعتماد برنامج المسؤولية الاجتماعية والتبرعات لعام (…) بمبلغ (…) ريال", en: "Approving the social responsibility and donations program for (…) of SAR (…)", reqs: [
+    { body: "board", keys: ["تبرع", "تبرعات", "المسؤوليه الاجتماعيه"], kind: "decision", title: "التصويت على اعتماد برنامج المسؤولية الاجتماعية والتبرعات لعام (…) بمبلغ (…) ريال", en: "Approving the social responsibility and donations program for (…) of SAR (…)", authority: "bylaws", power: "donations", alt: toGa("باعتماد برنامج المسؤولية الاجتماعية والتبرعات لعام (…) بمبلغ (…) ريال", "approving the social responsibility and donations program for (…) of SAR (…)"), reqs: [
       doc("سياسة المسؤولية الاجتماعية (لائحة الحوكمة م84)", "Social responsibility policy (CGR Art. 84)"),
       doc("البرامج والجهات المستفيدة ومعايير اختيارها", "Programs, beneficiaries and selection criteria"),
       doc("الموازنة وحدود الصلاحية", "Budget and authority limits", "finance"),
@@ -244,45 +255,45 @@ export const partTwo = (): Part => [
     ] },
   ]],
   ["البنوك والتفويضات والشركات التابعة", [
-    { body: "board", keys: ["حساب بنكي", "حسابات بنكيه", "فتح حساب", "اغلاق حساب"], kind: "decision", title: "التصويت على فتح/إغلاق حساب بنكي (…) لدى (…) لغرض (…)، وتحديد المفوضين بالتوقيع عليه", en: "Opening/closing a (…) bank account with (…) for (…), and designating its authorized signatories", reqs: [
+    { body: "board", keys: ["حساب بنكي", "حسابات بنكيه", "فتح حساب", "اغلاق حساب"], kind: "decision", title: "التصويت على فتح/إغلاق حساب بنكي (…) لدى (…) لغرض (…)، وتحديد المفوضين بالتوقيع عليه", en: "Opening/closing a (…) bank account with (…) for (…), and designating its authorized signatories", authority: "board", reqs: [
       doc("الغرض من الحساب", "Purpose of the account", "finance"),
       doc("نوعه وعملته", "Account type and currency", "finance"),
       doc("المفوضون بالتشغيل وحدود صلاحياتهم", "Authorized operators and their limits", "finance"),
       doc("عند الإغلاق: الرصيد وجهة تحويله", "On closure: the balance and where it is transferred", "finance"),
     ] },
-    { body: "board", keys: ["المفوضين", "التوقيع البنكي", "صلاحيات التوقيع"], kind: "decision", title: "التصويت على تفويض (…) بالتوقيع على حسابات الشركة لدى (…) منفردين/مجتمعين في حدود (…) ريال للعملية الواحدة، وإلغاء التفويضات السابقة", en: "Authorizing (…) to sign on the company's accounts with (…) individually/jointly up to SAR (…) per transaction, and revoking previous authorizations", reqs: [
+    { body: "board", keys: ["المفوضين", "التوقيع البنكي", "صلاحيات التوقيع"], kind: "decision", title: "التصويت على تفويض (…) بالتوقيع على حسابات الشركة لدى (…) منفردين/مجتمعين في حدود (…) ريال للعملية الواحدة، وإلغاء التفويضات السابقة", en: "Authorizing (…) to sign on the company's accounts with (…) individually/jointly up to SAR (…) per transaction, and revoking previous authorizations", authority: "board", authorityRef: "نظام الشركات م77", reqs: [
       doc("جدول الصلاحيات", "Delegation of authority", "finance"),
       doc("أسماء المفوضين", "Names of the signatories", "finance"),
       doc("حدود الصلاحيات ونوع التوقيع (منفرد/مشترك)", "Limits and signature type (single/joint)", "finance"),
       doc("التفويضات السابقة الملغاة", "Previous authorizations revoked", "finance"),
       doc("صور الهويات لإبلاغ البنوك", "ID copies for notifying the banks", "finance"),
     ] },
-    { body: "board", keys: ["تفويض", "توقيع", "نيابه"], kind: "decision", title: "التصويت على تفويض (…) بصفته (…) بالتوقيع نيابة عن الشركة على (…) أمام (…)، في حدود مبلغ (…) ريال، لمدة (…) تبدأ من (…)، دون حق تفويض الغير", en: "Authorizing (…), in the capacity of (…), to sign (…) on behalf of the company before (…), up to SAR (…), for (…) starting (…), without the right to sub-delegate", reqs: [
+    { body: "board", keys: ["تفويض", "توقيع", "نيابه"], kind: "decision", title: "التصويت على تفويض (…) بصفته (…) بالتوقيع نيابة عن الشركة على (…) أمام (…)، في حدود مبلغ (…) ريال، لمدة (…) تبدأ من (…)، دون حق تفويض الغير", en: "Authorizing (…), in the capacity of (…), to sign (…) on behalf of the company before (…), up to SAR (…), for (…) starting (…), without the right to sub-delegate", authority: "board", authorityRef: "نظام الشركات م77", reqs: [
       doc("حدود التفويض ومدته", "Scope and duration of the authorization"),
       doc("المستند محل التوقيع أو نطاقه", "The document to be signed or its scope"),
       bylawsPower("صلاحية المجلس في التفويض وفق النظام الأساس", "Board's power to delegate under the bylaws"),
       doc("حق التفويض للغير من عدمه", "Whether onward delegation is allowed"),
     ] },
-    { body: "board", keys: ["جدول الصلاحيات", "مصفوفه الصلاحيات", "الصلاحيات"], kind: "decision", title: "التصويت على اعتماد/تحديث جدول الصلاحيات المالية والإدارية", en: "Approving/updating the financial and administrative delegation of authority", reqs: [
+    { body: "board", keys: ["جدول الصلاحيات", "مصفوفه الصلاحيات", "الصلاحيات"], kind: "decision", title: "التصويت على اعتماد/تحديث جدول الصلاحيات المالية والإدارية", en: "Approving/updating the financial and administrative delegation of authority", authority: "board", authorityRef: "لائحة الحوكمة م22", reqs: [
       doc("الجدول الحالي والمقترح مع المقارنة", "Current and proposed delegation of authority with a comparison"),
       doc("مبررات التعديل", "Rationale for the changes"),
       rec("توصية لجنة المراجعة", "Audit committee recommendation", "audit"),
       chk("التوافق مع النظام الأساس وما تحتفظ به الجمعية والمجلس من صلاحيات", "Consistent with the bylaws and the powers reserved to the General Assembly and the board"),
     ] },
-    { body: "board", keys: ["وكاله", "الجهات الحكوميه", "تفويض حكومي"], kind: "decision", title: "التصويت على إصدار وكالة/تفويض لـ(…) بصفته (…) لتمثيل الشركة أمام (…) في (…)، لمدة (…)، دون حق توكيل الغير", en: "Issuing a power of attorney to (…), in the capacity of (…), to represent the company before (…) in (…), for (…), without the right to appoint others", reqs: [
+    { body: "board", keys: ["وكاله", "الجهات الحكوميه", "تفويض حكومي"], kind: "decision", title: "التصويت على إصدار وكالة/تفويض لـ(…) بصفته (…) لتمثيل الشركة أمام (…) في (…)، لمدة (…)، دون حق توكيل الغير", en: "Issuing a power of attorney to (…), in the capacity of (…), to represent the company before (…) in (…), for (…), without the right to appoint others", authority: "board", authorityRef: "نظام الشركات م77", reqs: [
       doc("نطاق الوكالة ومدتها", "Scope and duration of the power of attorney"),
       doc("بيانات الوكيل", "Attorney's details"),
       doc("حق التوكيل للغير من عدمه", "Whether onward delegation is allowed"),
       bylawsPower("صلاحية مُصدر الوكالة وفق النظام الأساس", "Issuer's power under the bylaws"),
     ] },
-    { body: "board", keys: ["مستشار", "استشاري", "مكتب محاماه"], kind: "decision", title: "التصويت على تعيين (…) مستشاراً (قانونياً/مالياً) للشركة بشأن (…) بأتعاب قدرها (…) ريال", en: "Appointing (…) as the company's (legal/financial) adviser on (…) for fees of SAR (…)", reqs: [
+    { body: "board", keys: ["مستشار", "استشاري", "مكتب محاماه"], kind: "decision", title: "التصويت على تعيين (…) مستشاراً (قانونياً/مالياً) للشركة بشأن (…) بأتعاب قدرها (…) ريال", en: "Appointing (…) as the company's (legal/financial) adviser on (…) for fees of SAR (…)", authority: "board", reqs: [
       doc("العروض", "Proposals"),
       doc("نطاق العمل والأتعاب", "Scope of work and fees"),
       doc("مسودة خطاب التكليف", "Draft engagement letter", "legal"),
       chk("التحقق من استقلال المستشار وعدم تعارض مصالحه", "Confirm the adviser's independence and absence of conflicts"),
       noInterest(),
     ] },
-    { body: "board", keys: ["تاسيس", "شركه تابعه", "فرع"], kind: "decision", title: "التصويت على تأسيس شركة تابعة باسم (…) برأس مال (…) ريال مملوكة للشركة بنسبة (…)% لمزاولة نشاط (…)", en: "Establishing a subsidiary named (…) with capital of SAR (…), (…)% owned by the company, to carry out (…)", reqs: [
+    { body: "board", keys: ["تاسيس", "شركه تابعه", "فرع"], kind: "decision", title: "التصويت على تأسيس شركة تابعة باسم (…) برأس مال (…) ريال مملوكة للشركة بنسبة (…)% لمزاولة نشاط (…)", en: "Establishing a subsidiary named (…) with capital of SAR (…), (…)% owned by the company, to carry out (…)", authority: "board", reqs: [
       doc("دراسة الجدوى", "Feasibility study"),
       doc("هيكل الملكية", "Ownership structure"),
       doc("مسودة النظام الأساس أو عقد التأسيس", "Draft bylaws or articles of association", "legal"),
@@ -291,18 +302,18 @@ export const partTwo = (): Part => [
       doc("ترتيبات الحوكمة والإشراف", "Governance and oversight arrangements"),
       disclose("تقييم الإفصاح للمدرجة", "Assess disclosure (listed companies)"),
     ] },
-    { body: "board", keys: ["فتح فرع", "فرع"], kind: "decision", title: "التصويت على فتح فرع للشركة في (…) لمزاولة نشاط (…)، وتعيين (…) مديراً له", en: "Opening a company branch in (…) to carry out (…), with (…) as its manager", reqs: [
+    { body: "board", keys: ["فتح فرع", "فرع"], kind: "decision", title: "التصويت على فتح فرع للشركة في (…) لمزاولة نشاط (…)، وتعيين (…) مديراً له", en: "Opening a company branch in (…) to carry out (…), with (…) as its manager", authority: "board", reqs: [
       doc("دراسة الجدوى", "Feasibility study"),
       doc("متطلبات السجل التجاري للفرع", "Commercial registration requirements for the branch", "legal"),
       doc("تحديد مدير الفرع وصلاحياته", "Branch manager and powers"),
     ] },
-    { body: "board", keys: ["ممثلي الشركه", "مجالس الشركات التابعه", "ممثل"], kind: "decision", title: "التصويت على تعيين (…) ممثلين للشركة في مجلس إدارة الشركة التابعة (…)", en: "Appointing (…) as the company's representatives on the board of subsidiary (…)", reqs: [
+    { body: "board", keys: ["ممثلي الشركه", "مجالس الشركات التابعه", "ممثل"], kind: "decision", title: "التصويت على تعيين (…) ممثلين للشركة في مجلس إدارة الشركة التابعة (…)", en: "Appointing (…) as the company's representatives on the board of subsidiary (…)", authority: "board", reqs: [
       doc("السير الذاتية", "CVs"),
       chk("التحقق من عدم تعارض المصالح", "Confirm no conflicts of interest"),
       doc("صلاحيات الممثلين وآلية رفع تقاريرهم للمجلس", "Representatives' powers and how they report to the board"),
       chk("متطلبات النظام الأساس للشركة التابعة", "Subsidiary's bylaws requirements met"),
     ] },
-    { body: "board", keys: ["تصفيه", "شركه تابعه", "دمج تابعه"], kind: "decision", title: "التصويت على تصفية/دمج الشركة التابعة (…) بسبب (…)، وتفويض ممثل الشركة (…) بالتصويت على ذلك في جمعيتها", en: "Liquidating/merging subsidiary (…) because (…), authorizing the company's representative (…) to vote for it at its general assembly", reqs: [
+    { body: "board", keys: ["تصفيه", "شركه تابعه", "دمج تابعه"], kind: "decision", title: "التصويت على تصفية/دمج الشركة التابعة (…) بسبب (…)، وتفويض ممثل الشركة (…) بالتصويت على ذلك في جمعيتها", en: "Liquidating/merging subsidiary (…) because (…), authorizing the company's representative (…) to vote for it at its general assembly", authority: "board", reqs: [
       doc("الأثر المالي والقانوني", "Financial and legal impact"),
       doc("مبررات القرار", "Rationale for the decision"),
       after("القرار النهائي لجمعية الشركة التابعة أو شركائها، فيُفوَّض ممثل الشركة بالتصويت فيها", "The subsidiary's assembly or partners decide; authorize the company's representative to vote there"),

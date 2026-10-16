@@ -8,6 +8,7 @@ import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_acti
 import { byDepartment, ownerOf, type Target } from "./agenda-targets";
 import { useAutoEnglish } from "./auto-english";
 import { isRequirementsOnly, requirementsText, type Req } from "@/lib/requirements";
+import { AUTHORITY } from "@/lib/authority";
 import { ItemReviewPanel } from "./item-review-panel";
 import { matchTemplate, suggestTitles, type Body, type Template, type TitleSuggestion } from "@/lib/item-templates";
 
@@ -148,6 +149,7 @@ function TitleField({ defaultValue, library, body, onPicked }: { defaultValue?: 
           {suggestions.map((s) => (
             <button key={s.title} type="button" onClick={() => pick(s)} className="flex flex-col rounded-md border border-primary px-2 py-1 text-start text-sm text-primary hover:bg-primary-soft">
               {s.title}
+              {s.authority && <span className="text-xs text-brass">{AUTHORITY[s.authority].label}</span>}
               {s.needs && <span className="text-xs text-ink-muted">يتطلب: {s.needs}</span>}
             </button>
           ))}

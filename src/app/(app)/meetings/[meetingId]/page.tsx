@@ -21,6 +21,7 @@ import { OutlookPanel } from "../_components/outlook-panel";
 import { riyadhToday } from "@/lib/minutes";
 import { packDeadline, requestsMail } from "@/lib/meeting-mail";
 import { meetingMail } from "@/lib/meeting-mail-server";
+import { loadPowers } from "@/lib/authority-server";
 import { JourneyBar } from "../_components/journey-bar";
 import { loadJourney } from "../_actions/journey-data";
 import { currentStage, stageDone, STAGES } from "@/lib/journey";
@@ -59,7 +60,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
     .maybeSingle();
   if (!meeting) notFound();
 
-  const [{ data: users }, profile, disclosures, { data: library }, { data: requirementRows }] =
+  const [{ data: users }, profile, disclosures, { data: library }, { data: requirementRows }, powers] =
     tab === "agenda" && organizer
       ? await Promise.all([
           supabase.rpc("list_people_by_department"),
@@ -71,8 +72,9 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
             .select("id, agenda_item_id, kind, label, status, custom, department_id, assignee_user_id, due_date, checked_at, note")
             .eq("meeting_id", meetingId)
             .order("position"),
+          loadPowers(supabase),
         ])
-      : [{ data: [] }, null, [], { data: [] }, { data: [] }];
+      : [{ data: [] }, null, [], { data: [] }, { data: [] }, undefined];
   const profileDays = profile?.invite_days ?? 5;
   // Outlook messages: the members' invitation and pack (overview), the request emails (agenda).
   const [mail, mailProfile] =
@@ -236,7 +238,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           requirementsSentAt={meeting.requirements_sent_at}
           requestMails={mail ? mail.recipients.map((r) => ({ name: r.name, to: r.to, ...requestsMail(mail.meeting, r.name, r.requests, mail.tasksUrl) })) : undefined}
           body={bodyOf({ board_id: meeting.board_id, committee_kind: (meeting.committee as { kind?: string } | null)?.kind })}
-          review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1 } : undefined}
+          review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1, powers } : undefined}
         />
       )}
       {tab === "agenda" && (

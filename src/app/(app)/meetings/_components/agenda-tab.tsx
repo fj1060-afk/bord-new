@@ -8,8 +8,10 @@ import { ownerOf, type Target } from "./agenda-targets";
 import { UploadDocument } from "./upload-document";
 import { RequirementsPanel, SendRequirementsBar, type RequestMail, type RequirementRow } from "./requirements-panel";
 import { ItemFindings } from "./item-review-panel";
+import { AuthorityBadge } from "./authority-badge";
 import { reviewItem, type Disclosure } from "@/lib/item-review";
-import type { Body, Template } from "@/lib/item-templates";
+import { matchTemplate, type Body, type Template } from "@/lib/item-templates";
+import type { Powers } from "@/lib/authority";
 
 type Doc = { id: string; title: string; file_name: string; size_bytes: number | null; agenda_item_id: string | null; document_request_id: string | null };
 type DocRequest = {
@@ -57,7 +59,7 @@ export function AgendaTab({
   requirementsSentAt?: string | null;
   library?: Template[];
   body?: Body;
-  review?: { disclosures: Disclosure[]; listed: boolean; year: number };
+  review?: { disclosures: Disclosure[]; listed: boolean; year: number; powers?: Powers };
   meetingId: string;
   items: AgendaItem[];
   documents: Doc[];
@@ -95,6 +97,7 @@ export function AgendaTab({
                 <span className="font-mono text-brass">{item.position}.</span>
                 <h3 className="font-display text-lg font-bold">{item.title}</h3>
                 <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">{ITEM_KINDS[item.kind]}</span>
+                <AuthorityBadge authority={matchTemplate(item.title, library)?.authority} />
                 {item.duration_minutes && <span className="text-xs text-ink-muted">{item.duration_minutes} دقيقة</span>}
               </div>
               {(ownerLabel(item) || item.presenter) && (
@@ -110,7 +113,7 @@ export function AgendaTab({
                   {item.description_en}
                 </p>
               )}
-              {review && <ItemNotes findings={reviewItem(item, review)} />}
+              {review && <ItemNotes findings={reviewItem(item, { ...review, template: matchTemplate(item.title, library) })} />}
             </>
           );
 

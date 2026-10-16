@@ -2,6 +2,7 @@
 // governance regulations and members' conflict-of-interest disclosures.
 // Advisory only: findings never block the meeting journey.
 
+import { authorityFindings, type AuthorityTemplate, type Powers } from "./authority";
 import { withoutRequirements } from "./requirements";
 import { withPhraseFixes } from "./spelling";
 
@@ -209,8 +210,11 @@ export function templateGaps(title: string): Finding[] {
   return gaps;
 }
 
-/** `year` is the last completed financial year, used in suggested titles; `listed` adds the CMA rules. */
-export function reviewItem(item: ItemDraft, { disclosures = [], year = new Date().getFullYear() - 1, listed = false }: { disclosures?: Disclosure[]; year?: number; listed?: boolean } = {}): Finding[] {
+/** `year` is the last completed financial year, used in suggested titles; `listed` adds the CMA rules; `template` and `powers` add who decides. */
+export function reviewItem(
+  item: ItemDraft,
+  { disclosures = [], year = new Date().getFullYear() - 1, listed = false, template, powers }: { disclosures?: Disclosure[]; year?: number; listed?: boolean; template?: AuthorityTemplate | null; powers?: Powers } = {},
+): Finding[] {
   // The auto-filled requirements block lists documents, not what the item is about.
   const about = withoutRequirements(item.description ?? "");
   const text = fold(withPhraseFixes(`${item.title} ${about}`));
@@ -219,7 +223,8 @@ export function reviewItem(item: ItemDraft, { disclosures = [], year = new Date(
   const verbless = item.kind === "decision" && !DECISION_VERBS.some((v) => title.startsWith(fold(v)));
   const verb = verbless ? "التصويت على اعتماد " : "";
   const fullPeriod = `للسنة المالية المنتهية في 31 ديسمبر ${year}`;
-  const findings: Finding[] = [...templateGaps(base)];
+  // Who decides: from the standard wording the item follows and the company's bylaws and assembly authorizations.
+  const findings: Finding[] = [...templateGaps(base), ...authorityFindings(template, item.title, powers)];
   // A delegation is for "certain acts" (CL 77/1): it must say who, in what capacity, for what, and for how long.
   const delegation = /(^|\s)(تفويض|وكاله|توكيل)/.test(title) && !/تفويض مجلس الاداره|بتفويض مجلس|بناء علي تفويض|تفويض الجمعيه|تفويض ممثل|حسابات الشركه/.test(title);
   if (delegation && !(/بصفته/.test(title) && /(لمده|حتي|اعتبارا من|لانجاز|لاتمام)/.test(title)))
@@ -238,7 +243,9 @@ export function reviewItem(item: ItemDraft, { disclosures = [], year = new Date(
     const hit = keywords(d.details ?? "").find(({ key }) => text.includes(key));
     if (hit) findings.push({ level: "warn", text: `تعارض مصالح محتمل: ${d.name} أفصح عن مصلحة تتصل بـ«${hit.word}». يُفصح فوراً ويُثبت ذلك في المحضر، ولا يشارك في المداولة ولا التصويت.`, ref: "نظام الشركات م71؛ لائحة الحوكمة م42" });
   }
-  for (const r of RULES) if (has(text, r.when) && !(r.unless && has(text, r.unless)) && (!r.listed || listed)) findings.push(r.finding);
+  // A wording classified "per the bylaws" already carries the company-specific Art. 74 remark.
+  const known = template?.authority === "bylaws" ? "نظام الشركات م74" : null;
+  for (const r of RULES) if (has(text, r.when) && !(r.unless && has(text, r.unless)) && (!r.listed || listed) && r.finding.ref !== known) findings.push(r.finding);
   if (item.kind === "decision") {
     // The completed-title suggestions above already start with a verb.
     if (verbless && !findings.some((f) => f.fixes)) findings.push({ level: "tip", text: "صُغ بند القرار بفعل واضح.", fixes: [`التصويت على اعتماد ${base}`, `التصويت على ${base}`] });

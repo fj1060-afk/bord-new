@@ -5,14 +5,14 @@ import { after, chk, disclose, doc, ega, egaEn, fy, fyEn, ga, gaEn, noInterest, 
 
 export const partThree = (): Part => [
   ["رأس المال والجمعيات", [
-    { body: "board", keys: ["النظام الاساس", "تعديل النظام"], kind: "decision", title: `${ega} بتعديل المادة (…) من النظام الأساس للشركة المتعلقة بـ(…)`, en: `${egaEn} amending Article (…) of the company's bylaws relating to (…)`, reqs: [
+    { body: "board", keys: ["النظام الاساس", "تعديل النظام"], kind: "decision", title: `${ega} بتعديل المادة (…) من النظام الأساس للشركة المتعلقة بـ(…)`, en: `${egaEn} amending Article (…) of the company's bylaws relating to (…)`, authority: "ga_extraordinary", authorityRef: "نظام الشركات م85", reqs: [
       doc("مسودة التعديلات والمقارنة", "Draft amendments and comparison", "legal"),
       doc("رأي قانوني", "Legal opinion", "legal"),
       after("إدراجها بنوداً مستقلة في دعوة الجمعية", "Include as separate items in the General Assembly invitation", "before_ga", "secretary"),
       after("قيد التعديل في السجل التجاري خلال 15 يوماً من صدوره (نظام الشركات م8 وم93)", "Register the amendment in the commercial register within 15 days (Companies Law Arts. 8 and 93)", "15d", "secretary"),
       disclose("الإفصاح للمدرجة (قواعد الطرح م80)", "Disclosure (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["راس المال", "زياده", "تخفيض"], kind: "decision", title: `${ega} بزيادة/تخفيض رأس مال الشركة من (…) ريال إلى (…) ريال عن طريق (…)`, en: `${egaEn} increasing/reducing the company's capital from SAR (…) to SAR (…) through (…)`, reqs: [
+    { body: "board", keys: ["راس المال", "زياده", "تخفيض"], kind: "decision", title: `${ega} بزيادة/تخفيض رأس مال الشركة من (…) ريال إلى (…) ريال عن طريق (…)`, en: `${egaEn} increasing/reducing the company's capital from SAR (…) to SAR (…) through (…)`, authority: "ga_extraordinary", authorityRef: "نظام الشركات م127/م134", reqs: [
       chk("عند الزيادة: سداد رأس المال المصدر كاملاً (نظام الشركات م127)", "For an increase: issued capital fully paid (Companies Law Art. 127)"),
       doc("عند الزيادة بتحويل ديون: بيان المجلس وتقرير مراجع الحسابات (نظام الشركات م126)", "For an increase by debt conversion: board statement and auditor's report (Companies Law Art. 126)", "finance"),
       doc("عند التخفيض: بيان المجلس بأسبابه والتزامات الشركة وأثره عليها مع تقرير مراجع الحسابات (نظام الشركات م134)", "For a reduction: board statement on its reasons, the company's obligations and the impact, with the auditor's report (Companies Law Art. 134)", "finance"),
@@ -22,7 +22,7 @@ export const partThree = (): Part => [
       disclose("الإفصاح الفوري (قواعد الطرح م80)", "Immediate disclosure (OSCOs Art. 80)"),
       after("قيد التعديل في السجل التجاري", "Register the change in the commercial register", undefined, "secretary"),
     ] },
-    { body: "board", keys: ["شراء اسهم", "اسهم الخزينه", "اسهمها"], kind: "decision", title: `${ega} بشراء الشركة لعدد أقصاه (…) من أسهمها بغرض (…) وتمويل ذلك من (…)، وتفويض مجلس الإدارة بإتمام الشراء خلال مدة أقصاها (…) شهراً من تاريخ قرار الجمعية`, en: `${egaEn} the purchase by the company of up to (…) of its shares for (…), funded from (…), authorizing the board to complete the purchase within (…) months of the assembly's resolution`, reqs: [
+    { body: "board", keys: ["شراء اسهم", "اسهم الخزينه", "اسهمها"], kind: "decision", title: `${ega} بشراء الشركة لعدد أقصاه (…) من أسهمها بغرض (…) وتمويل ذلك من (…)، وتفويض مجلس الإدارة بإتمام الشراء خلال مدة أقصاها (…) شهراً من تاريخ قرار الجمعية`, en: `${egaEn} the purchase by the company of up to (…) of its shares for (…), funded from (…), authorizing the board to complete the purchase within (…) months of the assembly's resolution`, authority: "ga_extraordinary", authorityRef: "نظام الشركات م85", reqs: [
       chk("نص النظام الأساس (نظام الشركات م114)", "Bylaws permit the buyback (Companies Law Art. 114)"),
       doc("تقرير ملاءة من مراجع الحسابات", "Auditor's solvency report", "finance"),
       chk("الغرض والحد الأقصى للأسهم (10% لأسهم الخزينة) وطريقة التمويل، وتفويض المجلس لمدة أقصاها 18 شهراً (اللائحة التنفيذية للمدرجة م17)", "Purpose, maximum shares (10% for treasury shares) and funding, with the board authorized for at most 18 months (IR Art. 17)"),
@@ -30,33 +30,33 @@ export const partThree = (): Part => [
       chk("مدة الاحتفاظ بأسهم الخزينة (اللائحة التنفيذية للمدرجة م24)", "Treasury share holding period (IR Art. 24)"),
       disclose("الإفصاح فور قرار الجمعية", "Disclosure immediately after the General Assembly resolution"),
     ] },
-    { body: "board", keys: ["بيع اصول", "الاصول"], kind: "decision", title: `${ga} ببيع (…) بقيمة (…) ريال، وهي أصول تتجاوز قيمتها 50% من إجمالي أصول الشركة`, en: `${gaEn} the sale of (…) for SAR (…), being assets exceeding 50% of the company's total assets`, reqs: [
+    { body: "board", keys: ["بيع اصول", "الاصول"], kind: "decision", title: `${ga} ببيع (…) بقيمة (…) ريال، وهي أصول تتجاوز قيمتها 50% من إجمالي أصول الشركة`, en: `${gaEn} the sale of (…) for SAR (…), being assets exceeding 50% of the company's total assets`, authority: "ga_ordinary", authorityRef: "نظام الشركات م75", reqs: [
       doc("تقييم الأصول (نظام الشركات م75)", "Asset valuation (Companies Law Art. 75)"),
       doc("مسودة اتفاقية البيع", "Draft sale agreement", "legal"),
       doc("المستشار المالي والمبررات والأثر على نشاط الشركة", "Financial adviser, rationale and impact on the company's business", "finance"),
       noInterest(),
       disclose("الإفصاح الفوري للمدرجة (قواعد الطرح م80)", "Immediate disclosure (listed companies; OSCOs Art. 80)"),
     ] },
-    { body: "board", keys: ["الخسائر", "نصف راس المال"], kind: "decision", title: `${ega} بشأن استمرار الشركة أو حلها لبلوغ الخسائر نصف رأس المال`, en: `${egaEn} on the continuation or dissolution of the company as losses reached half the capital`, reqs: [
+    { body: "board", keys: ["الخسائر", "نصف راس المال"], kind: "decision", title: `${ega} بشأن استمرار الشركة أو حلها لبلوغ الخسائر نصف رأس المال`, en: `${egaEn} on the continuation or dissolution of the company as losses reached half the capital`, authority: "ga_extraordinary", authorityRef: "نظام الشركات م132", reqs: [
       doc("القوائم المالية", "Financial statements", "finance"),
       after("الإعلان خلال 60 يوماً (نظام الشركات م132)", "Announce within 60 days (Companies Law Art. 132)", "60d", "ir"),
       after("دعوة الجمعية غير العادية خلال 180 يوماً", "Call the Extraordinary General Assembly within 180 days", "180d", "secretary"),
       doc("خطة المعالجة والبدائل", "Remediation plan and alternatives"),
       doc("رأي قانوني", "Legal opinion", "legal"),
     ] },
-    { body: "board", keys: ["الجمعيه", "دعوه", "الجمعيه العامه"], kind: "decision", title: "التصويت على دعوة الجمعية العامة (…) للانعقاد في (…) واعتماد جدول أعمالها", en: "Calling the (…) General Assembly to convene on (…) and approving its agenda", reqs: [
+    { body: "board", keys: ["الجمعيه", "دعوه", "الجمعيه العامه"], kind: "decision", title: "التصويت على دعوة الجمعية العامة (…) للانعقاد في (…) واعتماد جدول أعمالها", en: "Calling the (…) General Assembly to convene on (…) and approving its agenda", authority: "board", authorityRef: "نظام الشركات م90", reqs: [
       doc("مسودة الدعوة متضمنةً نوع الجمعية ومكانها وتاريخها ووقتها وجدول الأعمال (21 يوماً على الأقل؛ بند مستقل لكل عقد فيه مصلحة، نظام الشركات م91/م96)", "Draft invitation stating the assembly type, venue, date, time and agenda (at least 21 days; a separate item for each interested contract, Companies Law Arts. 91/96)", "secretary"),
       doc("مستندات كل بند", "Supporting documents for each item"),
       after("إرسال نسخة للسجل التجاري والهيئة", "Send a copy to the commercial register and the CMA", "before_ga", "secretary"),
       after("الإفصاح في تداول للمدرجة", "Disclosure on Tadawul (listed companies)", "before_ga", "ir"),
     ] },
-    { body: "board", keys: ["قرارات الجمعيه", "نتائج الجمعيه", "متابعه الجمعيه"], kind: "information", title: "متابعة تنفيذ قرارات الجمعية العامة الأخيرة", en: "Follow-up on the resolutions of the last General Assembly", reqs: [
+    { body: "board", keys: ["قرارات الجمعيه", "نتائج الجمعيه", "متابعه الجمعيه"], kind: "information", title: "متابعة تنفيذ قرارات الجمعية العامة الأخيرة", en: "Follow-up on the resolutions of the last General Assembly", authority: "board", reqs: [
       doc("محضر الجمعية", "General Assembly minutes", "secretary"),
       doc("الإفصاح عن النتائج", "Disclosure of the results", "ir"),
       doc("حالة تنفيذ كل قرار (التوزيعات، التعيينات، تعديلات النظام الأساس)", "Implementation status of each resolution (dividends, appointments, bylaws amendments)", "secretary"),
       after("قيد ما يلزم في السجل التجاري", "Make the required commercial register filings", undefined, "secretary"),
     ] },
-    { body: "board", keys: ["اعاده الدعوه", "النصاب", "الاجتماع الثاني"], kind: "decision", title: "التصويت على الدعوة لاجتماع ثانٍ للجمعية العامة (…) في (…) لعدم اكتمال نصاب الاجتماع الأول", en: "Calling a second meeting of the (…) General Assembly on (…) as the first meeting lacked quorum", reqs: [
+    { body: "board", keys: ["اعاده الدعوه", "النصاب", "الاجتماع الثاني"], kind: "decision", title: "التصويت على الدعوة لاجتماع ثانٍ للجمعية العامة (…) في (…) لعدم اكتمال نصاب الاجتماع الأول", en: "Calling a second meeting of the (…) General Assembly on (…) as the first meeting lacked quorum", authority: "board", authorityRef: "نظام الشركات م92", reqs: [
       doc("محضر عدم اكتمال النصاب", "Minutes recording the lack of quorum", "secretary"),
       doc("نص النظام الأساس بشأن الاجتماع الثاني ونصابه", "Bylaws provision on the second meeting and its quorum", "legal"),
       chk("انعقاد الاجتماع الثاني للجمعية العادية خلال 30 يوماً (نظام الشركات م92)، ونصابه للجمعية غير العادية ربع الأسهم (نظام الشركات م93)", "Second Ordinary GA meeting held within 30 days (Companies Law Art. 92); quorum for an Extraordinary GA is a quarter of the shares (Companies Law Art. 93)"),
@@ -65,7 +65,7 @@ export const partThree = (): Part => [
     ] },
   ]],
   ["اجتماعات لجنة المراجعة", [
-    { body: "audit", keys: ["القوائم الماليه", "الاوليه", "الربع", "توصيه"], kind: "decision", title: `مراجعة القوائم المالية الأولية ${period} والتوصية للمجلس باعتمادها`, en: `Reviewing the interim financial statements ${periodEn} and recommending them to the board`, reqs: [
+    { body: "audit", keys: ["القوائم الماليه", "الاوليه", "الربع", "توصيه"], kind: "decision", title: `مراجعة القوائم المالية الأولية ${period} والتوصية للمجلس باعتمادها`, en: `Reviewing the interim financial statements ${periodEn} and recommending them to the board`, authority: "committee", authorityRef: "لائحة الحوكمة م52", reqs: [
       doc("القوائم", "The statements", "finance"),
       doc("تقرير الفحص", "Review report", "finance"),
       doc("ملاحظات المراجع (لائحة الحوكمة م52)", "Auditor's observations (CGR Art. 52)", "finance"),
@@ -73,7 +73,7 @@ export const partThree = (): Part => [
       doc("التقديرات والأحكام المحاسبية المهمة", "Significant accounting estimates and judgements", "finance"),
       doc("إقرار الإدارة", "Management representation letter", "finance"),
     ] },
-    { body: "audit", keys: ["القوائم الماليه", "السنويه", "توصيه"], kind: "decision", title: `مراجعة القوائم المالية السنوية ${fy} والتوصية للمجلس باعتمادها`, en: `Reviewing the annual financial statements ${fyEn} and recommending them to the board`, reqs: [
+    { body: "audit", keys: ["القوائم الماليه", "السنويه", "توصيه"], kind: "decision", title: `مراجعة القوائم المالية السنوية ${fy} والتوصية للمجلس باعتمادها`, en: `Reviewing the annual financial statements ${fyEn} and recommending them to the board`, authority: "committee", authorityRef: "لائحة الحوكمة م52", reqs: [
       doc("القوائم", "The statements", "finance"),
       doc("تقرير مراجع الحسابات", "External auditor's report", "finance"),
       doc("خطاب الإدارة", "Management letter", "finance"),
@@ -82,118 +82,118 @@ export const partThree = (): Part => [
       doc("الفروقات غير المصححة", "Unadjusted differences", "finance"),
       doc("إقرار الإدارة (لائحة الحوكمة م52)", "Management representation letter (CGR Art. 52)", "finance"),
     ] },
-    { body: "audit", keys: ["المراجع الخارجي", "بدون حضور الاداره", "اجتماع مع المراجع"], kind: "discussion", title: "الاجتماع مع مراجع الحسابات الخارجي دون حضور الإدارة التنفيذية", en: "Meeting the external auditor without the executive management", reqs: [
+    { body: "audit", keys: ["المراجع الخارجي", "بدون حضور الاداره", "اجتماع مع المراجع"], kind: "discussion", title: "الاجتماع مع مراجع الحسابات الخارجي دون حضور الإدارة التنفيذية", en: "Meeting the external auditor without the executive management", authority: "committee", authorityRef: "لائحة الحوكمة م54", reqs: [
       doc("خطة المراجعة ونتائجها", "Audit plan and findings"),
       doc("الصعوبات أو القيود التي واجهت المراجع", "Difficulties or restrictions the auditor faced"),
       doc("مدى تعاون الإدارة", "Management's cooperation"),
       doc("تأكيد الاستقلال", "Independence confirmation"),
     ] },
-    { body: "audit", keys: ["خطاب الاداره", "ملاحظات المراجع"], kind: "discussion", title: "مناقشة خطاب الإدارة الصادر من مراجع الحسابات ومتابعة معالجة ملاحظاته", en: "Discussing the external auditor's management letter and follow-up of its findings", reqs: [
+    { body: "audit", keys: ["خطاب الاداره", "ملاحظات المراجع"], kind: "discussion", title: "مناقشة خطاب الإدارة الصادر من مراجع الحسابات ومتابعة معالجة ملاحظاته", en: "Discussing the external auditor's management letter and follow-up of its findings", authority: "committee", authorityRef: "لائحة الحوكمة م52", reqs: [
       doc("خطاب الإدارة", "Management letter", "finance"),
       doc("ردود الإدارة وخطط المعالجة", "Management responses and remediation plans"),
       doc("الجهة المسؤولة والمواعيد", "Responsible parties and deadlines"),
       doc("حالة ملاحظات السنة السابقة", "Status of prior-year findings"),
     ] },
-    { body: "audit", keys: ["ترشيح المراجع", "مراجع الحسابات", "عروض المراجعين", "استقلال"], kind: "decision", title: `دراسة عروض مراجعي الحسابات والتوصية للمجلس بترشيح مراجع الحسابات للعام (…) وأتعابه`, en: `Evaluating external audit proposals and recommending the auditor for (…) and its fees to the board`, reqs: [
+    { body: "audit", keys: ["ترشيح المراجع", "مراجع الحسابات", "عروض المراجعين", "استقلال"], kind: "decision", title: `دراسة عروض مراجعي الحسابات والتوصية للمجلس بترشيح مراجع الحسابات للعام (…) وأتعابه`, en: `Evaluating external audit proposals and recommending the auditor for (…) and its fees to the board`, authority: "committee", authorityRef: "لائحة الحوكمة م52", reqs: [
       doc("العروض الفنية والمالية", "Technical and financial proposals", "finance"),
       doc("إقرارات الاستقلال", "Independence declarations", "finance"),
       chk("مرشحان على الأقل مرخص لهما (لائحة الحوكمة م78)", "At least two licensed nominees (CGR Art. 78)"),
       chk("مدة المراجع الحالي (7 سنوات حداً أقصى للمدرجة، اللائحة التنفيذية للمدرجة م3)", "Current auditor's tenure (7 years maximum for listed companies, IR Art. 3)"),
     ] },
-    { body: "audit", keys: ["المراجعه الداخليه", "تقرير المراجعه", "تقارير المراجعه"], kind: "discussion", title: `مناقشة تقارير المراجعة الداخلية ${period} ومتابعة الملاحظات`, en: `Discussing the internal audit reports ${periodEn} and follow-up of findings`, reqs: [
+    { body: "audit", keys: ["المراجعه الداخليه", "تقرير المراجعه", "تقارير المراجعه"], kind: "discussion", title: `مناقشة تقارير المراجعة الداخلية ${period} ومتابعة الملاحظات`, en: `Discussing the internal audit reports ${periodEn} and follow-up of findings`, authority: "committee", authorityRef: "لائحة الحوكمة م52", reqs: [
       doc("تقارير المراجعة الداخلية", "Internal audit reports"),
       doc("سجل متابعة الملاحظات", "Findings tracker"),
       doc("تقييم نظام الرقابة الداخلية", "Internal control assessment"),
       doc("الملاحظات المتأخرة وأسبابها (لائحة الحوكمة م75)", "Overdue findings and their reasons (CGR Art. 75)"),
     ] },
-    { body: "audit", keys: ["خطه المراجعه", "المراجعه الداخليه"], kind: "decision", title: `اعتماد خطة المراجعة الداخلية لعام (…) والتوصية بها للمجلس`, en: `Approving the internal audit plan for (…) and recommending it to the board`, reqs: [
+    { body: "audit", keys: ["خطه المراجعه", "المراجعه الداخليه"], kind: "decision", title: `اعتماد خطة المراجعة الداخلية لعام (…) ورفعها للمجلس للاطلاع`, en: `Approving the internal audit plan for (…) and presenting it to the board for information`, authority: "committee", authorityRef: "لائحة الحوكمة م74", reqs: [
       doc("الخطة المبنية على المخاطر", "Risk-based plan"),
       doc("الموارد", "Resources"),
       chk("تغطية أنشطة المخاطر والالتزام سنوياً (لائحة الحوكمة م74)", "Risk and compliance activities covered annually (CGR Art. 74)"),
       doc("نسبة تنفيذ خطة العام الحالي", "Current year's plan completion rate"),
     ] },
-    { body: "audit", keys: ["مدير المراجعه", "رئيس المراجعه"], kind: "decision", title: "التوصية للمجلس بتعيين/عزل مدير إدارة المراجعة الداخلية (…) وتحديد مكافأته", en: "Recommending to the board the appointment/removal of the head of internal audit (…) and the remuneration", reqs: [
+    { body: "audit", keys: ["مدير المراجعه", "رئيس المراجعه"], kind: "decision", title: "التوصية للمجلس بتعيين/عزل مدير إدارة المراجعة الداخلية (…) وتحديد مكافأته", en: "Recommending to the board the appointment/removal of the head of internal audit (…) and the remuneration", authority: "committee", authorityRef: "لائحة الحوكمة م52", reqs: [
       doc("السيرة الذاتية", "CV", "hr"),
       doc("تقييم الأداء", "Performance evaluation"),
       chk("يعيّنه المجلس ويعزله ويحدد مكافأته بتوصية لجنة المراجعة (لائحة الحوكمة م24 وم52)", "The board appoints, removes and remunerates the head on the audit committee's recommendation (CGR Arts. 24 and 52)"),
       doc("مقترح المكافأة", "Proposed remuneration", "hr"),
       chk("ما يضمن استقلال الوظيفة وارتباطها باللجنة", "The function's independence and reporting line to the committee are assured"),
     ] },
-    { body: "audit", keys: ["ذات علاقه", "ذي علاقه", "تعاملات"], kind: "decision", title: "مراجعة التعاملات مع الأطراف ذات العلاقة ورفع التوصيات للمجلس", en: "Reviewing related-party transactions and recommending to the board", reqs: [
+    { body: "audit", keys: ["ذات علاقه", "ذي علاقه", "تعاملات"], kind: "decision", title: "مراجعة التعاملات مع الأطراف ذات العلاقة ورفع التوصيات للمجلس", en: "Reviewing related-party transactions and recommending to the board", authority: "committee", authorityRef: "لائحة الحوكمة م52", reqs: [
       doc("بيان التعاملات وقيمها وشروطها", "Statement of transactions, their values and terms", "finance"),
       doc("مقارنة الشروط بالسوق", "Terms compared with the market"),
       doc("إفصاحات الأعضاء", "Members' disclosures", "secretary"),
       chk("ما يتطلب منها ترخيص الجمعية أو الإفصاح الفوري (1% من الإيرادات، قواعد الطرح م80)", "Which require General Assembly authorization or immediate disclosure (1% of revenue, OSCOs Art. 80)"),
     ] },
-    { body: "audit", keys: ["الالتزام", "تقرير الالتزام"], kind: "discussion", title: `مناقشة تقرير إدارة الالتزام ${period}`, en: `Discussing the compliance report ${periodEn}`, reqs: [
+    { body: "audit", keys: ["الالتزام", "تقرير الالتزام"], kind: "discussion", title: `مناقشة تقرير إدارة الالتزام ${period}`, en: `Discussing the compliance report ${periodEn}`, authority: "committee", authorityRef: "لائحة الحوكمة م52", reqs: [
       doc("تقرير الالتزام", "Compliance report"),
       doc("المخالفات والملاحظات الرقابية", "Violations and regulatory observations"),
       doc("المستجدات النظامية وأثرها", "Regulatory developments and their impact"),
       doc("حالة خطة الالتزام", "Compliance plan status"),
     ] },
-    { body: "audit", keys: ["بلاغات", "المخالفات", "الاحتيال"], kind: "discussion", title: "مناقشة البلاغات الواردة عن المخالفات والإجراءات المتخذة بشأنها", en: "Discussing whistleblowing reports and the actions taken", reqs: [
+    { body: "audit", keys: ["بلاغات", "المخالفات", "الاحتيال"], kind: "discussion", title: "مناقشة البلاغات الواردة عن المخالفات والإجراءات المتخذة بشأنها", en: "Discussing whistleblowing reports and the actions taken", authority: "committee", reqs: [
       doc("سجل البلاغات (دون كشف هوية المبلّغين)", "Whistleblowing log (without revealing whistleblowers' identities)"),
       doc("نتائج التحقيق والإجراءات المتخذة", "Investigation results and actions taken"),
       doc("البلاغات المفتوحة ومدد معالجتها (لائحة الحوكمة م81)", "Open reports and their handling times (CGR Art. 81)"),
     ] },
-    { body: "audit", keys: ["السياسات المحاسبيه", "التقديرات"], kind: "decision", title: "مراجعة السياسات والتقديرات المحاسبية الجوهرية وإبداء التوصية للمجلس", en: "Reviewing significant accounting policies and estimates and recommending to the board", reqs: [
+    { body: "audit", keys: ["السياسات المحاسبيه", "التقديرات"], kind: "decision", title: "مراجعة السياسات والتقديرات المحاسبية الجوهرية وإبداء التوصية للمجلس", en: "Reviewing significant accounting policies and estimates and recommending to the board", authority: "committee", authorityRef: "لائحة الحوكمة م52", reqs: [
       doc("مذكرة الإدارة المالية", "Finance department memo", "finance"),
       doc("رأي المراجع", "Auditor's opinion", "finance"),
       doc("المعيار المحاسبي ذو الصلة", "Relevant accounting standard", "finance"),
       doc("أثر التغيير على القوائم المالية", "Impact of the change on the financial statements", "finance"),
     ] },
-    { body: "audit", keys: ["تقرير اللجنه", "تقرير لجنه المراجعه"], kind: "decision", title: `اعتماد تقرير لجنة المراجعة ${fy} لرفعه للمجلس والجمعية العامة`, en: `Approving the audit committee report ${fyEn} for the board and the General Assembly`, reqs: [
+    { body: "audit", keys: ["تقرير اللجنه", "تقرير لجنه المراجعه"], kind: "decision", title: `اعتماد تقرير لجنة المراجعة ${fy} لرفعه للمجلس والجمعية العامة`, en: `Approving the audit committee report ${fyEn} for the board and the General Assembly`, authority: "committee", authorityRef: "لائحة الحوكمة م88", reqs: [
       doc("مسودة التقرير (لائحة الحوكمة م88)", "Draft report (CGR Art. 88)"),
       doc("رأي اللجنة في كفاية أنظمة الرقابة الداخلية والمالية وإدارة المخاطر", "Committee's opinion on the adequacy of internal, financial and risk controls"),
       doc("سجل اجتماعات اللجنة وحضورها", "Committee meetings and attendance record", "secretary"),
     ] },
   ]],
   ["اجتماعات لجنة الترشيحات والمكافآت", [
-    { body: "nrc", keys: ["استقلال", "الاعضاء المستقلين"], kind: "decision", title: `التحقق السنوي من استقلال الأعضاء المستقلين للعام (…)`, en: `Annual verification of the independence of independent directors for (…)`, reqs: [
+    { body: "nrc", keys: ["استقلال", "الاعضاء المستقلين"], kind: "decision", title: `التحقق السنوي من استقلال الأعضاء المستقلين للعام (…)`, en: `Annual verification of the independence of independent directors for (…)`, authority: "committee", authorityRef: "لائحة الحوكمة م62", reqs: [
       doc("إقرارات الاستقلال المحدّثة", "Updated independence declarations", "secretary"),
       chk("التحقق من عوارض الاستقلال (لائحة الحوكمة م19)", "Check for circumstances impairing independence (CGR Art. 19)"),
       doc("إفصاحات الأعضاء عن مصالحهم وعلاقاتهم", "Members' disclosures of their interests and relationships", "secretary"),
     ] },
-    { body: "nrc", keys: ["المهارات", "احتياجات المجلس", "مصفوفه"], kind: "discussion", title: "مراجعة هيكل المجلس ومصفوفة المهارات المطلوبة ورفع التوصيات", en: "Reviewing the board structure and skills matrix and recommending changes", reqs: [
+    { body: "nrc", keys: ["المهارات", "احتياجات المجلس", "مصفوفه"], kind: "discussion", title: "مراجعة هيكل المجلس ومصفوفة المهارات المطلوبة ورفع التوصيات", en: "Reviewing the board structure and skills matrix and recommending changes", authority: "committee", authorityRef: "لائحة الحوكمة م62", reqs: [
       doc("مصفوفة المهارات الحالية", "Current skills matrix"),
       doc("نتائج تقييم المجلس", "Board assessment results"),
       doc("الاحتياجات المستقبلية وفق الاستراتيجية", "Future needs in line with the strategy"),
       chk("نسب الاستقلال وتنوع التشكيل (لائحة الحوكمة م62)", "Independence ratios and board diversity (CGR Art. 62)"),
     ] },
-    { body: "nrc", keys: ["ترشيح", "المرشحين", "عضويه المجلس"], kind: "decision", title: "دراسة المرشحين لعضوية مجلس الإدارة والتوصية للمجلس", en: "Evaluating candidates for board membership and recommending to the board", reqs: [
+    { body: "nrc", keys: ["ترشيح", "المرشحين", "عضويه المجلس"], kind: "decision", title: "دراسة المرشحين لعضوية مجلس الإدارة والتوصية للمجلس", en: "Evaluating candidates for board membership and recommending to the board", authority: "committee", authorityRef: "لائحة الحوكمة م62", reqs: [
       doc("طلبات الترشح", "Nomination applications", "secretary"),
       doc("السير الذاتية", "CVs", "secretary"),
       doc("إعلان الترشح (شهر على الأقل، لائحة الحوكمة م65)", "Call for nominations (at least one month, CGR Art. 65)", "secretary"),
       doc("إقرارات الاستقلال والإفصاح عن تعارض المصالح (لائحة الحوكمة م43)", "Independence declarations and conflict-of-interest disclosures (CGR Art. 43)", "secretary"),
       doc("تقييم المرشحين مقابل مصفوفة المهارات", "Candidates assessed against the skills matrix"),
     ] },
-    { body: "nrc", keys: ["مكافات", "مكافات الاداره", "التنفيذيين"], kind: "decision", title: `مراجعة مكافآت الإدارة التنفيذية عن العام (…) والتوصية للمجلس`, en: `Reviewing the executive management remuneration for (…) and recommending to the board`, reqs: [
+    { body: "nrc", keys: ["مكافات", "مكافات الاداره", "التنفيذيين"], kind: "decision", title: `مراجعة مكافآت الإدارة التنفيذية عن العام (…) والتوصية للمجلس`, en: `Reviewing the executive management remuneration for (…) and recommending to the board`, authority: "committee", authorityRef: "لائحة الحوكمة م58", reqs: [
       doc("سياسة المكافآت", "Remuneration policy", "hr"),
       doc("نتائج مؤشرات الأداء", "KPI results", "hr"),
       doc("القوائم المالية المعتمدة", "Approved financial statements", "finance"),
       doc("مقارنة بالسوق", "Market benchmarking", "hr"),
       after("الإفصاح في تقرير المجلس (لائحة الحوكمة م90)", "Disclose in the board report (CGR Art. 90)", undefined, "secretary"),
     ] },
-    { body: "nrc", keys: ["مكافات المجلس", "مكافات الاعضاء"], kind: "decision", title: `التوصية للمجلس بمكافآت أعضاء المجلس واللجان عن العام (…) بإجمالي (…) ريال`, en: `Recommending to the board the remuneration of board and committee members for (…) totalling SAR (…)`, reqs: [
+    { body: "nrc", keys: ["مكافات المجلس", "مكافات الاعضاء"], kind: "decision", title: `التوصية للمجلس بمكافآت أعضاء المجلس واللجان عن العام (…) بإجمالي (…) ريال`, en: `Recommending to the board the remuneration of board and committee members for (…) totalling SAR (…)`, authority: "committee", authorityRef: "لائحة الحوكمة م58", reqs: [
       doc("سياسة المكافآت", "Remuneration policy"),
       chk("حدود النظام الأساس (نظام الشركات م76)", "Within the limits set by the bylaws (Companies Law Art. 76)"),
       doc("سجل حضور الاجتماعات", "Meeting attendance record", "secretary"),
       doc("بيان مفصل لكل عضو", "Detailed statement for each member", "finance"),
     ] },
-    { body: "nrc", keys: ["سياسه المكافات"], kind: "decision", title: "مراجعة سياسة المكافآت والتوصية للمجلس بتحديثها", en: "Reviewing the remuneration policy and recommending updates to the board", reqs: [
+    { body: "nrc", keys: ["سياسه المكافات"], kind: "decision", title: "مراجعة سياسة المكافآت والتوصية للمجلس بتحديثها", en: "Reviewing the remuneration policy and recommending updates to the board", authority: "committee", authorityRef: "لائحة الحوكمة م58", reqs: [
       doc("السياسة الحالية", "Current policy"),
       doc("مقارنة السوق", "Market benchmarking", "hr"),
       doc("مسودة التعديلات", "Draft amendments"),
       chk("التوافق مع لائحة الحوكمة م59 ونظام الشركات", "Consistent with CGR Art. 59 and the Companies Law"),
     ] },
-    { body: "nrc", keys: ["الاحلال", "التعاقب"], kind: "decision", title: "مراجعة خطة الإحلال والتعاقب للمناصب القيادية والتوصية للمجلس", en: "Reviewing the succession plan for leadership positions and recommending to the board", reqs: [
+    { body: "nrc", keys: ["الاحلال", "التعاقب"], kind: "decision", title: "مراجعة خطة الإحلال والتعاقب للمناصب القيادية والتوصية للمجلس", en: "Reviewing the succession plan for leadership positions and recommending to the board", authority: "committee", reqs: [
       doc("الخطة الحالية", "Current plan", "hr"),
       doc("تقييم المرشحين الداخليين", "Assessment of internal candidates", "hr"),
       doc("المناصب الحرجة", "Critical positions", "hr"),
       doc("خطط التطوير", "Development plans", "hr"),
       doc("ترتيبات الإحلال الطارئ", "Emergency succession arrangements", "hr"),
     ] },
-    { body: "nrc", keys: ["تقييم", "تقييم الاداء"], kind: "decision", title: `الإشراف على تقييم أداء المجلس ولجانه للعام (…) ورفع النتائج`, en: `Overseeing the board and committees' performance assessment for (…) and reporting the results`, reqs: [
+    { body: "nrc", keys: ["تقييم", "تقييم الاداء"], kind: "decision", title: `الإشراف على تقييم أداء المجلس ولجانه للعام (…) ورفع النتائج`, en: `Overseeing the board and committees' performance assessment for (…) and reporting the results`, authority: "committee", authorityRef: "لائحة الحوكمة م39", reqs: [
       doc("نماذج التقييم", "Assessment forms"),
       chk("تقييم خارجي كل 3 سنوات", "External assessment every 3 years"),
       doc("نتائج تقييم المجلس واللجان والأعضاء (لائحة الحوكمة م39)", "Assessment results for the board, committees and members (CGR Art. 39)"),
@@ -201,32 +201,32 @@ export const partThree = (): Part => [
     ] },
   ]],
   ["اجتماعات لجنة المخاطر", [
-    { body: "risk", keys: ["سجل المخاطر", "المخاطر"], kind: "discussion", title: `مراجعة سجل المخاطر ومؤشراتها ${period}`, en: `Reviewing the risk register and indicators ${periodEn}`, reqs: [
+    { body: "risk", keys: ["سجل المخاطر", "المخاطر"], kind: "discussion", title: `مراجعة سجل المخاطر ومؤشراتها ${period}`, en: `Reviewing the risk register and indicators ${periodEn}`, authority: "committee", authorityRef: "لائحة الحوكمة م68", reqs: [
       doc("سجل المخاطر المحدّث", "Updated risk register"),
       doc("مؤشرات المخاطر الرئيسة مقارنة بمستوى القبول", "Key risk indicators against risk appetite"),
       doc("المخاطر المستجدة", "Emerging risks"),
       doc("حالة خطط المعالجة", "Mitigation plan status"),
     ] },
-    { body: "risk", keys: ["قبول المخاطر", "شهيه المخاطر"], kind: "decision", title: "مراجعة مستوى قبول المخاطر والتوصية للمجلس باعتماده", en: "Reviewing the risk appetite and recommending it to the board", reqs: [
+    { body: "risk", keys: ["قبول المخاطر", "شهيه المخاطر"], kind: "decision", title: "مراجعة مستوى قبول المخاطر والتوصية للمجلس باعتماده", en: "Reviewing the risk appetite and recommending it to the board", authority: "committee", authorityRef: "لائحة الحوكمة م68", reqs: [
       doc("بيان مستوى قبول المخاطر", "Risk appetite statement"),
       doc("نتائج اختبارات الضغط", "Stress test results"),
       doc("حدود التحمل لكل فئة", "Tolerance limits per category"),
       chk("مواءمته مع الاستراتيجية (لائحة الحوكمة م68)", "Aligned with the strategy (CGR Art. 68)"),
     ] },
-    { body: "risk", keys: ["الامن السيبراني", "سيبراني", "امن المعلومات"], kind: "discussion", title: "مناقشة تقرير الأمن السيبراني وأمن المعلومات", en: "Discussing the cybersecurity and information security report", reqs: [
+    { body: "risk", keys: ["الامن السيبراني", "سيبراني", "امن المعلومات"], kind: "discussion", title: "مناقشة تقرير الأمن السيبراني وأمن المعلومات", en: "Discussing the cybersecurity and information security report", authority: "committee", reqs: [
       doc("تقرير الأمن السيبراني", "Cybersecurity report"),
       doc("نتائج الاختبارات", "Test results"),
       doc("الحوادث وأثرها", "Incidents and their impact"),
       doc("مستوى الالتزام بضوابط الهيئة الوطنية للأمن السيبراني", "Compliance with the National Cybersecurity Authority controls"),
       doc("خطط المعالجة", "Remediation plans"),
     ] },
-    { body: "risk", keys: ["استمراريه الاعمال", "الطوارئ"], kind: "discussion", title: "مراجعة جاهزية خطة استمرارية الأعمال ونتائج اختبارها", en: "Reviewing business continuity readiness and test results", reqs: [
+    { body: "risk", keys: ["استمراريه الاعمال", "الطوارئ"], kind: "discussion", title: "مراجعة جاهزية خطة استمرارية الأعمال ونتائج اختبارها", en: "Reviewing business continuity readiness and test results", authority: "committee", reqs: [
       doc("نتائج آخر اختبار", "Latest test results"),
       doc("الخطة المحدّثة", "Updated plan"),
       doc("الملاحظات وخطط معالجتها", "Findings and remediation plans"),
       doc("جاهزية مواقع وأنظمة التعافي", "Readiness of recovery sites and systems"),
     ] },
-    { body: "risk", keys: ["سياسه المخاطر", "اداره المخاطر"], kind: "decision", title: "مراجعة سياسة إدارة المخاطر والتوصية للمجلس بتحديثها", en: "Reviewing the risk management policy and recommending updates to the board", reqs: [
+    { body: "risk", keys: ["سياسه المخاطر", "اداره المخاطر"], kind: "decision", title: "مراجعة سياسة إدارة المخاطر والتوصية للمجلس بتحديثها", en: "Reviewing the risk management policy and recommending updates to the board", authority: "committee", authorityRef: "لائحة الحوكمة م68", reqs: [
       doc("السياسة الحالية والمقترحة", "Current and proposed policy"),
       doc("جدول مقارنة التعديلات", "Comparison of changes"),
       chk("مواءمتها مع مستوى قبول المخاطر (لائحة الحوكمة م68)", "Aligned with the risk appetite (CGR Art. 68)"),

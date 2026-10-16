@@ -11,6 +11,8 @@ export const ga = "التوصية للجمعية العامة العادية";
 export const gaEn = "Recommending to the Ordinary General Assembly";
 export const ega = "التوصية للجمعية العامة غير العادية";
 export const egaEn = "Recommending to the Extraordinary General Assembly";
+/** The wording used when the board cannot decide alone: the same item as a recommendation to the Ordinary General Assembly. */
+export const toGa = (ar: string, en: string) => ({ title: `${ga} ${ar}`, en: `${gaEn} ${en}` });
 
 /** A document provided before the meeting (by the item owner unless said otherwise). */
 export const doc = (ar: string, en: string, from: ReqFrom = "owner"): Req => ({ k: "doc", ar, en, from });

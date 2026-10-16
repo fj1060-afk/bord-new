@@ -6,13 +6,19 @@ import { companyProfile } from "@/lib/live-server";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { CompanyForm } from "./company-form";
+import { PowersForm } from "./powers-form";
+import { riyadhToday } from "@/lib/minutes";
 
 export const metadata: Metadata = { title: "ملف الشركة" };
 
 export default async function CompanyPage() {
   const viewer = await requirePage("/admin/company");
   const supabase = await createClient();
-  const [profile, { data: people }] = await Promise.all([companyProfile(supabase), supabase.from("people").select("id, full_name").order("full_name")]);
+  const [profile, { data: people }, { data: grants }] = await Promise.all([
+    companyProfile(supabase),
+    supabase.from("people").select("id, full_name").order("full_name"),
+    supabase.from("ga_authorizations").select("id, kind, granted_on, expires_on, assembly_reference").order("granted_on", { ascending: false }),
+  ]);
   if (!profile) throw new Error("company_profile row is missing");
   const warnings = profileWarnings(profile);
 
@@ -27,6 +33,12 @@ export default async function CompanyPage() {
         </ul>
       )}
       <CompanyForm profile={profile} people={people ?? []} canEdit={can(viewer.permissions, "/admin/company", LEVELS.edit)} />
+      <PowersForm
+        restricted={(profile as { bylaws_restrictions?: string[] }).bylaws_restrictions ?? []}
+        grants={(grants ?? []) as never}
+        today={riyadhToday()}
+        canEdit={can(viewer.permissions, "/admin/company", LEVELS.edit)}
+      />
     </>
   );
 }

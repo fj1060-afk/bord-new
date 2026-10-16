@@ -9,6 +9,7 @@ import { BODIES, CATEGORIES, searchTemplates, type Body, type Template } from "@
 import { ITEM_KINDS } from "@/lib/meetings";
 import { addLibraryItem, removeLibraryItem } from "../_actions/library";
 import { ItemFindings } from "../_components/item-review-panel";
+import { AuthorityBadge } from "../_components/authority-badge";
 
 type Item = Template & { id: string | null; own: boolean; key: string };
 
@@ -59,6 +60,7 @@ export function LibraryBrowser({ items, organizer, listed }: { items: Item[]; or
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">{ITEM_KINDS[i.kind]}</span>
+                    <AuthorityBadge authority={i.authority} />
                     {i.body !== "any" && <span className="rounded-full border border-rule px-2 py-0.5 text-xs text-ink-muted">{BODIES[i.body]}</span>}
                     {i.own && <span className="rounded-full bg-brass-soft px-2 py-0.5 text-xs text-brass">خاص بالشركة</span>}
                     {organizer && i.id && <ConfirmButton action={removeLibraryItem.bind(null, i.id)} label="حذف" confirm="حذف هذه الصيغة من المستودع؟" />}

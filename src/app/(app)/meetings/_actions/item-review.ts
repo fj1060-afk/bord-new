@@ -5,6 +5,8 @@ import { reviewItem, type Finding } from "@/lib/item-review";
 import { meetingDisclosures } from "@/lib/item-review-server";
 import { currentYear } from "@/lib/org";
 import { companyProfile } from "@/lib/live-server";
+import { loadPowers } from "@/lib/authority-server";
+import { libraryTemplates, matchTemplate } from "@/lib/item-templates";
 import { LEVELS } from "@/lib/permissions";
 import { checkSpelling, type Misspelling } from "@/lib/spelling";
 import { createClient } from "@/lib/supabase/server";
@@ -16,12 +18,19 @@ export async function reviewDraft(meetingId: string, draft: { title: string; des
   await requirePage("/meetings", LEVELS.edit);
   const supabase = await createClient();
   // One request for both fields: the title, a line break, then the description.
-  const [spelling, disclosures, profile] = await Promise.all([checkSpelling(`${draft.title}\n${draft.description}`, online), meetingDisclosures(supabase, meetingId), companyProfile(supabase)]);
+  const [spelling, disclosures, profile, powers, { data: own }] = await Promise.all([
+    checkSpelling(`${draft.title}\n${draft.description}`, online),
+    meetingDisclosures(supabase, meetingId),
+    companyProfile(supabase),
+    loadPowers(supabase),
+    supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
+  ]);
+  const template = matchTemplate(draft.title, libraryTemplates(own ?? []));
   const cut = draft.title.length + 1;
   return {
     title: spelling.matches.filter((m) => m.offset < cut),
     description: spelling.matches.filter((m) => m.offset >= cut).map((m) => ({ ...m, offset: m.offset - cut })),
-    findings: reviewItem(draft, { disclosures, year: currentYear() - 1, listed: profile?.company_type === "listed_jsc" }),
+    findings: reviewItem(draft, { disclosures, year: currentYear() - 1, listed: profile?.company_type === "listed_jsc", template, powers }),
     online: spelling.online,
   };
 }
