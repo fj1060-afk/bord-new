@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, FileText, Printer } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, FileText, Paperclip, Printer } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { buttonClass } from "@/components/ui/styles";
 import { DOC_REQUEST_STATUS, ITEM_KINDS } from "@/lib/meetings";
@@ -9,6 +9,7 @@ import { UploadDocument } from "./upload-document";
 import { RequirementsPanel, SendRequirementsBar, type RequestMail, type RequirementRow } from "./requirements-panel";
 import { ItemFindings } from "./item-review-panel";
 import { AuthorityBadge } from "./authority-badge";
+import { ExpandAll } from "./expand-all";
 import { reviewItem, type ReviewContext } from "@/lib/item-review";
 import { bodyMismatch, duplicateOf } from "@/lib/item-body";
 import { matchTemplate, type Body, type Template } from "@/lib/item-templates";
@@ -93,20 +94,23 @@ export function AgendaTab({
         <p className="rounded-md bg-brass-soft px-4 py-3 text-sm text-brass">تظهر مستندات الاجتماع هنا بعد نشر حزمة المجلس.</p>
       )}
 
-      <ol className="flex flex-col gap-4">
+      {items.length > 0 && (
+        <div className="flex items-center gap-3">
+          <h2 className="font-display text-lg font-bold">
+            البنود <span className="font-mono text-sm text-ink-muted">({items.length})</span>
+          </h2>
+          <ExpandAll listId="agenda-items" />
+        </div>
+      )}
+      <ol id="agenda-items" className="flex flex-col gap-3">
         {items.length === 0 && <li className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">لا توجد بنود بعد.</li>}
         {items.map((item, index) => {
           const itemDocs = documents.filter((d) => d.agenda_item_id === item.id);
           const requests = docRequests.filter((r) => r.agenda_item_id === item.id);
+          const notes = review ? notesFor(item) : [];
+          const waiting = requests.filter((r) => r.status !== "accepted").length;
           const content = (
             <>
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="font-mono text-brass">{item.position}.</span>
-                <h3 className="font-display text-lg font-bold">{item.title}</h3>
-                <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">{ITEM_KINDS[item.kind]}</span>
-                <AuthorityBadge authority={matchTemplate(item.title, library, body)?.authority} />
-                {item.duration_minutes && <span className="text-xs text-ink-muted">{item.duration_minutes} دقيقة</span>}
-              </div>
               {(ownerLabel(item) || item.presenter) && (
                 <p className="text-sm text-ink-muted">
                   {ownerLabel(item) && <>المسؤول: <strong className="text-ink">{ownerLabel(item)}</strong></>}
@@ -120,24 +124,91 @@ export function AgendaTab({
                   {item.description_en}
                 </p>
               )}
-              {review && <ItemNotes findings={notesFor(item)} />}
+              {review && <ItemNotes findings={notes} />}
             </>
           );
 
           return (
-            <li key={item.id} className="rounded-lg border border-rule bg-surface p-5">
-              <div className="flex gap-3">
-                <div className="min-w-0 flex-1">
-                  {editable ? (
-                    <EditableAgendaItem meetingId={meetingId} item={item} targets={targets} library={library} body={body}>
-                      {content}
-                    </EditableAgendaItem>
-                  ) : (
-                    <div className="flex flex-col gap-2">{content}</div>
+            <li key={item.id} className="rounded-lg border border-rule bg-surface">
+              <div className="flex">
+                <details className="group min-w-0 flex-1">
+                  <summary className="flex cursor-pointer list-none items-start gap-3 p-4 hover:bg-paper [&::-webkit-details-marker]:hidden">
+                    <span className="mt-0.5 font-mono text-brass">{item.position}.</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-display text-base font-bold leading-7">{item.title}</span>
+                      <span className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="rounded-full bg-primary-soft px-2 py-0.5 text-primary">{ITEM_KINDS[item.kind]}</span>
+                        <AuthorityBadge authority={matchTemplate(item.title, library, body)?.authority} />
+                        {item.duration_minutes && <span className="text-ink-muted">{item.duration_minutes} دقيقة</span>}
+                        {itemDocs.length > 0 && (
+                          <span className="inline-flex items-center gap-1 text-ink-muted">
+                            <Paperclip size={13} aria-hidden="true" />
+                            <span className="font-mono">{itemDocs.length}</span>
+                          </span>
+                        )}
+                        {waiting > 0 && <span className="text-brass">{waiting} مستند مطلوب</span>}
+                        {notes.length > 0 && <span className="text-brass">{notes.length} ملاحظات</span>}
+                      </span>
+                    </span>
+                    <ChevronDown size={18} aria-hidden="true" className="mt-1 shrink-0 text-ink-muted transition-transform duration-200 group-open:rotate-180" />
+                  </summary>
+
+                  <div className="border-t border-rule p-4">
+                    {editable ? (
+                      <EditableAgendaItem meetingId={meetingId} item={item} targets={targets} library={library} body={body}>
+                        {content}
+                      </EditableAgendaItem>
+                    ) : (
+                      <div className="flex flex-col gap-2">{content}</div>
+                    )}
+                  {(itemDocs.length > 0 || requests.length > 0 || editable) && (
+                    <div className="mt-4 flex flex-col gap-3 border-t border-rule pt-4">
+                      {itemDocs.map((doc) => (
+                        <DocumentLink key={doc.id} meetingId={meetingId} doc={doc} />
+                      ))}
+                      {requests.map((r) => (
+                        <div key={r.id} className="flex flex-col gap-2 rounded-md bg-paper p-3 text-sm">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <span className="min-w-0 flex-1">
+                              مطلوب من {r.department?.name ?? (r.assignee_user_id === viewerId ? "حضرتك" : targetName(r.assignee_user_id))}: <strong>{r.title}</strong>
+                              {r.due_date && <span className="text-ink-muted"> · حتى {r.due_date}</span>}
+                            </span>
+                            <span className={r.status === "accepted" ? "text-primary" : r.status === "returned" ? "text-danger" : "text-brass"}>
+                              {DOC_REQUEST_STATUS[r.status]}
+                            </span>
+                            {editable && r.status === "submitted" && <ReviewDocumentButtons meetingId={meetingId} requestId={r.id} />}
+                          </div>
+                          {r.review_note && <p className="text-danger">ملاحظة: {r.review_note}</p>}
+                          {(r.status === "requested" || r.status === "returned") && (editable || r.assignee_user_id === viewerId || (!!r.department_id && myDepartmentIds.includes(r.department_id))) && (
+                            <UploadDocument meetingId={meetingId} agendaItemId={item.id} documentRequestId={r.id} label="تسليم المستند" />
+                          )}
+                        </div>
+                      ))}
+                      {editable && requirements && (
+                        <RequirementsPanel
+                          meetingId={meetingId}
+                          itemId={item.id}
+                          rows={requirements.filter((r) => r.agenda_item_id === item.id)}
+                          targets={targets}
+                          dueDefault={dueDefault ?? ""}
+                          send={requirements.some((r) => r.agenda_item_id === item.id) && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} mails={requestMails} />}
+                        />
+                      )}
+                      {editable && (
+                        <>
+                          <UploadDocument meetingId={meetingId} agendaItemId={item.id} />
+                          <DocumentRequestForm meetingId={meetingId} itemId={item.id} targets={targets} owner={ownerOf(item)} dueDate={dueDefault} />
+                          <div>
+                            <ConfirmButton action={removeAgendaItem.bind(null, meetingId, item.id)} label="حذف البند" confirm={`حذف البند "${item.title}"؟`} />
+                          </div>
+                        </>
+                      )}
+                    </div>
                   )}
-                </div>
+                  </div>
+                </details>
                 {editable && (
-                  <div className="flex shrink-0 flex-col gap-1">
+                  <div className="flex shrink-0 flex-col gap-1 p-2">
                     <form action={moveAgendaItem.bind(null, meetingId, item.id, "up")}>
                       <button disabled={index === 0} aria-label="نقل للأعلى" className="rounded p-1.5 text-ink-muted hover:bg-primary-soft disabled:opacity-30">
                         <ArrowUp size={16} />
@@ -151,51 +222,6 @@ export function AgendaTab({
                   </div>
                 )}
               </div>
-
-              {(itemDocs.length > 0 || requests.length > 0 || editable) && (
-                <div className="mt-4 flex flex-col gap-3 border-t border-rule pt-4">
-                  {itemDocs.map((doc) => (
-                    <DocumentLink key={doc.id} meetingId={meetingId} doc={doc} />
-                  ))}
-                  {requests.map((r) => (
-                    <div key={r.id} className="flex flex-col gap-2 rounded-md bg-paper p-3 text-sm">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="min-w-0 flex-1">
-                          مطلوب من {r.department?.name ?? (r.assignee_user_id === viewerId ? "حضرتك" : targetName(r.assignee_user_id))}: <strong>{r.title}</strong>
-                          {r.due_date && <span className="text-ink-muted"> · حتى {r.due_date}</span>}
-                        </span>
-                        <span className={r.status === "accepted" ? "text-primary" : r.status === "returned" ? "text-danger" : "text-brass"}>
-                          {DOC_REQUEST_STATUS[r.status]}
-                        </span>
-                        {editable && r.status === "submitted" && <ReviewDocumentButtons meetingId={meetingId} requestId={r.id} />}
-                      </div>
-                      {r.review_note && <p className="text-danger">ملاحظة: {r.review_note}</p>}
-                      {(r.status === "requested" || r.status === "returned") && (editable || r.assignee_user_id === viewerId || (!!r.department_id && myDepartmentIds.includes(r.department_id))) && (
-                        <UploadDocument meetingId={meetingId} agendaItemId={item.id} documentRequestId={r.id} label="تسليم المستند" />
-                      )}
-                    </div>
-                  ))}
-                  {editable && requirements && (
-                    <RequirementsPanel
-                      meetingId={meetingId}
-                      itemId={item.id}
-                      rows={requirements.filter((r) => r.agenda_item_id === item.id)}
-                      targets={targets}
-                      dueDefault={dueDefault ?? ""}
-                      send={requirements.some((r) => r.agenda_item_id === item.id) && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} mails={requestMails} />}
-                    />
-                  )}
-                  {editable && (
-                    <>
-                      <UploadDocument meetingId={meetingId} agendaItemId={item.id} />
-                      <DocumentRequestForm meetingId={meetingId} itemId={item.id} targets={targets} owner={ownerOf(item)} dueDate={dueDefault} />
-                      <div>
-                        <ConfirmButton action={removeAgendaItem.bind(null, meetingId, item.id)} label="حذف البند" confirm={`حذف البند "${item.title}"؟`} />
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
             </li>
           );
         })}
