@@ -22,7 +22,7 @@ export type JourneyInput = {
   isBoard: boolean;
   boardTermEnd: string | null;
   secretary: boolean;
-  meeting: { status: string; live_status: string; starts_at: string; mode: string; location: string | null; virtual_link: string | null; pack_published_at: string | null; meeting_type: string };
+  meeting: { status: string; live_status: string; starts_at: string; mode: string; location: string | null; virtual_link: string | null; pack_published_at: string | null; pack_emailed_at?: string | null; meeting_type: string };
   items: { title: string; kind: string; owned: boolean }[];
   requests: { title: string; status: string }[];
   /** Item requirements: drafts or withdrawals not yet sent, and checks not yet confirmed. */
@@ -68,6 +68,7 @@ export function journeyChecks(j: JourneyInput): Check[] {
       ok: notice !== null && notice >= j.inviteDays,
       detail: notice === null ? "لم تُنشر الحزمة بعد" : `نُشرت قبل ${notice} أيام${m.meeting_type === "extraordinary" ? " (اجتماع استثنائي)" : ""}`,
     },
+    { id: "pack-email", stage: 2, tab: "overview", label: `إرسال الحزمة للأعضاء بالبريد قبل الاجتماع بـ ${j.inviteDays} أيام`, level: "info", ref: "لائحة الحوكمة م30", ok: !!m.pack_emailed_at, detail: m.pack_emailed_at ? undefined : "من «المراسلات عبر Outlook» في نظرة عامة" },
     { id: "held", stage: 3, tab: "live", label: "عقد الاجتماع بنصاب مكتمل وإنهاؤه", level: "block", ref: "نظام الشركات م80/2", ok: m.live_status === "ended", detail: m.live_status === "ended" ? undefined : day(m.starts_at) > j.today ? "يُفتح يوم الاجتماع" : "سجّل الحضور وابدأ الاجتماع" },
     { id: "minutes", stage: 4, tab: "minutes", label: "إعداد المحضر", level: "block", ok: !!j.minutes },
     { id: "minutes-complete", stage: 4, tab: "minutes", label: "المحضر مكتمل (الحد الأدنى، والأصوات، والتوقيع)", level: "block", ref: "دليل أمين السر؛ نظام الشركات م83", ok: !!j.minutes && j.minutes.gaps.length === 0, detail: j.minutes?.gaps.join(" ") || undefined },

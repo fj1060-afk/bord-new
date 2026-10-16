@@ -11,7 +11,7 @@ import { loadMinutesGaps } from "./minutes-check";
 export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
   const { data: m } = await supabase
     .from("meetings")
-    .select("status, live_status, starts_at, mode, location, virtual_link, pack_published_at, meeting_type, board_id, committee_id")
+    .select("status, live_status, starts_at, mode, location, virtual_link, pack_published_at, pack_emailed_at, meeting_type, board_id, committee_id")
     .eq("id", meetingId)
     .single();
   if (!m) return null;

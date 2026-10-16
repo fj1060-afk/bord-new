@@ -17,6 +17,10 @@ import type { RequirementRow } from "../_components/requirements-panel";
 import { currentYear } from "@/lib/org";
 import { InfoRequests } from "../_components/info-requests";
 import { PrintDocs } from "../_components/print-docs";
+import { OutlookPanel } from "../_components/outlook-panel";
+import { riyadhToday } from "@/lib/minutes";
+import { packDeadline, requestsMail } from "@/lib/meeting-mail";
+import { meetingMail } from "@/lib/meeting-mail-server";
 import { JourneyBar } from "../_components/journey-bar";
 import { loadJourney } from "../_actions/journey-data";
 import { currentStage, stageDone, STAGES } from "@/lib/journey";
@@ -70,6 +74,9 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
         ])
       : [{ data: [] }, null, [], { data: [] }, { data: [] }];
   const profileDays = profile?.invite_days ?? 5;
+  // Outlook messages: the members' invitation and pack (overview), the request emails (agenda).
+  const [mail, mailProfile] =
+    organizer && (tab === "overview" || tab === "agenda") ? await Promise.all([meetingMail(supabase, meetingId, viewer.fullName), profile ?? companyProfile(supabase)]) : [null, null];
   const { data: minutesRow } = tab === "overview" ? await supabase.from("minutes").select("id").eq("meeting_id", meetingId).maybeSingle() : { data: null };
   const [{ data: items }, { data: invitees }, { data: documents }, { data: docRequests }, { data: departments }] = await Promise.all([
     supabase.from("agenda_items").select("id, position, title, title_en, description, description_en, kind, duration_minutes, presenter, presenter_user_id, department_id, owner_user_id, status, outcome").eq("meeting_id", meetingId).order("position"),
@@ -187,6 +194,18 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
               {status !== "cancelled" && can(viewer.permissions, "/meetings", LEVELS.manage) && (
                 <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "cancelled")} label="إلغاء الاجتماع" confirm="إلغاء الاجتماع؟ يبقى سجله محفوظاً." />
               )}
+              {mail && status !== "cancelled" && (
+                <OutlookPanel
+                  meetingId={meetingId}
+                  meeting={mail.meeting}
+                  minutes={mail.minutes}
+                  invitees={mail.invitees}
+                  items={mail.items}
+                  deadline={packDeadline(meeting.starts_at, mailProfile?.invite_days ?? 5)}
+                  today={riyadhToday()}
+                  packEmailedAt={meeting.pack_emailed_at}
+                />
+              )}
             </aside>
           )}
         </div>
@@ -215,6 +234,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           library={libraryTemplates(library ?? [])}
           requirements={organizer ? withObsolete(requirementRows ?? [], agenda, libraryTemplates(library ?? [])) : undefined}
           requirementsSentAt={meeting.requirements_sent_at}
+          requestMails={mail ? mail.recipients.map((r) => ({ name: r.name, to: r.to, ...requestsMail(mail.meeting, r.name, r.requests, mail.tasksUrl) })) : undefined}
           body={bodyOf({ board_id: meeting.board_id, committee_kind: (meeting.committee as { kind?: string } | null)?.kind })}
           review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1 } : undefined}
         />

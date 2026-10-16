@@ -6,7 +6,7 @@ import { moveAgendaItem, removeAgendaItem } from "../_actions/agenda";
 import { AgendaItemForm, DocumentRequestForm, EditableAgendaItem, ReviewDocumentButtons, type AgendaItem } from "./agenda-forms";
 import { ownerOf, type Target } from "./agenda-targets";
 import { UploadDocument } from "./upload-document";
-import { RequirementsPanel, SendRequirementsBar, type RequirementRow } from "./requirements-panel";
+import { RequirementsPanel, SendRequirementsBar, type RequestMail, type RequirementRow } from "./requirements-panel";
 import { ItemFindings } from "./item-review-panel";
 import { reviewItem, type Disclosure } from "@/lib/item-review";
 import type { Body, Template } from "@/lib/item-templates";
@@ -50,7 +50,9 @@ export function AgendaTab({
   body,
   requirements,
   requirementsSentAt,
+  requestMails,
 }: {
+  requestMails?: RequestMail[];
   requirements?: RequirementRow[];
   requirementsSentAt?: string | null;
   library?: Template[];
@@ -170,7 +172,7 @@ export function AgendaTab({
                       rows={requirements.filter((r) => r.agenda_item_id === item.id)}
                       targets={targets}
                       dueDefault={dueDefault ?? ""}
-                      send={requirements.some((r) => r.agenda_item_id === item.id) && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} />}
+                      send={requirements.some((r) => r.agenda_item_id === item.id) && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} mails={requestMails} />}
                     />
                   )}
                   {editable && (

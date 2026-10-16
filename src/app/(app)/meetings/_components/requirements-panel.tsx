@@ -7,6 +7,7 @@ import { FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { REQ_KINDS } from "@/lib/requirements";
 import { addRequirement, confirmCheck, sendRequirements, setRequirementStatus, setRequirementTarget } from "../_actions/requirements";
 import { TargetSelect } from "./agenda-forms";
+import { MailButton } from "./outlook-buttons";
 import type { Target } from "./agenda-targets";
 
 export type RequirementRow = {
@@ -163,8 +164,33 @@ function AddRequirement({ meetingId, itemId, targets, dueDefault }: { meetingId:
   );
 }
 
+export type RequestMail = { name: string; to: string[]; subject: string; body: string };
+
+/** After sending: one ready email per recipient, opened in Outlook. */
+function RequestMails({ mails }: { mails: RequestMail[] }) {
+  if (!mails.length) return null;
+  return (
+    <details className="text-sm">
+      <summary className="w-fit cursor-pointer text-primary">رسائل الطلبات عبر Outlook ({mails.length})</summary>
+      <ul className="mt-2 flex flex-col gap-2">
+        {mails.map((m) => (
+          <li key={m.name + m.subject} className="flex flex-wrap items-center justify-between gap-2 rounded bg-paper p-2">
+            <span>
+              {m.name}
+              <span className="block text-xs text-ink-muted" dir="ltr">
+                {m.to.join(", ")}
+              </span>
+            </span>
+            <MailButton to={m.to} subject={m.subject} body={m.body} label="فتح الرسالة" />
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 /** The meeting-wide review and send step: one action sends every drafted requirement. */
-export function SendRequirementsBar({ meetingId, rows, targets, sentAt }: { meetingId: string; rows: RequirementRow[]; targets: Target[]; sentAt: string | null }) {
+export function SendRequirementsBar({ meetingId, rows, targets, sentAt, mails = [] }: { meetingId: string; rows: RequirementRow[]; targets: Target[]; sentAt: string | null; mails?: RequestMail[] }) {
   const [state, action] = useActionState(sendRequirements.bind(null, meetingId), null);
   const drafts = rows.filter((r) => r.status === "draft");
   const obsolete = rows.filter((r) => r.obsolete);
@@ -179,7 +205,12 @@ export function SendRequirementsBar({ meetingId, rows, targets, sentAt }: { meet
   );
 
   if (!pendingChanges)
-    return <p className="text-xs text-primary">✓ أُرسلت طلبات المتطلبات{sentAt ? ` في ${sentAt.slice(0, 10)}` : ""}، ولا تغييرات جديدة.</p>;
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-xs text-primary">✓ أُرسلت طلبات المتطلبات{sentAt ? ` في ${sentAt.slice(0, 10)}` : ""}، ولا تغييرات جديدة.</p>
+        <RequestMails mails={mails} />
+      </div>
+    );
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-brass bg-surface p-3 text-sm">
