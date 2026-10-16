@@ -4,6 +4,7 @@
 
 import { BODIES, foreignTemplate, type Body, type Template } from "./item-templates";
 import type { Finding } from "./item-review";
+import { fold } from "./fold";
 
 const label = (body: Body) => (body === "any" ? "هذه اللجنة" : BODIES[body]);
 
@@ -22,4 +23,18 @@ export function bodyMismatch(title: string, own: Template[], body: Body): (Findi
     ...(hit.instead ? { fixes: [hit.instead.title] } : {}),
     block: hit.exact,
   };
+}
+
+/** A title reduced for comparison: folded Arabic, Latin digits, no punctuation or brackets, single spaces. */
+export function itemKey(title: string): string {
+  return fold(title)
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+/** The other item in the meeting with the same title, if any. */
+export function duplicateOf<T extends { id: string; title: string }>(title: string, items: T[], selfId?: string | null): T | undefined {
+  const key = itemKey(title);
+  return items.find((i) => i.id !== selfId && itemKey(i.title) === key);
 }

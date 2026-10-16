@@ -7,13 +7,13 @@ import { reviewDraft, type DraftReview } from "../_actions/item-review";
 type Field = "title" | "description";
 
 /** "Check the item" button: spelling suggestions and legal remarks on the unsaved draft. */
-export function ItemReviewPanel({ meetingId, form }: { meetingId: string; form: () => HTMLFormElement | null }) {
+export function ItemReviewPanel({ meetingId, itemId, form }: { meetingId: string; itemId?: string; form: () => HTMLFormElement | null }) {
   const [review, setReview] = useState<DraftReview | null>(null);
   const [pending, start] = useTransition();
   const field = (name: Field) => form()?.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null;
   const value = (name: string) => (form()?.elements.namedItem(name) as HTMLInputElement | null)?.value ?? "";
 
-  const draft = () => ({ title: value("title"), description: value("description"), kind: value("kind") });
+  const draft = () => ({ title: value("title"), description: value("description"), kind: value("kind"), itemId });
   const run = () => start(async () => setReview(await reviewDraft(meetingId, draft())));
 
   // A suggested title replaces the field; re-check it quickly (offline) and keep the description's spelling results.

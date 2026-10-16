@@ -218,7 +218,7 @@ export function AgendaItemForm({ meetingId, item, targets, library, body, onDone
           {auto.failed.includes("description") && <TranslateHint />}
         </Field>
       </div>
-      <ItemReviewPanel meetingId={meetingId} form={() => ref.current} />
+      <ItemReviewPanel meetingId={meetingId} itemId={item?.id} form={() => ref.current} />
       <div className="flex flex-col gap-3 sm:col-span-2">
         <FormMessage state={state} />
         <SubmitButton pendingLabel="جارٍ الحفظ…" className="w-fit">

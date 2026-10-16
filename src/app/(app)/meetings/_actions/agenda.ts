@@ -6,7 +6,7 @@ import { requirePage } from "@/lib/auth";
 import { isOneOf } from "@/lib/org";
 import { templateGaps } from "@/lib/item-review";
 import { syncItemRequirements } from "@/lib/requirements-server";
-import { bodyMismatch } from "@/lib/item-body";
+import { bodyMismatch, duplicateOf } from "@/lib/item-body";
 import { meetingBody } from "@/lib/item-review-server";
 import { libraryTemplates } from "@/lib/item-templates";
 import { ITEM_KINDS, moveItem } from "@/lib/meetings";
@@ -45,9 +45,16 @@ export async function saveAgendaItem(meetingId: string, itemId: string | null, _
   if ("error" in item) return { ok: false, message: item.error! };
   const supabase = await createClient();
   // An item plainly worded for another body (the board's decision in an audit committee) is refused.
-  const [body, { data: own }] = await Promise.all([meetingBody(supabase, meetingId), supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs")]);
+  const [body, { data: own }, { data: existing }] = await Promise.all([
+    meetingBody(supabase, meetingId),
+    supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
+    supabase.from("agenda_items").select("id, title, position").eq("meeting_id", meetingId),
+  ]);
   const mismatch = bodyMismatch(item.row.title, libraryTemplates(own ?? []), body);
   if (mismatch?.block) return { ok: false, message: `لا يمكن حفظ البند: ${mismatch.text}` };
+  // The same item twice in one meeting is refused.
+  const twin = duplicateOf(item.row.title, existing ?? [], itemId);
+  if (twin) return { ok: false, message: `هذا البند مضاف من قبل في الاجتماع (البند ${twin.position}). عدّل البند الموجود بدل تكراره.` };
 
   let savedId = itemId;
   if (itemId) {

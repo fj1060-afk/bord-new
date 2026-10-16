@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bodyMismatch } from "./item-body";
+import { bodyMismatch, duplicateOf } from "./item-body";
 import { matchTemplate, suggestTitles } from "./item-templates";
 
 describe("items stay with their body", () => {
@@ -26,5 +26,16 @@ describe("items stay with their body", () => {
 
   it("keeps a committee item out of the board", () => {
     expect(bodyMismatch("الاجتماع مع مراجع الحسابات الخارجي دون حضور الإدارة التنفيذية", [], "board")?.block).toBe(true);
+  });
+});
+
+describe("duplicate items", () => {
+  const items = [{ id: "1", title: "التصويت على اعتماد القوائم المالية للسنة المالية المنتهية في (2028)" }];
+  it("finds the same title written slightly differently", () => {
+    expect(duplicateOf("التصويت على اعتماد القوائم الماليه للسنة المالية المنتهية في ٢٠٢٨.", items)?.id).toBe("1");
+    expect(duplicateOf("التصويت على اعتماد القوائم المالية للسنة المالية المنتهية في (2027)", items)).toBeUndefined();
+  });
+  it("lets an item be saved again under its own title", () => {
+    expect(duplicateOf(items[0].title, items, "1")).toBeUndefined();
   });
 });

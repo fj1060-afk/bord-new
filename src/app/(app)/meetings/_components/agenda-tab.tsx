@@ -10,7 +10,7 @@ import { RequirementsPanel, SendRequirementsBar, type RequestMail, type Requirem
 import { ItemFindings } from "./item-review-panel";
 import { AuthorityBadge } from "./authority-badge";
 import { reviewItem, type ReviewContext } from "@/lib/item-review";
-import { bodyMismatch } from "@/lib/item-body";
+import { bodyMismatch, duplicateOf } from "@/lib/item-body";
 import { matchTemplate, type Body, type Template } from "@/lib/item-templates";
 
 type Doc = { id: string; title: string; file_name: string; size_bytes: number | null; agenda_item_id: string | null; document_request_id: string | null };
@@ -75,7 +75,9 @@ export function AgendaTab({
   // Saved items are checked as drafts are: another body's wording first, then the rules.
   const notesFor = (item: AgendaItem) => {
     const mismatch = body ? bodyMismatch(item.title, library ?? [], body) : null;
-    return [...(mismatch ? [mismatch] : []), ...reviewItem(item, { ...review, template: matchTemplate(item.title, library, body) })];
+    const twin = duplicateOf(item.title, items, item.id);
+    const repeated = twin ? [{ level: "warn" as const, text: `البند مكرر: يطابق البند ${twin.position}. احذف أحدهما.` }] : [];
+    return [...repeated, ...(mismatch ? [mismatch] : []), ...reviewItem(item, { ...review, template: matchTemplate(item.title, library, body) })];
   };
   const targetName = (userId: string | null) => targets.find((t) => t.value === `user:${userId}`)?.label ?? "—";
   const ownerLabel = (item: AgendaItem) => targets.find((t) => t.value === ownerOf(item))?.label;

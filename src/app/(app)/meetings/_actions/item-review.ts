@@ -4,7 +4,7 @@ import { requirePage } from "@/lib/auth";
 import { reviewItem, type Finding } from "@/lib/item-review";
 import { meetingAffiliations, meetingCommitteeKind, meetingDisclosures } from "@/lib/item-review-server";
 import { bodyOf } from "@/lib/item-templates";
-import { bodyMismatch } from "@/lib/item-body";
+import { bodyMismatch, duplicateOf } from "@/lib/item-body";
 import { currentYear } from "@/lib/org";
 import { companyProfile } from "@/lib/live-server";
 import { loadPowers } from "@/lib/authority-server";
@@ -17,7 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 export type DraftReview = { title: Misspelling[]; description: Misspelling[]; findings: Finding[]; online: boolean; spellingOff?: boolean };
 
 /** Spelling and legal review of an agenda item before it is saved. */
-export async function reviewDraft(meetingId: string, draft: { title: string; description: string; kind: string }, online = true): Promise<DraftReview> {
+export async function reviewDraft(meetingId: string, draft: { title: string; description: string; kind: string; itemId?: string }, online = true): Promise<DraftReview> {
   await requirePage("/meetings", LEVELS.edit);
   const supabase = await createClient();
   const { external_spelling } = await serviceSettings(supabase);
@@ -31,6 +31,8 @@ export async function reviewDraft(meetingId: string, draft: { title: string; des
     meetingAffiliations(supabase, meetingId),
     meetingCommitteeKind(supabase, meetingId),
   ]);
+  const { data: existing } = await supabase.from("agenda_items").select("id, title, position").eq("meeting_id", meetingId);
+  const twin = duplicateOf(draft.title, existing ?? [], draft.itemId);
   const body = bodyOf({ board_id: committeeKind === undefined ? "board" : null, committee_kind: committeeKind });
   const library = libraryTemplates(own ?? []);
   const template = matchTemplate(draft.title, library, body);
@@ -39,7 +41,7 @@ export async function reviewDraft(meetingId: string, draft: { title: string; des
   return {
     title: spelling.matches.filter((m) => m.offset < cut),
     description: spelling.matches.filter((m) => m.offset >= cut).map((m) => ({ ...m, offset: m.offset - cut })),
-    findings: [...(mismatch ? [mismatch] : []), ...reviewItem(draft, { disclosures, year: currentYear() - 1, listed: profile?.company_type === "listed_jsc", template, powers, affiliations, company: profile?.name ?? "", committeeKind })],
+    findings: [...(twin ? [{ level: "warn" as const, text: `هذا البند مضاف من قبل في الاجتماع (البند ${twin.position})، ولن يُحفظ مكرراً.` }] : []), ...(mismatch ? [mismatch] : []), ...reviewItem(draft, { disclosures, year: currentYear() - 1, listed: profile?.company_type === "listed_jsc", template, powers, affiliations, company: profile?.name ?? "", committeeKind })],
     online: spelling.online,
     spellingOff: !external_spelling,
   };
