@@ -41,3 +41,8 @@ Article numbers were checked against the official English translations; the Arab
 ## Reporting deadlines (listed)
 - Interim statements within 30 days; annual within 3 months and 21 days before the assembly (OSCOs 81).
 - Board report contents: CGR 87.
+
+## Other articles cited in item requirements (`item-templates-data.ts`)
+- CL: 8 (registering bylaw amendments), 78 (chair/CEO/secretary powers and pay), 83 (minutes register), 117 (debt instruments and sukuk), 121-122 (statements to auditor and shareholders), 123-124 (reserves).
+- CGR: 8 (board election), 9 (dividends), 19 (independence), 23 (separating chair and executive roles), 30, 33 (agenda), 35, 37 (training), 39 (assessment), 43 (nominee disclosure), 59 (remuneration policy), 62 (nomination committee), 65 (nomination announcement), 68 (risk committee), 74-75 (internal audit plan and report), 78 (external auditor), 80 (stakeholders), 81 (whistleblowing), 83 (code of conduct), 84 (social responsibility), 86 (disclosure policy), 90 (remuneration disclosure).
+- IR: 29 (employee shares). OSCOs: 80-81.
