@@ -80,7 +80,7 @@ export function buildTemplates(): Template[] {
       { body: "board", keys: ["تقرير الرئيس التنفيذي", "الرئيس التنفيذي", "تقرير الاداره"], kind: "information", title: `الاطلاع على تقرير الرئيس التنفيذي عن أداء الشركة ${period}`, en: `Reviewing the CEO's report on the company's performance ${periodEn}`, authority: "board", reqs: [
         doc("تقرير الرئيس التنفيذي (الأداء المالي والتشغيلي مقارنة بالموازنة، مؤشرات الأداء، المشاريع الرئيسة، المخاطر والمستجدات الجوهرية)", "CEO's report (financial and operational performance against budget, KPIs, major projects, risks and material developments)"),
       ] },
-      { body: "any", keys: ["تقارير اللجان", "تقرير اللجان"], kind: "information", title: "الاطلاع على تقارير لجان المجلس وتوصياتها", en: "Reviewing the reports and recommendations of the board committees", authority: "board", reqs: [
+      { body: "board", keys: ["تقارير اللجان", "تقرير اللجان"], kind: "information", title: "الاطلاع على تقارير لجان المجلس وتوصياتها", en: "Reviewing the reports and recommendations of the board committees", authority: "board", reqs: [
         doc("تقارير اللجان ومحاضر اجتماعاتها منذ آخر اجتماع للمجلس (لائحة الحوكمة م47)", "Committee reports and minutes since the last board meeting (CGR Art. 47)", "secretary"),
         doc("التوصيات المرفوعة للمجلس وما يتطلب منها قراراً", "Recommendations submitted to the board and those requiring a resolution", "secretary"),
       ] },

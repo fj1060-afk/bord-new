@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Affiliation } from "./affiliations";
+import { bodyOf, type Body } from "./item-templates";
 import type { Disclosure } from "./item-review";
 import { currentYear } from "./org";
 
@@ -39,4 +40,10 @@ export async function bodyAffiliations(supabase: SupabaseClient, body: { board?:
     title: p.title,
     current: p.end_year === null,
   }));
+}
+
+/** Which wordings a meeting may use: the board's, one committee kind's, or only the general ones. */
+export async function meetingBody(supabase: SupabaseClient, meetingId: string): Promise<Body> {
+  const { data } = await supabase.from("meetings").select("board_id, committee:committees(kind)").eq("id", meetingId).maybeSingle();
+  return bodyOf({ board_id: data?.board_id ?? null, committee_kind: (data?.committee as { kind?: string } | null)?.kind });
 }

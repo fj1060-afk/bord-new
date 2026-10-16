@@ -6,6 +6,9 @@ import { requirePage } from "@/lib/auth";
 import { isOneOf } from "@/lib/org";
 import { templateGaps } from "@/lib/item-review";
 import { syncItemRequirements } from "@/lib/requirements-server";
+import { bodyMismatch } from "@/lib/item-body";
+import { meetingBody } from "@/lib/item-review-server";
+import { libraryTemplates } from "@/lib/item-templates";
 import { ITEM_KINDS, moveItem } from "@/lib/meetings";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -41,6 +44,10 @@ export async function saveAgendaItem(meetingId: string, itemId: string | null, _
   const item = readItem(form);
   if ("error" in item) return { ok: false, message: item.error! };
   const supabase = await createClient();
+  // An item plainly worded for another body (the board's decision in an audit committee) is refused.
+  const [body, { data: own }] = await Promise.all([meetingBody(supabase, meetingId), supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs")]);
+  const mismatch = bodyMismatch(item.row.title, libraryTemplates(own ?? []), body);
+  if (mismatch?.block) return { ok: false, message: `لا يمكن حفظ البند: ${mismatch.text}` };
 
   let savedId = itemId;
   if (itemId) {

@@ -10,6 +10,7 @@ import { RequirementsPanel, SendRequirementsBar, type RequestMail, type Requirem
 import { ItemFindings } from "./item-review-panel";
 import { AuthorityBadge } from "./authority-badge";
 import { reviewItem, type ReviewContext } from "@/lib/item-review";
+import { bodyMismatch } from "@/lib/item-body";
 import { matchTemplate, type Body, type Template } from "@/lib/item-templates";
 
 type Doc = { id: string; title: string; file_name: string; size_bytes: number | null; agenda_item_id: string | null; document_request_id: string | null };
@@ -71,6 +72,11 @@ export function AgendaTab({
   myDepartmentIds: string[];
 }) {
   const general = documents.filter((d) => !d.agenda_item_id);
+  // Saved items are checked as drafts are: another body's wording first, then the rules.
+  const notesFor = (item: AgendaItem) => {
+    const mismatch = body ? bodyMismatch(item.title, library ?? [], body) : null;
+    return [...(mismatch ? [mismatch] : []), ...reviewItem(item, { ...review, template: matchTemplate(item.title, library, body) })];
+  };
   const targetName = (userId: string | null) => targets.find((t) => t.value === `user:${userId}`)?.label ?? "—";
   const ownerLabel = (item: AgendaItem) => targets.find((t) => t.value === ownerOf(item))?.label;
 
@@ -96,7 +102,7 @@ export function AgendaTab({
                 <span className="font-mono text-brass">{item.position}.</span>
                 <h3 className="font-display text-lg font-bold">{item.title}</h3>
                 <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">{ITEM_KINDS[item.kind]}</span>
-                <AuthorityBadge authority={matchTemplate(item.title, library)?.authority} />
+                <AuthorityBadge authority={matchTemplate(item.title, library, body)?.authority} />
                 {item.duration_minutes && <span className="text-xs text-ink-muted">{item.duration_minutes} دقيقة</span>}
               </div>
               {(ownerLabel(item) || item.presenter) && (
@@ -112,7 +118,7 @@ export function AgendaTab({
                   {item.description_en}
                 </p>
               )}
-              {review && <ItemNotes findings={reviewItem(item, { ...review, template: matchTemplate(item.title, library) })} />}
+              {review && <ItemNotes findings={notesFor(item)} />}
             </>
           );
 

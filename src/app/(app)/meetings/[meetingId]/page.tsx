@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
 import { AgendaTab } from "../_components/agenda-tab";
 import { meetingAffiliations, meetingDisclosures } from "@/lib/item-review-server";
-import { bodyOf, libraryTemplates, matchTemplate, type Template } from "@/lib/item-templates";
+import { bodyOf, libraryTemplates, matchTemplate, type Body, type Template } from "@/lib/item-templates";
 import type { RequirementRow } from "../_components/requirements-panel";
 import { currentYear } from "@/lib/org";
 import { InfoRequests } from "../_components/info-requests";
@@ -61,6 +61,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
     .maybeSingle();
   if (!meeting) notFound();
   const services = await serviceSettings(supabase);
+  const wordings = bodyOf({ board_id: meeting.board_id, committee_kind: (meeting.committee as { kind?: string } | null)?.kind });
   // A member without this year's disclosure sees no pack documents (enforced in RLS) when the company requires it.
   const packBlocked =
     !organizer && Boolean(meeting.pack_published_at) && services.pack_requires_disclosure && !(await supabase.rpc("pack_disclosure_ok", { p_meeting: meetingId })).data;
@@ -250,10 +251,10 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           packPublished={Boolean(meeting.pack_published_at)}
           myDepartmentIds={(delegations ?? []).map((d) => d.department_id)}
           library={libraryTemplates(library ?? [])}
-          requirements={organizer ? withObsolete(requirementRows ?? [], agenda, libraryTemplates(library ?? [])) : undefined}
+          requirements={organizer ? withObsolete(requirementRows ?? [], agenda, libraryTemplates(library ?? []), wordings) : undefined}
           requirementsSentAt={meeting.requirements_sent_at}
           requestMails={mail ? mail.recipients.map((r) => ({ name: r.name, to: r.to, ...requestsMail(mail.meeting, r.name, r.requests, mail.tasksUrl) })) : undefined}
-          body={bodyOf({ board_id: meeting.board_id, committee_kind: (meeting.committee as { kind?: string } | null)?.kind })}
+          body={wordings}
           review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1, powers, affiliations, company: profile?.name ?? "" } : undefined}
         />
       )}
@@ -308,7 +309,7 @@ async function loadLive(supabase: SupabaseClient, meetingId: string, isBoard: bo
 }
 
 /** Marks sent requirements an item's current wording no longer calls for. */
-function withObsolete(rows: Omit<RequirementRow, "obsolete">[], items: { id: string; title: string }[], own: Template[]): RequirementRow[] {
-  const wanted = new Map(items.map((i) => [i.id, new Set((matchTemplate(i.title, own)?.reqs ?? []).map((r) => r.ar))]));
+function withObsolete(rows: Omit<RequirementRow, "obsolete">[], items: { id: string; title: string }[], own: Template[], body: Body): RequirementRow[] {
+  const wanted = new Map(items.map((i) => [i.id, new Set((matchTemplate(i.title, own, body)?.reqs ?? []).map((r) => r.ar))]));
   return rows.map((r) => ({ ...r, obsolete: r.status === "sent" && !r.custom && !wanted.get(r.agenda_item_id)?.has(r.label) }));
 }

@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { quorumNeeded, quorumRule } from "@/lib/company";
 import { journeyChecks } from "@/lib/journey";
 import { libraryTemplates, matchTemplate } from "@/lib/item-templates";
+import { meetingBody } from "@/lib/item-review-server";
 import { companyProfile } from "@/lib/live-server";
 import { riyadhToday } from "@/lib/minutes";
 import { loadMinutesGaps } from "./minutes-check";
@@ -36,7 +37,8 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
     supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
   ]);
   const library = libraryTemplates(own ?? []);
-  const wanted = new Map((items ?? []).map((i) => [i.id, new Set((matchTemplate(i.title, library)?.reqs ?? []).map((r) => r.ar))]));
+  const wordings = await meetingBody(supabase, meetingId);
+  const wanted = new Map((items ?? []).map((i) => [i.id, new Set((matchTemplate(i.title, library, wordings)?.reqs ?? []).map((r) => r.ar))]));
   const live = (reqRows ?? []).filter((r) => r.status !== "dismissed");
   return journeyChecks({
     today: riyadhToday(),

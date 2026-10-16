@@ -114,7 +114,7 @@ function TitleField({ defaultValue, library, body, onPicked }: { defaultValue?: 
 
   // Opening a saved item refreshes an auto-filled description to the current requirements.
   useEffect(() => {
-    if (defaultValue) follow(matchTemplate(defaultValue, library));
+    if (defaultValue) follow(matchTemplate(defaultValue, library, body));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -137,7 +137,7 @@ function TitleField({ defaultValue, library, body, onPicked }: { defaultValue?: 
 
   const onInput = (value: string) => {
     setTyped(value);
-    follow(matchTemplate(value, library));
+    follow(matchTemplate(value, library, body));
   };
 
   return (

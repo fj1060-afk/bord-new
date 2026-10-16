@@ -1,15 +1,16 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { libraryTemplates, matchTemplate } from "./item-templates";
+import { meetingBody } from "./item-review-server";
+import { libraryTemplates, matchTemplate, type Body } from "./item-templates";
 import { companyProfile } from "./live-server";
 import { departmentFor, planSync, type Req, type ReqFrom, type ReqRow } from "./requirements";
 
 const COMMITTEE_KINDS: Partial<Record<ReqFrom, string[]>> = { audit: ["audit"], nrc: ["nomination", "remuneration", "remuneration_nomination"], risk: ["risk"] };
 
 /** The requirements an agenda item's title calls for (from the standard wording it follows, if any). */
-export async function wantedRequirements(supabase: SupabaseClient, title: string): Promise<Req[]> {
+export async function wantedRequirements(supabase: SupabaseClient, title: string, body?: Body): Promise<Req[]> {
   const { data: own } = await supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs");
-  return matchTemplate(title, libraryTemplates(own ?? []))?.reqs ?? [];
+  return matchTemplate(title, libraryTemplates(own ?? []), body)?.reqs ?? [];
 }
 
 /**
@@ -27,7 +28,7 @@ export async function syncItemRequirements(supabase: SupabaseClient, meetingId: 
   ]);
   if (!item || !meeting) return;
 
-  const plan = planSync(await wantedRequirements(supabase, item.title), (rows ?? []) as ReqRow[]);
+  const plan = planSync(await wantedRequirements(supabase, item.title, await meetingBody(supabase, meetingId)), (rows ?? []) as ReqRow[]);
   if (plan.remove.length) await supabase.from("agenda_item_requirements").delete().in("id", plan.remove);
   if (!plan.insert.length) return;
 
