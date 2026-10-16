@@ -25,7 +25,7 @@ function Badge({ c }: { c: Check }) {
 function OpenCheck({ c, meetingId, href }: { c: Check; meetingId: string; href: (tab?: string) => string }) {
   const t = tone(c) as keyof typeof WORD;
   const fix = c.fix;
-  const first = fix?.targets?.[0]?.anchor ?? fix?.anchor;
+  const first = fix?.anchor ?? fix?.targets?.[0]?.anchor;
   const button = buttonClass(t === "block" ? "primary" : "secondary", "shrink-0 px-3 py-1.5 text-xs");
   return (
     <li className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start">

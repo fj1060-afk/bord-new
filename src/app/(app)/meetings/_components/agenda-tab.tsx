@@ -102,6 +102,8 @@ export function AgendaTab({
           <ExpandAll listId="agenda-items" />
         </div>
       )}
+      {/* One send box for the whole meeting, above the items it covers. */}
+      {editable && requirements && requirements.length > 0 && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} mails={requestMails} />}
       <ol id="agenda-items" className="flex flex-col gap-3">
         {items.length === 0 && <li className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">لا توجد بنود بعد.</li>}
         {items.map((item, index) => {
@@ -202,7 +204,6 @@ export function AgendaTab({
                           rows={requirements.filter((r) => r.agenda_item_id === item.id)}
                           targets={targets}
                           dueDefault={dueDefault ?? ""}
-                          send={requirements.some((r) => r.agenda_item_id === item.id) && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} mails={requestMails} />}
                         />
                       )}
                       {editable && (

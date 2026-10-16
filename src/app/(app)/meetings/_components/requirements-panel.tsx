@@ -219,7 +219,7 @@ export function SendRequirementsBar({ meetingId, rows, targets, sentAt, mails = 
     );
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-brass bg-surface p-3 text-sm">
+    <div id="send-requirements" className="flex scroll-mt-24 flex-col gap-3 rounded-lg border border-brass bg-surface p-3 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <strong>
           {sentAt ? "تحديثات لم تُرسل" : "طلبات المتطلبات لم تُرسل بعد"}: {drafts.length} جديد{obsolete.length ? ` · ${obsolete.length} للسحب` : ""}
