@@ -42,7 +42,13 @@ function Section({ section, current, onNavigate }: { section: SideSection; curre
     current === item.href || (current?.startsWith(`${item.href}/`) ?? false) || ("children" in item && item.children.some((c) => c.href === current));
   const holds = section.items.some(inside);
   const [open, setOpen] = useState(!section.collapsible || holds);
-  const shown = open || holds;
+  // Open the section when you navigate into it, but let the header close it even then.
+  const [wasHolding, setWasHolding] = useState(holds);
+  if (holds !== wasHolding) {
+    setWasHolding(holds);
+    if (holds) setOpen(true);
+  }
+  const shown = !section.collapsible || open;
   return (
     <div>
       {section.collapsible ? (
