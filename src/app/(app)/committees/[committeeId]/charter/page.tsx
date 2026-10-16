@@ -34,12 +34,14 @@ export default async function CommitteeCharterPage({ params }: PageProps<"/commi
           <Panel title="الاختصاصات النظامية">
             <ul className="divide-y divide-rule text-sm">
               {rules.powers.map((p) => (
-                <li key={p.ref + p.ar} className="flex flex-wrap items-start gap-x-3 gap-y-1 px-5 py-3">
-                  <span className={clsx("shrink-0 rounded-full px-2 py-0.5 text-xs", p.kind === "decide" ? "bg-primary-soft text-primary" : p.kind === "recommend" ? "bg-brass-soft text-brass" : "bg-paper text-ink-muted")}>{POWER_KINDS[p.kind]}</span>
-                  <span className="min-w-0 flex-1 leading-7">{p.ar}</span>
-                  <span className="text-xs text-ink-muted">
-                    {p.ref}
-                    <Guide on={p.guiding} listed={listed} />
+                <li key={p.ref + p.ar} className="flex items-start gap-3 px-5 py-3">
+                  <span className={clsx("mt-1 shrink-0 rounded-full px-2 py-0.5 text-xs", p.kind === "decide" ? "bg-primary-soft text-primary" : p.kind === "recommend" ? "bg-brass-soft text-brass" : "bg-paper text-ink-muted")}>{POWER_KINDS[p.kind]}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block leading-7">{p.ar}</span>
+                    <span className="block text-[11px] text-ink-muted">
+                      {p.ref}
+                      <Guide on={p.guiding} listed={listed} />
+                    </span>
                   </span>
                 </li>
               ))}

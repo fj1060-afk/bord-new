@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft, CircleAlert, TriangleAlert } from "lucide-react";
 import clsx from "clsx";
 import { Meter, Panel, StatTile } from "../../_dashboard/widgets";
 import { listedSeats, type PositionRole } from "@/lib/affiliations";
@@ -17,18 +18,25 @@ type Board = { id: string; name: string; term_start: string; term_end: string };
 const date = (d: string) => formatGregorianDate(new Date(`${d}T12:00:00Z`));
 
 function Alert({ tone, title, detail, source, href }: { tone: "violation" | "warning"; title: string; detail: string; source?: string; href?: string }) {
+  const Icon = tone === "violation" ? CircleAlert : TriangleAlert;
   const body = (
     <>
-      <span className={clsx("rounded-full px-2 py-0.5 text-xs", tone === "violation" ? "bg-danger/10 text-danger" : "bg-brass-soft text-brass")}>{tone === "violation" ? "مخالفة" : "تنبيه"}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block font-medium">{title}</span>
-        <span className="block text-xs text-ink-muted">{detail}</span>
+      <span className={clsx("grid size-8 shrink-0 place-items-center rounded-full", tone === "violation" ? "bg-danger/10 text-danger" : "bg-brass-soft text-brass")}>
+        <Icon size={16} aria-hidden="true" />
       </span>
-      {source && <span className="text-xs text-ink-muted">{source}</span>}
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="font-medium">{title}</span>
+          <span className={clsx("rounded-full px-2 py-0.5 text-[11px]", tone === "violation" ? "bg-danger/10 text-danger" : "bg-brass-soft text-brass")}>{tone === "violation" ? "مخالفة" : "تنبيه"}</span>
+        </span>
+        <span className="mt-1 block text-xs leading-6 text-ink-muted">{detail}</span>
+        {source && <span className="mt-1 block text-[11px] text-ink-muted/80">{source}</span>}
+      </span>
+      {href && <ChevronLeft size={16} aria-hidden="true" className="mt-2 shrink-0 text-ink-muted transition-transform group-hover:-translate-x-0.5" />}
     </>
   );
-  const cls = "flex flex-wrap items-start gap-x-3 gap-y-1 px-5 py-3 text-sm";
-  return <li>{href ? <Link href={href} className={clsx(cls, "hover:bg-paper")}>{body}</Link> : <div className={cls}>{body}</div>}</li>;
+  const cls = "flex items-start gap-3 px-5 py-4 text-sm";
+  return <li>{href ? <Link href={href} className={clsx(cls, "group hover:bg-paper")}>{body}</Link> : <div className={cls}>{body}</div>}</li>;
 }
 
 /** The board at a glance: composition, term, meetings, resolutions, disclosures, attendance and what needs attention. */

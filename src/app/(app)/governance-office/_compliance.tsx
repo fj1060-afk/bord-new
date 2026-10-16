@@ -1,5 +1,6 @@
 import Link from "next/link";
 import clsx from "clsx";
+import { ChevronLeft } from "lucide-react";
 import { Meter, Panel, StatTile } from "../_dashboard/widgets";
 import { score, SOURCES, type Finding, type Status } from "@/lib/compliance";
 import { complianceFindings } from "@/lib/compliance-server";
@@ -17,16 +18,17 @@ const ORDER: Status[] = ["violation", "warning", "ok"];
 function Row({ f }: { f: Finding }) {
   return (
     <li>
-      <Link href={f.href} className="flex flex-wrap items-start gap-x-3 gap-y-1 px-5 py-3 text-sm hover:bg-paper">
-        <span className={clsx("rounded-full px-2 py-0.5 text-xs", STATUS[f.status].className)}>{STATUS[f.status].label}</span>
+      <Link href={f.href} className="group flex items-start gap-3 px-5 py-4 text-sm hover:bg-paper">
+        <span className={clsx("shrink-0 rounded-full px-2 py-0.5 text-xs", STATUS[f.status].className)}>{STATUS[f.status].label}</span>
         <span className="min-w-0 flex-1">
           <span className="block font-medium">{f.title}</span>
-          <span className="block text-xs text-ink-muted">{f.detail}</span>
+          <span className="mt-1 block text-xs leading-6 text-ink-muted">{f.detail}</span>
+          <span className="mt-1 block text-[11px] text-ink-muted/80">
+            {SOURCES[f.source]} · {f.article}
+            {f.level === "guidance" && <span className="ms-1 rounded border border-rule px-1">إرشادي</span>}
+          </span>
         </span>
-        <span className="text-xs text-ink-muted">
-          {SOURCES[f.source]} · {f.article}
-          {f.level === "guidance" && <span className="ms-1 rounded border border-rule px-1">إرشادي</span>}
-        </span>
+        <ChevronLeft size={16} aria-hidden="true" className="mt-1 shrink-0 text-ink-muted transition-transform group-hover:-translate-x-0.5" />
       </Link>
     </li>
   );
