@@ -105,3 +105,26 @@ async function onlineCheck(text: string): Promise<Misspelling[] | null> {
     return null;
   }
 }
+
+// Common governance words often typed without hamza or with ه for ة ("الادارة", "للسنه").
+const STEMS = ["إدارة", "سنة", "مالية", "أول", "أولى", "عامة", "عادية", "جمعية", "شركة", "لجنة", "مراجعة", "ميزانية", "موازنة", "إفصاح", "أعمال", "أعضاء", "هيئة", "سنوية", "ربعية", "استثنائية", "اعتيادية", "تنفيذية", "إستراتيجية"];
+const PREFIXES = ["", "ال", "و", "وال", "ب", "بال", "ل", "لل", "ف", "فال", "ك", "كال"];
+
+/** Hamza and taa marbuta slips in common governance words, with the corrected text. */
+export function hamzaSlips(text: string): { fixed: string; words: { from: string; to: string }[] } {
+  const words: { from: string; to: string }[] = [];
+  const fixed = text.replace(/[\p{L}]+/gu, (word) => {
+    for (const p of PREFIXES) {
+      if (!word.startsWith(p)) continue;
+      const rest = word.slice(p.length);
+      const stem = STEMS.find((s) => loose(s) === loose(rest));
+      if (stem && rest !== stem) {
+        const to = p + stem;
+        words.push({ from: word, to });
+        return to;
+      }
+    }
+    return word;
+  });
+  return { fixed, words };
+}

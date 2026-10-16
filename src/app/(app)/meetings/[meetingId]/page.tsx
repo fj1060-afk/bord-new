@@ -19,6 +19,7 @@ import { InfoRequests } from "../_components/info-requests";
 import { PrintDocs } from "../_components/print-docs";
 import { OutlookPanel } from "../_components/outlook-panel";
 import { riyadhToday } from "@/lib/minutes";
+import { defaultDue } from "@/lib/requirements";
 import { packDeadline, requestsMail } from "@/lib/meeting-mail";
 import { meetingMail } from "@/lib/meeting-mail-server";
 import { loadPowers } from "@/lib/authority-server";
@@ -246,7 +247,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
             ...((users ?? []) as { user_id: string; full_name: string; department_name: string | null }[]).map((u) => ({ value: `user:${u.user_id}`, label: u.full_name, group: "user" as const, dept: u.department_name ?? undefined })),
           ]}
           viewerId={viewer.id}
-          dueDefault={new Date(Date.parse(meeting.starts_at) - ((profileDays ?? 5) + 2) * 86400000).toISOString().slice(0, 10)}
+          dueDefault={defaultDue(meeting.starts_at, profileDays ?? 5, riyadhToday())}
           editable={editable}
           packPublished={Boolean(meeting.pack_published_at)}
           myDepartmentIds={(delegations ?? []).map((d) => d.department_id)}

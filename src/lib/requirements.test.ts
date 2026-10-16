@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { departmentFor, isRequirementsOnly, withoutBeforeMeeting, needsText, planSync, requirementsText, unassigned, withoutRequirements, type Req, type ReqRow } from "./requirements";
+import { defaultDue, departmentFor, isRequirementsOnly, withoutBeforeMeeting, needsText, planSync, requirementsText, unassigned, withoutRequirements, type Req, type ReqRow } from "./requirements";
 
 const reqs: Req[] = [
   { k: "doc", ar: "مسودة العقد", en: "Draft contract", from: "owner" },
@@ -59,5 +59,12 @@ describe("withoutBeforeMeeting", () => {
     expect(withoutBeforeMeeting(desc)).toBe("ملاحظة الأمين\nبعد القرار:\n• توقيع القوائم");
     expect(withoutBeforeMeeting("Before the meeting:\n• From Finance: X\nAfter the resolution:\n• Y")).toBe("After the resolution:\n• Y");
     expect(withoutBeforeMeeting("المستندات الداعمة: أ؛ ب")).toBe("");
+  });
+});
+
+describe("defaultDue", () => {
+  it("keeps the deadline ahead of the meeting but never in the past", () => {
+    expect(defaultDue("2026-11-20T07:00:00Z", 5, "2026-10-17")).toBe("2026-11-13");
+    expect(defaultDue("2026-10-18T07:00:00Z", 5, "2026-10-17")).toBe("2026-10-17");
   });
 });

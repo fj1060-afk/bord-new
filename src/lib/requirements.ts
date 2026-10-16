@@ -129,3 +129,9 @@ export function withoutBeforeMeeting(description: string): string {
   }
   return out.join("\n").trim();
 }
+
+/** Default deadline for a requirement: the invite notice plus two days before the meeting, but never before today. */
+export function defaultDue(startsAt: string, inviteDays: number, today: string): string {
+  const due = new Date(Date.parse(startsAt) - (inviteDays + 2) * 86400000).toISOString().slice(0, 10);
+  return due < today ? today : due;
+}

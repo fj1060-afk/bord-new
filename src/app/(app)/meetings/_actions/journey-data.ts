@@ -12,7 +12,7 @@ import { loadMinutesGaps } from "./minutes-check";
 export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
   const { data: m } = await supabase
     .from("meetings")
-    .select("status, live_status, starts_at, mode, location, virtual_link, pack_published_at, pack_emailed_at, meeting_type, board_id, committee_id")
+    .select("title, status, live_status, starts_at, mode, location, virtual_link, pack_published_at, pack_emailed_at, meeting_type, board_id, committee_id")
     .eq("id", meetingId)
     .single();
   if (!m) return null;
@@ -33,7 +33,7 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
   ]);
   const gaps = minutes ? await loadMinutesGaps(supabase, meetingId, minutes.id) : [];
   const [{ data: reqRows }, { data: own }] = await Promise.all([
-    supabase.from("agenda_item_requirements").select("agenda_item_id, kind, label, status, custom, checked_at").eq("meeting_id", meetingId),
+    supabase.from("agenda_item_requirements").select("agenda_item_id, kind, label, status, custom, checked_at, due_date").eq("meeting_id", meetingId),
     supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
   ]);
   const library = libraryTemplates(own ?? []);
@@ -57,6 +57,7 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
       unchecked: unchecked.map((r) => r.label),
       unsentItems: unsent.map((r) => r.agenda_item_id),
       uncheckedItems: unchecked.map((r) => r.agenda_item_id),
+      dues: live.filter((r) => r.status === "draft" && r.due_date).map((r) => ({ itemId: r.agenda_item_id, due: r.due_date! })),
     },
     invitedMembers: (invitees ?? []).length,
     quorumNeeded: quorumNeeded((members ?? []).length, quorumRule(profile, !!m.board_id)),

@@ -3,7 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { meetingBody } from "./item-review-server";
 import { libraryTemplates, matchTemplate, type Body } from "./item-templates";
 import { companyProfile } from "./live-server";
-import { departmentFor, planSync, type Req, type ReqFrom, type ReqRow } from "./requirements";
+import { defaultDue, departmentFor, planSync, type Req, type ReqFrom, type ReqRow } from "./requirements";
+import { riyadhToday } from "./minutes";
 
 const COMMITTEE_KINDS: Partial<Record<ReqFrom, string[]>> = { audit: ["audit"], nrc: ["nomination", "remuneration", "remuneration_nomination"], risk: ["risk"] };
 
@@ -48,8 +49,7 @@ export async function syncItemRequirements(supabase: SupabaseClient, meetingId: 
     if (r.from === "secretary" || !r.from) return { department_id: null, assignee_user_id: null };
     return { department_id: item.department_id, assignee_user_id: item.department_id ? null : item.owner_user_id };
   };
-  const days = (profile?.invite_days ?? 5) + 2;
-  const due = new Date(Date.parse(meeting.starts_at) - days * 86400000).toISOString().slice(0, 10);
+  const due = defaultDue(meeting.starts_at, profile?.invite_days ?? 5, riyadhToday());
 
   await supabase.from("agenda_item_requirements").insert(
     plan.insert.map((r) => ({
