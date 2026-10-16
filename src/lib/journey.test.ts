@@ -39,6 +39,15 @@ describe("meeting journey", () => {
     expect(find({ ...i, items: [{ ...i.items[0], title: "التوصية بزيادة رأس المال" }] }, "definite").ok).toBe(true);
   });
 
+  it("requires item requirements to be sent, and checks confirmed or explained", () => {
+    const i = { ...base, items: [{ title: "أ", kind: "information", owned: true }], requirements: { unsent: 2, unchecked: ["التحقق من عدم وجود مصلحة"] } };
+    expect(find(i, "requirements-sent").ok).toBe(false);
+    expect(currentStage(journeyChecks(i))).toBe(1);
+    const sent = { ...i, requirements: { unsent: 0, unchecked: ["التحقق من عدم وجود مصلحة"] } };
+    expect(blocking(find(sent, "requirements-checks"))).toBe(true);
+    expect(blocking(find({ ...sent, overrides: { "requirements-checks": "يُعرض في الاجتماع" } }, "requirements-checks"))).toBe(false);
+  });
+
   it("lets a pending document pass only with a reason", () => {
     const i = { ...base, items: [{ title: "أ", kind: "information", owned: false }], requests: [{ title: "القوائم", status: "requested" }] };
     expect(currentStage(journeyChecks(i))).toBe(1);

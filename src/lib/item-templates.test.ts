@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { needsText } from "./requirements";
 import { bodyOf, CATEGORIES, libraryTemplates, matchTemplate, suggestTitles, templates } from "./item-templates";
 
 describe("suggestTitles", () => {
@@ -59,5 +60,18 @@ describe("suggestTitles", () => {
 
   it("stays quiet when nothing fits", () => {
     expect(suggestTitles("زيارة ميدانية للمصنع")).toEqual([]);
+  });
+
+  it("lists each built-in item's requirements as actions", () => {
+    const all = templates();
+    const reqs = all.flatMap((t) => t.reqs ?? []);
+    expect(reqs.filter((r) => !r.ar.trim() || !r.en.trim())).toEqual([]);
+    const deadline = /فور|خلال|يوم|أيام/;
+    const dues = ["immediate", "5d", "15d", "30d", "15bd", "before_ga", "60d", "180d"];
+    expect(reqs.filter((r) => r.k === "after" && deadline.test(r.ar) && !dues.includes(r.due ?? "")).map((r) => r.ar)).toEqual([]);
+    expect(all.filter((t) => t.needs && !t.reqs?.length).map((t) => t.title)).toEqual([]);
+    expect(all.filter((t) => t.reqs?.length && t.needs !== needsText(t.reqs)).map((t) => t.title)).toEqual([]);
+    expect(all.filter((t) => !t.reqs?.length).map((t) => t.en)).toEqual(["Any other business"]);
+    expect(reqs.filter((r) => r.k === "check" && r.auto === "conflict").length).toBeGreaterThan(10);
   });
 });

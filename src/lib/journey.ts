@@ -25,6 +25,8 @@ export type JourneyInput = {
   meeting: { status: string; live_status: string; starts_at: string; mode: string; location: string | null; virtual_link: string | null; pack_published_at: string | null; meeting_type: string };
   items: { title: string; kind: string; owned: boolean }[];
   requests: { title: string; status: string }[];
+  /** Item requirements: drafts or withdrawals not yet sent, and checks not yet confirmed. */
+  requirements?: { unsent: number; unchecked: string[] };
   invitedMembers: number;
   quorumNeeded: number;
   minutes: { status: string; gaps: string[] } | null;
@@ -50,6 +52,8 @@ export function journeyChecks(j: JourneyInput): Check[] {
     { id: "items", stage: 1, tab: "agenda", label: "جدول الأعمال: بند واحد على الأقل", level: "block", ok: j.items.length > 0, detail: `${j.items.length} بند` },
     { id: "definite", stage: 1, tab: "agenda", label: "عناوين البنود محددة: لا خيارات «/» ولا فراغات «(…)»", level: "block", ok: vague.length === 0, detail: vague.length ? `تحتاج تحديداً: ${vague.map((i) => i.title).join("، ")}` : undefined },
     { id: "owners", stage: 1, tab: "agenda", label: "كل بند للقرار له مسؤول", level: "block", ok: unowned.length === 0, detail: unowned.length ? `بلا مسؤول: ${unowned.map((i) => i.title).join("، ")}` : undefined },
+    { id: "requirements-sent", stage: 1, tab: "agenda", label: "إرسال طلبات متطلبات البنود", level: "block", ok: !j.requirements?.unsent, detail: j.requirements?.unsent ? `${j.requirements.unsent} لم تُرسل بعد` : undefined },
+    { id: "requirements-checks", stage: 1, tab: "agenda", label: "تأكيد التحققات المطلوبة للبنود", level: "warn", ok: !j.requirements?.unchecked.length, detail: j.requirements?.unchecked.length ? `بانتظار: ${j.requirements.unchecked.join("، ")}` : undefined },
     { id: "docs", stage: 1, tab: "agenda", label: "المستندات المطلوبة مسلّمة ومعتمدة", level: "warn", ok: pending.length === 0, detail: pending.length ? `بانتظار: ${pending.map((r) => r.title).join("، ")}` : undefined },
     { id: "quorum-possible", stage: 1, tab: "invitees", label: "الأعضاء المدعوون يكفون لاكتمال النصاب", level: "block", ref: "نظام الشركات م80/2", ok: j.invitedMembers >= j.quorumNeeded, detail: `مدعوون ${j.invitedMembers}، والنصاب ${j.quorumNeeded}` },
     { id: "scheduled", stage: 2, tab: "overview", label: "اعتماد موعد الاجتماع", level: "block", ok: m.status === "scheduled" },

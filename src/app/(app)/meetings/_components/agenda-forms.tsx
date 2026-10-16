@@ -1,7 +1,7 @@
 "use client";
 
 import { ActionForm } from "@/components/ui/action-form";
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { EnglishField, buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
@@ -10,7 +10,7 @@ import { useAutoEnglish } from "./auto-english";
 import { ItemReviewPanel } from "./item-review-panel";
 import { matchTemplate, suggestTitles, type Body, type Template, type TitleSuggestion } from "@/lib/item-templates";
 
-function TargetSelect({ name, targets, defaultValue, required, placeholder }: { name: string; targets: Target[]; defaultValue?: string; required?: boolean; placeholder: string }) {
+export function TargetSelect({ name, targets, defaultValue, required, placeholder }: { name: string; targets: Target[]; defaultValue?: string; required?: boolean; placeholder: string }) {
   return (
     <select name={name} defaultValue={defaultValue ?? ""} required={required} className={inputClass}>
       <option value="">{placeholder}</option>
@@ -170,6 +170,12 @@ export function AgendaItemForm({ meetingId, item, targets, library, body, onDone
   }, null);
   const ref = useRef<HTMLFormElement>(null);
   const auto = useAutoEnglish(ref, { title: "title_en", description: "description_en" });
+  // A saved item's description that is still the auto-filled documents line keeps following the title.
+  useEffect(() => {
+    const description = ref.current?.elements.namedItem("description") as HTMLTextAreaElement | null;
+    const needs = item ? matchTemplate(item.title, library)?.needs : undefined;
+    if (description && needs && description.value === `المستندات الداعمة: ${needs}`) description.dataset.auto = description.value;
+  }, [item, library]);
 
   return (
     <ActionForm ref={ref} action={action} state={state} onInput={auto.onInput} onReset={auto.onReset} className="grid gap-4 sm:grid-cols-2">

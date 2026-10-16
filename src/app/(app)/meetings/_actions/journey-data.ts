@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { quorumNeeded, quorumRule } from "@/lib/company";
 import { journeyChecks } from "@/lib/journey";
+import { libraryTemplates, matchTemplate } from "@/lib/item-templates";
 import { companyProfile } from "@/lib/live-server";
 import { riyadhToday } from "@/lib/minutes";
 import { loadMinutesGaps } from "./minutes-check";
@@ -30,6 +31,13 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
     supabase.from("meeting_overrides").select("rule, reason").eq("meeting_id", meetingId),
   ]);
   const gaps = minutes ? await loadMinutesGaps(supabase, meetingId, minutes.id) : [];
+  const [{ data: reqRows }, { data: own }] = await Promise.all([
+    supabase.from("agenda_item_requirements").select("agenda_item_id, kind, label, status, custom, checked_at").eq("meeting_id", meetingId),
+    supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
+  ]);
+  const library = libraryTemplates(own ?? []);
+  const wanted = new Map((items ?? []).map((i) => [i.id, new Set((matchTemplate(i.title, library)?.reqs ?? []).map((r) => r.ar))]));
+  const live = (reqRows ?? []).filter((r) => r.status !== "dismissed");
   return journeyChecks({
     today: riyadhToday(),
     companyType: profile?.company_type ?? "unlisted_jsc",
@@ -40,6 +48,10 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
     meeting: m,
     items: (items ?? []).map((i) => ({ title: i.title, kind: i.kind, owned: !!(i.owner_user_id || i.department_id) })),
     requests: (requests ?? []).map((r) => ({ title: r.title, status: r.status })),
+    requirements: {
+      unsent: live.filter((r) => r.status === "draft" || (!r.custom && r.status === "sent" && !wanted.get(r.agenda_item_id)?.has(r.label))).length,
+      unchecked: live.filter((r) => r.kind === "check" && !r.checked_at).map((r) => r.label),
+    },
     invitedMembers: (invitees ?? []).length,
     quorumNeeded: quorumNeeded((members ?? []).length, quorumRule(profile, !!m.board_id)),
     minutes: minutes ? { status: minutes.status, gaps } : null,

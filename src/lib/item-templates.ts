@@ -14,7 +14,16 @@ const bareWord = (w: string) => w.replace(/^(وال|بال|فال|لل|ال|و|�
 
 /** A company's own library rows as templates. */
 export const libraryTemplates = (rows: { title: string; title_en?: string | null; body?: string | null; kind: string; category: string; needs: string | null }[]): Template[] =>
-  rows.map((r) => ({ category: r.category, body: (r.body ?? "any") as Body, keys: [], title: r.title, kind: r.kind as Kind, ...(r.title_en ? { en: r.title_en } : {}), ...(r.needs ? { needs: r.needs } : {}) }));
+  rows.map((r) => ({
+    category: r.category,
+    body: (r.body ?? "any") as Body,
+    keys: [],
+    title: r.title,
+    kind: r.kind as Kind,
+    ...(r.title_en ? { en: r.title_en } : {}),
+    // A company item's requirements are documents requested from the item owner.
+    ...(r.needs ? { needs: r.needs, reqs: r.needs.split("؛").map((n) => n.trim()).filter(Boolean).map((ar) => ({ k: "doc" as const, ar, en: ar, from: "owner" as const })) } : {}),
+  }));
 
 /**
  * Search-as-you-type over standard titles: every typed word, including the

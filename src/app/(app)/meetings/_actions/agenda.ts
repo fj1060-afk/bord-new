@@ -5,6 +5,7 @@ import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
 import { isOneOf } from "@/lib/org";
 import { templateGaps } from "@/lib/item-review";
+import { syncItemRequirements } from "@/lib/requirements-server";
 import { ITEM_KINDS, moveItem } from "@/lib/meetings";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -41,6 +42,7 @@ export async function saveAgendaItem(meetingId: string, itemId: string | null, _
   if ("error" in item) return { ok: false, message: item.error! };
   const supabase = await createClient();
 
+  let savedId = itemId;
   if (itemId) {
     const { error } = await supabase.from("agenda_items").update(item.row).eq("id", itemId);
     if (error) return { ok: false, message: "تعذّر حفظ البند." };
@@ -52,11 +54,16 @@ export async function saveAgendaItem(meetingId: string, itemId: string | null, _
       .order("position", { ascending: false })
       .limit(1)
       .maybeSingle();
-    const { error } = await supabase
+    const { data: created, error } = await supabase
       .from("agenda_items")
-      .insert({ ...item.row, meeting_id: meetingId, position: (last?.position ?? 0) + 1 });
-    if (error) return { ok: false, message: "تعذّرت إضافة البند." };
+      .insert({ ...item.row, meeting_id: meetingId, position: (last?.position ?? 0) + 1 })
+      .select("id")
+      .single();
+    if (error || !created) return { ok: false, message: "تعذّرت إضافة البند." };
+    savedId = created.id;
   }
+  // Requirements are drafted, not sent; the secretary sends them for the whole meeting.
+  await syncItemRequirements(supabase, meetingId, savedId!);
   revalidatePath(`/meetings/${meetingId}`);
   return { ok: true, message: itemId ? "حُفظ البند." : "أُضيف البند." };
 }

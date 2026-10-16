@@ -3,11 +3,18 @@
 // Governance Regulations, the CMA Implementing Regulation for listed companies
 // ("اللائحة التنفيذية للمدرجة") and the CMA continuing obligations rules
 // ("قواعد الطرح"); see docs/GOVERNANCE-RULES.md.
+// Each item lists its requirements as actions (see ./requirements); `needs`
+// is derived from them for the parts of the app that show a plain line.
+
+import { partTwo } from "./item-templates-data-2";
+import { partThree } from "./item-templates-data-3";
+import { after, chk, disclose, doc, ega, egaEn, fy, fyEn, ga, gaEn, noInterest, period, periodEn, rec } from "./item-templates-kit";
+import { needsText, needsTextEn, type Req } from "./requirements";
 
 export type Kind = "information" | "discussion" | "decision";
 /** Which meeting an item belongs to; "any" fits every board or committee meeting. */
 export type Body = "board" | "audit" | "nrc" | "risk" | "any";
-export type Template = { category: string; body: Body; keys: string[]; title: string; en?: string; kind: Kind; needs?: string };
+export type Template = { category: string; body: Body; keys: string[]; title: string; en?: string; kind: Kind; reqs?: Req[]; needs?: string; needsEn?: string };
 
 export const BODIES: Record<Body, string> = { board: "مجلس الإدارة", audit: "لجنة المراجعة", nrc: "لجنة الترشيحات والمكافآت", risk: "لجنة المخاطر", any: "أي اجتماع" };
 
@@ -27,172 +34,299 @@ export const CATEGORIES = [
   "بنود الشركة",
 ] as const;
 
-type T = Omit<Template, "category">;
+export type Category = (typeof CATEGORIES)[number];
+/** A library item as written: its category comes from its group and `needs` from its requirements. */
+export type Item = Omit<Template, "category" | "needs" | "needsEn">;
+/** Groups of items kept in the other data files. */
+export type Part = [Category, Item[]][];
 
-/** What a policy item needs before the board votes on it. */
-const POLICY = "مسودة السياسة النهائية؛ جدول مقارنة التعديلات ومبرراتها (عند التحديث)؛ توصية اللجنة المختصة؛ المراجعة القانونية والتوافق مع الأنظمة والنظام الأساس؛ الإدارة المالكة للسياسة وتاريخ النفاذ وموعد المراجعة القادمة";
-const group = (category: (typeof CATEGORIES)[number], items: T[]): Template[] => items.map((i) => ({ category, ...i }));
+const group = (category: Category, items: Item[]): Template[] =>
+  items.map((i) => ({ category, ...i, needs: needsText(i.reqs) || undefined, needsEn: needsTextEn(i.reqs) || undefined }));
 
 export function buildTemplates(): Template[] {
-  // Years and dates are left as blanks for the secretary to fill; an item cannot be saved with a blank.
-  const fy = "للسنة المالية المنتهية في (…)";
-  const fyEn = "for the financial year ended (…)";
-  const period = "للفترة المنتهية في (…)";
-  const periodEn = "for the period ended (…)";
-  const ga = "التوصية للجمعية العامة العادية";
-  const gaEn = "Recommending to the Ordinary General Assembly";
-  const ega = "التوصية للجمعية العامة غير العادية";
-  const egaEn = "Recommending to the Extraordinary General Assembly";
-
   return [
     ...group("الاجتماعات والمحاضر", [
-      { body: "any", keys: ["جدول الاعمال", "جدول اعمال"], kind: "decision", title: "التصويت على اعتماد جدول أعمال الاجتماع", en: "Approving the meeting agenda", needs: "مسودة جدول الأعمال المرسلة مع الدعوة قبل 5 أيام على الأقل مع مستنداتها (لائحة الحوكمة م30)؛ البنود الإضافية التي يقترحها الأعضاء؛ يُثبت أي اعتراض في المحضر (لائحة الحوكمة م33)" },
-      { body: "any", keys: ["المحضر", "محضر", "الاجتماع السابق"], kind: "decision", title: "التصويت على اعتماد محضر الاجتماع السابق", en: "Approving the minutes of the previous meeting", needs: "مسودة المحضر المعمّمة على الأعضاء؛ ملاحظات الأعضاء عليها؛ توقيعه من رئيس الاجتماع والأعضاء الحاضرين وأمين السر وقيده في السجل الخاص (نظام الشركات م83)" },
-      { body: "any", keys: ["متابعه", "القرارات السابقه", "تنفيذ القرارات"], kind: "information", title: "متابعة تنفيذ القرارات السابقة", en: "Follow-up on the implementation of previous resolutions", needs: "سجل متابعة القرارات محدّثاً (الجهة المسؤولة، الموعد، نسبة الإنجاز)؛ مبررات التأخير والإجراءات التصحيحية؛ القرارات المقترح إغلاقها" },
-      { body: "board", keys: ["التمرير", "بالتمرير"], kind: "decision", title: "إثبات قرارات المجلس الصادرة بالتمرير منذ الاجتماع السابق", en: "Recording the board resolutions passed by circulation since the previous meeting", needs: "نسخ القرارات ونتائج التصويت (نظام الشركات م82)؛ ما يثبت تعميمها على جميع الأعضاء وعدم طلب أي عضو مداولتها في اجتماع؛ قيدها في محضر هذا الاجتماع" },
-      { body: "any", keys: ["تعارض", "الافصاح عن"], kind: "information", title: "إفصاح الأعضاء عن تعارض المصالح في بنود الاجتماع", en: "Members' disclosure of conflicts of interest in the agenda items", needs: "سجل الإفصاحات (نظام الشركات م71)؛ إقرارات الأعضاء المحدّثة عن مصالحهم في بنود الاجتماع؛ إثبات الإفصاح في المحضر واستبعاد العضو صاحب المصلحة من المداولة والتصويت (لائحة الحوكمة م42)" },
-      { body: "board", keys: ["تقرير الرئيس التنفيذي", "الرئيس التنفيذي", "تقرير الاداره"], kind: "information", title: `الاطلاع على تقرير الرئيس التنفيذي عن أداء الشركة ${period}`, en: `Reviewing the CEO's report on the company's performance ${periodEn}`, needs: "تقرير الرئيس التنفيذي (الأداء المالي والتشغيلي مقارنة بالموازنة، مؤشرات الأداء، المشاريع الرئيسة، المخاطر والمستجدات الجوهرية)" },
-      { body: "any", keys: ["تقارير اللجان", "تقرير اللجان"], kind: "information", title: "الاطلاع على تقارير لجان المجلس وتوصياتها", en: "Reviewing the reports and recommendations of the board committees", needs: "تقارير اللجان ومحاضر اجتماعاتها منذ آخر اجتماع للمجلس (لائحة الحوكمة م47)؛ التوصيات المرفوعة للمجلس وما يتطلب منها قراراً" },
-      { body: "board", keys: ["التقويم", "خطه الاجتماعات", "مواعيد الاجتماعات"], kind: "decision", title: `التصويت على اعتماد التقويم السنوي لاجتماعات المجلس ولجانه لعام (…)`, en: `Approving the annual calendar of board and committee meetings for (…)`, needs: "مسودة التقويم (4 اجتماعات على الأقل، واحد كل ربع للشركات المدرجة)؛ مواءمته مع مواعيد إعلان النتائج المالية والجمعية العامة واجتماعات اللجان (لائحة الحوكمة م30)" },
+      { body: "any", keys: ["جدول الاعمال", "جدول اعمال"], kind: "decision", title: "التصويت على اعتماد جدول أعمال الاجتماع", en: "Approving the meeting agenda", reqs: [
+        doc("مسودة جدول الأعمال المرسلة مع الدعوة قبل 5 أيام على الأقل مع مستنداتها (لائحة الحوكمة م30)", "Draft agenda sent with the invitation and its documents at least 5 days before the meeting (CGR Art. 30)", "secretary"),
+        doc("البنود الإضافية التي يقترحها الأعضاء", "Additional items proposed by members", "secretary"),
+        after("إثبات أي اعتراض في المحضر (لائحة الحوكمة م33)", "Record any objection in the minutes (CGR Art. 33)", undefined, "secretary"),
+      ] },
+      { body: "any", keys: ["المحضر", "محضر", "الاجتماع السابق"], kind: "decision", title: "التصويت على اعتماد محضر الاجتماع السابق", en: "Approving the minutes of the previous meeting", reqs: [
+        doc("مسودة المحضر المعمّمة على الأعضاء", "Draft minutes circulated to members", "secretary"),
+        doc("ملاحظات الأعضاء على المسودة", "Members' comments on the draft", "secretary"),
+        after("توقيع المحضر من رئيس الاجتماع والأعضاء الحاضرين وأمين السر وقيده في السجل الخاص (نظام الشركات م83)", "Minutes signed by the chair, attending members and the secretary and entered in the minutes register (Companies Law Art. 83)", undefined, "secretary"),
+      ] },
+      { body: "any", keys: ["متابعه", "القرارات السابقه", "تنفيذ القرارات"], kind: "information", title: "متابعة تنفيذ القرارات السابقة", en: "Follow-up on the implementation of previous resolutions", reqs: [
+        doc("سجل متابعة القرارات محدّثاً (الجهة المسؤولة، الموعد، نسبة الإنجاز)", "Updated resolutions tracker (owner, due date, progress)", "secretary"),
+        doc("مبررات التأخير والإجراءات التصحيحية", "Reasons for delays and corrective actions"),
+        doc("القرارات المقترح إغلاقها", "Resolutions proposed for closure", "secretary"),
+      ] },
+      { body: "board", keys: ["التمرير", "بالتمرير"], kind: "decision", title: "إثبات قرارات المجلس الصادرة بالتمرير منذ الاجتماع السابق", en: "Recording the board resolutions passed by circulation since the previous meeting", reqs: [
+        doc("نسخ القرارات ونتائج التصويت (نظام الشركات م82)", "Copies of the resolutions and voting results (Companies Law Art. 82)", "secretary"),
+        chk("التحقق من تعميم القرارات على جميع الأعضاء وعدم طلب أي عضو مداولتها في اجتماع", "Confirm the resolutions were circulated to all members and no member asked for them to be deliberated in a meeting"),
+        after("قيد القرارات في محضر هذا الاجتماع", "Record the resolutions in this meeting's minutes", undefined, "secretary"),
+      ] },
+      { body: "any", keys: ["تعارض", "الافصاح عن"], kind: "information", title: "إفصاح الأعضاء عن تعارض المصالح في بنود الاجتماع", en: "Members' disclosure of conflicts of interest in the agenda items", reqs: [
+        doc("سجل الإفصاحات (نظام الشركات م71)", "Disclosure register (Companies Law Art. 71)", "secretary"),
+        doc("إقرارات الأعضاء المحدّثة عن مصالحهم في بنود الاجتماع", "Members' updated declarations of their interests in the agenda items", "secretary"),
+        noInterest("إثبات الإفصاح في المحضر واستبعاد العضو صاحب المصلحة من المداولة والتصويت (لائحة الحوكمة م42)", "Record the disclosure in the minutes and exclude the interested member from deliberation and voting (CGR Art. 42)"),
+      ] },
+      { body: "board", keys: ["تقرير الرئيس التنفيذي", "الرئيس التنفيذي", "تقرير الاداره"], kind: "information", title: `الاطلاع على تقرير الرئيس التنفيذي عن أداء الشركة ${period}`, en: `Reviewing the CEO's report on the company's performance ${periodEn}`, reqs: [
+        doc("تقرير الرئيس التنفيذي (الأداء المالي والتشغيلي مقارنة بالموازنة، مؤشرات الأداء، المشاريع الرئيسة، المخاطر والمستجدات الجوهرية)", "CEO's report (financial and operational performance against budget, KPIs, major projects, risks and material developments)"),
+      ] },
+      { body: "any", keys: ["تقارير اللجان", "تقرير اللجان"], kind: "information", title: "الاطلاع على تقارير لجان المجلس وتوصياتها", en: "Reviewing the reports and recommendations of the board committees", reqs: [
+        doc("تقارير اللجان ومحاضر اجتماعاتها منذ آخر اجتماع للمجلس (لائحة الحوكمة م47)", "Committee reports and minutes since the last board meeting (CGR Art. 47)", "secretary"),
+        doc("التوصيات المرفوعة للمجلس وما يتطلب منها قراراً", "Recommendations submitted to the board and those requiring a resolution", "secretary"),
+      ] },
+      { body: "board", keys: ["التقويم", "خطه الاجتماعات", "مواعيد الاجتماعات"], kind: "decision", title: `التصويت على اعتماد التقويم السنوي لاجتماعات المجلس ولجانه لعام (…)`, en: `Approving the annual calendar of board and committee meetings for (…)`, reqs: [
+        doc("مسودة التقويم (4 اجتماعات على الأقل، واحد كل ربع للشركات المدرجة)", "Draft calendar (at least 4 meetings, one per quarter for listed companies)", "secretary"),
+        chk("مواءمة التقويم مع مواعيد إعلان النتائج المالية والجمعية العامة واجتماعات اللجان (لائحة الحوكمة م30)", "Calendar aligned with financial results announcements, the General Assembly and committee meetings (CGR Art. 30)"),
+      ] },
       { body: "any", keys: ["ما يستجد", "اخري", "مستجدات"], kind: "discussion", title: "ما يستجد من أعمال", en: "Any other business" },
     ]),
     ...group("التقارير المالية والموازنة", [
-      { body: "board", keys: ["القوائم الماليه", "البيانات الماليه", "الحسابات الختاميه", "السنويه"], kind: "decision", title: `التصويت على اعتماد القوائم المالية ${fy}`, en: `Approving the financial statements ${fyEn}`, needs: "توصية لجنة المراجعة؛ تقرير مراجع الحسابات؛ القوائم المالية؛ خطاب الإدارة؛ توقيعها من رئيس المجلس والرئيس التنفيذي والمدير المالي (نظام الشركات م121)؛ الإفصاح في تداول فور الاعتماد للمدرجة (قواعد الطرح م81)" },
-      { body: "board", keys: ["القوائم الماليه", "البيانات الماليه", "الاوليه", "الربعيه", "الربع"], kind: "decision", title: `التصويت على اعتماد القوائم المالية الأولية الموجزة ${period}`, en: `Approving the condensed interim financial statements ${periodEn}`, needs: "توصية لجنة المراجعة؛ تقرير الفحص من مراجع الحسابات؛ القوائم المالية الأولية الموجزة؛ تفويض عضو بالتوقيع مع الرئيس التنفيذي والمدير المالي؛ الإفصاح في تداول خلال 30 يوماً من نهاية الفترة (قواعد الطرح م81)" },
-      { body: "board", keys: ["تقرير مجلس الاداره", "التقرير السنوي"], kind: "decision", title: `التصويت على اعتماد تقرير مجلس الإدارة ${fy} ورفعه للجمعية العامة`, en: `Approving the board of directors' report ${fyEn} for submission to the General Assembly`, needs: "مسودة التقرير وفق متطلبات لائحة الحوكمة م87؛ جداول المكافآت (لائحة الحوكمة م90)؛ مقترح توزيع الأرباح (نظام الشركات م121)؛ إتاحته للمساهمين قبل الجمعية بـ21 يوماً على الأقل (نظام الشركات م122)" },
-      { body: "board", keys: ["تقرير لجنه المراجعه"], kind: "decision", title: `التصويت على اعتماد تقرير لجنة المراجعة ${fy} لعرضه على الجمعية العامة`, en: `Approving the audit committee report ${fyEn} for presentation to the General Assembly`, needs: "تقرير لجنة المراجعة متضمناً رأيها في كفاية أنظمة الرقابة الداخلية والمالية وإدارة المخاطر (لائحة الحوكمة م88)؛ نشره على موقعي الشركة وتداول مع دعوة الجمعية" },
-      { body: "board", keys: ["الموازنه", "الميزانيه", "التقديريه"], kind: "decision", title: `التصويت على اعتماد الموازنة التقديرية لعام (…)`, en: `Approving the budget for (…)`, needs: "مشروع الموازنة من الإدارة التنفيذية؛ الافتراضات الرئيسة؛ المقارنة بالمتوقع للعام الحالي؛ توقعات التدفقات النقدية والتمويل؛ مواءمتها مع الخطة الاستراتيجية؛ توصية اللجنة التنفيذية (إن وجدت)" },
-      { body: "board", keys: ["الاداء", "اداء", "مؤشرات"], kind: "discussion", title: `مناقشة تقرير أداء الشركة ${period}`, en: `Discussing the company's performance report ${periodEn}`, needs: "تقرير الأداء ومؤشراته مقارنة بالموازنة والفترة المماثلة؛ تحليل الانحرافات الجوهرية وأسبابها؛ الإجراءات التصحيحية المقترحة" },
-      { body: "board", keys: ["زكاه", "الزكوي", "ضريبه", "الضريبي"], kind: "decision", title: `التصويت على اعتماد الإقرار الزكوي والضريبي ${fy}`, en: `Approving the zakat and tax return ${fyEn}`, needs: "الإقرار؛ رأي المستشار الزكوي؛ القوائم المالية المعتمدة التي بُني عليها؛ المقارنة بالسنة السابقة وبالمخصص المكوّن؛ موعد التقديم النظامي لهيئة الزكاة والضريبة والجمارك" },
-      { body: "board", keys: ["زكاه", "تسويه", "هيئه الزكاه", "ربط زكوي"], kind: "decision", title: "التصويت على التسوية مع هيئة الزكاة والضريبة والجمارك بشأن الربط الزكوي/الضريبي للأعوام (…) بمبلغ (…) ريال", en: "Approving the settlement with ZATCA on the zakat/tax assessments for the years (…) for SAR (…)", needs: "الربط والاعتراض؛ رأي المستشار؛ الأثر المالي؛ مقارنة مبلغ التسوية بالمخصص المكوّن؛ توصية لجنة المراجعة؛ تقييم الإفصاح للمدرجة إن كان الأثر جوهرياً" },
-      { body: "board", keys: ["احتياطي", "الاحتياطي", "احتياطيات"], kind: "decision", title: `${ga} بتكوين/استخدام احتياطي (…) بمبلغ (…) ريال ${fy}`, en: `${gaEn} the formation/use of the (…) reserve of SAR (…) ${fyEn}`, needs: "القوائم المالية؛ نص النظام الأساس؛ الغرض والمبلغ المقترح؛ تكوين الاحتياطي من صافي الربح عند تقرير الأرباح (نظام الشركات م123)؛ الاحتياطي المخصص لغرض في النظام الأساس لا يُستخدم إلا بقرار جمعية غير عادية، وغير المخصص تستخدمه الجمعية العادية بتوصية المجلس (نظام الشركات م124)" },
-      { body: "board", keys: ["مشاريع راسماليه", "راسماليه", "توسع", "توسعه"], kind: "decision", title: `التصويت على اعتماد خطة المصروفات الرأسمالية لعام (…) بمبلغ (…) ريال`, en: `Approving the capital expenditure plan for (…) of SAR (…)`, needs: "دراسات الجدوى؛ مصادر التمويل؛ قائمة المشاريع وتكلفتها وجدولها الزمني وأولوياتها؛ العائد المتوقع وفترة الاسترداد؛ مواءمتها مع الموازنة والخطة الاستراتيجية" },
+      { body: "board", keys: ["القوائم الماليه", "البيانات الماليه", "الحسابات الختاميه", "السنويه"], kind: "decision", title: `التصويت على اعتماد القوائم المالية ${fy}`, en: `Approving the financial statements ${fyEn}`, reqs: [
+        rec("توصية لجنة المراجعة", "Audit committee recommendation", "audit"),
+        doc("تقرير مراجع الحسابات", "External auditor's report", "finance"),
+        doc("القوائم المالية", "Financial statements", "finance"),
+        doc("خطاب الإدارة", "Management letter", "finance"),
+        after("توقيع القوائم من رئيس المجلس والرئيس التنفيذي والمدير المالي (نظام الشركات م121)", "Statements signed by the chairman, CEO and CFO (Companies Law Art. 121)", undefined, "secretary"),
+        after("الإفصاح في تداول فور الاعتماد للمدرجة (قواعد الطرح م81)", "Disclosure on Tadawul immediately upon approval (listed companies; OSCOs Art. 81)", "immediate", "ir"),
+      ] },
+      { body: "board", keys: ["القوائم الماليه", "البيانات الماليه", "الاوليه", "الربعيه", "الربع"], kind: "decision", title: `التصويت على اعتماد القوائم المالية الأولية الموجزة ${period}`, en: `Approving the condensed interim financial statements ${periodEn}`, reqs: [
+        rec("توصية لجنة المراجعة", "Audit committee recommendation", "audit"),
+        doc("تقرير الفحص من مراجع الحسابات", "External auditor's review report", "finance"),
+        doc("القوائم المالية الأولية الموجزة", "Condensed interim financial statements", "finance"),
+        after("تفويض عضو بالتوقيع مع الرئيس التنفيذي والمدير المالي", "Authorize a board member to sign with the CEO and CFO", undefined, "secretary"),
+        after("الإفصاح في تداول خلال 30 يوماً من نهاية الفترة (قواعد الطرح م81)", "Disclosure on Tadawul within 30 days of the period end (OSCOs Art. 81)", "30d", "ir"),
+      ] },
+      { body: "board", keys: ["تقرير مجلس الاداره", "التقرير السنوي"], kind: "decision", title: `التصويت على اعتماد تقرير مجلس الإدارة ${fy} ورفعه للجمعية العامة`, en: `Approving the board of directors' report ${fyEn} for submission to the General Assembly`, reqs: [
+        doc("مسودة التقرير وفق متطلبات لائحة الحوكمة م87", "Draft report meeting the requirements of CGR Art. 87"),
+        doc("جداول المكافآت (لائحة الحوكمة م90)", "Remuneration tables (CGR Art. 90)", "hr"),
+        doc("مقترح توزيع الأرباح (نظام الشركات م121)", "Proposed dividend distribution (Companies Law Art. 121)", "finance"),
+        after("إتاحة التقرير للمساهمين قبل الجمعية بـ21 يوماً على الأقل (نظام الشركات م122)", "Make the report available to shareholders at least 21 days before the General Assembly (Companies Law Art. 122)", "before_ga", "ir"),
+      ] },
+      { body: "board", keys: ["تقرير لجنه المراجعه"], kind: "decision", title: `التصويت على اعتماد تقرير لجنة المراجعة ${fy} لعرضه على الجمعية العامة`, en: `Approving the audit committee report ${fyEn} for presentation to the General Assembly`, reqs: [
+        doc("تقرير لجنة المراجعة متضمناً رأيها في كفاية أنظمة الرقابة الداخلية والمالية وإدارة المخاطر (لائحة الحوكمة م88)", "Audit committee report including its opinion on the adequacy of internal, financial and risk controls (CGR Art. 88)", "audit"),
+        after("نشر التقرير على موقعي الشركة وتداول مع دعوة الجمعية", "Publish the report on the company website and Tadawul with the General Assembly invitation", "before_ga", "ir"),
+      ] },
+      { body: "board", keys: ["الموازنه", "الميزانيه", "التقديريه"], kind: "decision", title: `التصويت على اعتماد الموازنة التقديرية لعام (…)`, en: `Approving the budget for (…)`, reqs: [
+        doc("مشروع الموازنة من الإدارة التنفيذية", "Draft budget from the executive management", "finance"),
+        doc("الافتراضات الرئيسة", "Key assumptions", "finance"),
+        doc("المقارنة بالمتوقع للعام الحالي", "Comparison with the current year's forecast", "finance"),
+        doc("توقعات التدفقات النقدية والتمويل", "Cash flow and funding projections", "finance"),
+        chk("مواءمة الموازنة مع الخطة الاستراتيجية", "Budget aligned with the strategic plan"),
+        rec("توصية اللجنة التنفيذية (إن وجدت)", "Executive committee recommendation (if any)"),
+      ] },
+      { body: "board", keys: ["الاداء", "اداء", "مؤشرات"], kind: "discussion", title: `مناقشة تقرير أداء الشركة ${period}`, en: `Discussing the company's performance report ${periodEn}`, reqs: [
+        doc("تقرير الأداء ومؤشراته مقارنة بالموازنة والفترة المماثلة", "Performance report and KPIs against budget and the same period last year"),
+        doc("تحليل الانحرافات الجوهرية وأسبابها", "Analysis of material variances and their causes"),
+        doc("الإجراءات التصحيحية المقترحة", "Proposed corrective actions"),
+      ] },
+      { body: "board", keys: ["زكاه", "الزكوي", "ضريبه", "الضريبي"], kind: "decision", title: `التصويت على اعتماد الإقرار الزكوي والضريبي ${fy}`, en: `Approving the zakat and tax return ${fyEn}`, reqs: [
+        doc("الإقرار الزكوي والضريبي", "Zakat and tax return", "finance"),
+        doc("رأي المستشار الزكوي", "Zakat adviser's opinion", "finance"),
+        doc("القوائم المالية المعتمدة التي بُني عليها", "Approved financial statements the return is based on", "finance"),
+        doc("المقارنة بالسنة السابقة وبالمخصص المكوّن", "Comparison with the prior year and the recorded provision", "finance"),
+        after("التقديم لهيئة الزكاة والضريبة والجمارك في الموعد النظامي", "File with ZATCA by the statutory deadline", undefined, "finance"),
+      ] },
+      { body: "board", keys: ["زكاه", "تسويه", "هيئه الزكاه", "ربط زكوي"], kind: "decision", title: "التصويت على التسوية مع هيئة الزكاة والضريبة والجمارك بشأن الربط الزكوي/الضريبي للأعوام (…) بمبلغ (…) ريال", en: "Approving the settlement with ZATCA on the zakat/tax assessments for the years (…) for SAR (…)", reqs: [
+        doc("الربط والاعتراض", "Assessment and objection", "finance"),
+        doc("رأي المستشار", "Adviser's opinion", "finance"),
+        doc("الأثر المالي", "Financial impact", "finance"),
+        doc("مقارنة مبلغ التسوية بالمخصص المكوّن", "Settlement amount compared with the recorded provision", "finance"),
+        rec("توصية لجنة المراجعة", "Audit committee recommendation", "audit"),
+        disclose("تقييم الإفصاح للمدرجة إن كان الأثر جوهرياً", "Assess disclosure if the impact is material (listed companies)"),
+      ] },
+      { body: "board", keys: ["احتياطي", "الاحتياطي", "احتياطيات"], kind: "decision", title: `${ga} بتكوين/استخدام احتياطي (…) بمبلغ (…) ريال ${fy}`, en: `${gaEn} the formation/use of the (…) reserve of SAR (…) ${fyEn}`, reqs: [
+        doc("القوائم المالية", "Financial statements", "finance"),
+        doc("نص النظام الأساس", "Relevant bylaws provision", "legal"),
+        doc("الغرض والمبلغ المقترح", "Purpose and proposed amount", "finance"),
+        chk("تكوين الاحتياطي من صافي الربح عند تقرير الأرباح (نظام الشركات م123)", "Reserve formed from net profit when profits are declared (Companies Law Art. 123)"),
+        chk("الاحتياطي المخصص لغرض في النظام الأساس لا يُستخدم إلا بقرار جمعية غير عادية، وغير المخصص تستخدمه الجمعية العادية بتوصية المجلس (نظام الشركات م124)", "A reserve earmarked in the bylaws is used only by an Extraordinary GA resolution; an unearmarked one by the Ordinary GA on the board's recommendation (Companies Law Art. 124)"),
+      ] },
+      { body: "board", keys: ["مشاريع راسماليه", "راسماليه", "توسع", "توسعه"], kind: "decision", title: `التصويت على اعتماد خطة المصروفات الرأسمالية لعام (…) بمبلغ (…) ريال`, en: `Approving the capital expenditure plan for (…) of SAR (…)`, reqs: [
+        doc("دراسات الجدوى", "Feasibility studies"),
+        doc("مصادر التمويل", "Funding sources", "finance"),
+        doc("قائمة المشاريع وتكلفتها وجدولها الزمني وأولوياتها", "List of projects with costs, timeline and priorities"),
+        doc("العائد المتوقع وفترة الاسترداد", "Expected return and payback period"),
+        chk("مواءمتها مع الموازنة والخطة الاستراتيجية", "Aligned with the budget and the strategic plan"),
+      ] },
     ]),
     ...group("المراجعة والأرباح", [
-      { body: "board", keys: ["مراجع الحسابات", "المراجع الخارجي", "مراجع"], kind: "decision", title: `${ga} بتعيين مراجع الحسابات من بين المرشحين بناءً على توصية لجنة المراجعة، لفحص ومراجعة وتدقيق القوائم المالية للربعين الثاني والثالث والقوائم السنوية للعام المالي (…) والربع الأول من العام المالي (…)، وتحديد أتعابه`, en: `${gaEn} the appointment of the external auditor from among the nominees, based on the audit committee's recommendation, to review and audit the financial statements for the second and third quarters and the annual financial statements for the financial year (…) and the first quarter of the financial year (…), and determine its fees`, needs: "توصية لجنة المراجعة؛ تحديد الجمعية أتعاب المراجع ونطاق عمله ومدة تكليفه (نظام الشركات م18؛ اللائحة التنفيذية للمدرجة م3)؛ عروض المراجعين (مرشحان على الأقل، لائحة الحوكمة م78)؛ إقرارات الاستقلال وترخيص المراجعين؛ مدة المراجع الحالي (7 سنوات حداً أقصى للمدرجة، اللائحة التنفيذية للمدرجة م3)" },
-      { body: "board", keys: ["توزيع", "الارباح", "ارباح", "نقديه"], kind: "decision", title: `${ga} بتوزيع أرباح نقدية على المساهمين عن العام المالي (…) بواقع (…) ريال للسهم وبإجمالي (…) ريال، على أن تكون الأحقية للمساهمين المسجلين بنهاية يوم (…) ويبدأ التوزيع في (…)`, en: `${gaEn} a cash dividend for the financial year (…) of SAR (…) per share, totalling SAR (…), to shareholders registered at the end of (…), with distribution starting on (…)`, needs: "الأرباح القابلة للتوزيع وفق آخر قوائم مالية مدققة؛ سياسة توزيع الأرباح؛ الأثر على السيولة والتعهدات البنكية؛ تاريخا الأحقية والتوزيع في قرار الجمعية (نظام الشركات م125/2)؛ الصرف خلال 15 يوم عمل من تاريخ الأحقية للمدرجة (اللائحة التنفيذية للمدرجة م46)؛ الإفصاح الفوري عن التوصية للمدرجة (قواعد الطرح م80)" },
-      { body: "board", keys: ["مرحليه", "توزيع", "ارباح"], kind: "decision", title: `التصويت على توزيع أرباح مرحلية ${period} بواقع (…) ريال للسهم وبإجمالي (…) ريال بناءً على تفويض الجمعية العامة، على أن تكون الأحقية للمساهمين المسجلين بنهاية يوم (…) ويبدأ التوزيع في (…)`, en: `Approving an interim dividend ${periodEn} of SAR (…) per share, totalling SAR (…), under the General Assembly's authorization, to shareholders registered at the end of (…), with distribution starting on (…)`, needs: "قرار الجمعية بالتفويض؛ القوائم المالية الأولية؛ ملاءة السيولة؛ انتظام الربحية وكفاية الأرباح القابلة للتوزيع (اللائحة التنفيذية للمدرجة م47)؛ تاريخا الأحقية والتوزيع في القرار (لائحة الحوكمة م9)؛ الصرف خلال 15 يوم عمل من تاريخ الأحقية (اللائحة التنفيذية للمدرجة م46)؛ الإفصاح الفوري عن القرار (اللائحة التنفيذية للمدرجة م49)" },
-      { body: "board", keys: ["تفويض", "مرحليه"], kind: "decision", title: `${ga} بتفويض مجلس الإدارة بتوزيع أرباح مرحلية على المساهمين بشكل نصف سنوي أو ربع سنوي عن العام المالي (…)`, en: `${gaEn} authorizing the board to distribute interim dividends to shareholders on a semi-annual or quarterly basis for the financial year (…)`, needs: "نص النظام الأساس الذي يجيز التوزيع المرحلي؛ سياسة توزيع الأرباح؛ مؤشرات الربحية والسيولة المتوقعة؛ تجديد التفويض سنوياً (اللائحة التنفيذية للمدرجة م47)" },
-      { body: "board", keys: ["الاحقيه", "تاريخ الصرف", "صرف الارباح"], kind: "decision", title: "التصويت على اتخاذ إجراءات صرف الأرباح التي أقرتها الجمعية العامة بتاريخ (…) وفق تاريخي الأحقية والتوزيع المحددين في قرارها", en: "Implementing the payment of the dividend approved by the General Assembly on (…) on the record and distribution dates set in its resolution", needs: "قرار الجمعية متضمناً تاريخي الأحقية والتوزيع، فلا يحددهما المجلس لاحقاً (نظام الشركات م125/2)؛ الصرف خلال 15 يوم عمل من تاريخ الأحقية للمدرجة (اللائحة التنفيذية للمدرجة م46)؛ التنسيق مع مركز إيداع الأوراق المالية؛ توافر السيولة في تاريخ الصرف؛ الإفصاح للمدرجة" },
+      { body: "board", keys: ["مراجع الحسابات", "المراجع الخارجي", "مراجع"], kind: "decision", title: `${ga} بتعيين مراجع الحسابات من بين المرشحين بناءً على توصية لجنة المراجعة، لفحص ومراجعة وتدقيق القوائم المالية للربعين الثاني والثالث والقوائم السنوية للعام المالي (…) والربع الأول من العام المالي (…)، وتحديد أتعابه`, en: `${gaEn} the appointment of the external auditor from among the nominees, based on the audit committee's recommendation, to review and audit the financial statements for the second and third quarters and the annual financial statements for the financial year (…) and the first quarter of the financial year (…), and determine its fees`, reqs: [
+        rec("توصية لجنة المراجعة", "Audit committee recommendation", "audit"),
+        chk("تحديد الجمعية أتعاب المراجع ونطاق عمله ومدة تكليفه (نظام الشركات م18؛ اللائحة التنفيذية للمدرجة م3)", "The General Assembly sets the auditor's fees, scope and term (Companies Law Art. 18; IR Art. 3)"),
+        doc("عروض المراجعين (مرشحان على الأقل، لائحة الحوكمة م78)", "Auditors' proposals (at least two nominees, CGR Art. 78)", "finance"),
+        doc("إقرارات الاستقلال وترخيص المراجعين", "Auditors' independence declarations and licences", "finance"),
+        chk("مدة المراجع الحالي (7 سنوات حداً أقصى للمدرجة، اللائحة التنفيذية للمدرجة م3)", "Current auditor's tenure (7 years maximum for listed companies, IR Art. 3)"),
+      ] },
+      { body: "board", keys: ["توزيع", "الارباح", "ارباح", "نقديه"], kind: "decision", title: `${ga} بتوزيع أرباح نقدية على المساهمين عن العام المالي (…) بواقع (…) ريال للسهم وبإجمالي (…) ريال، على أن تكون الأحقية للمساهمين المسجلين بنهاية يوم (…) ويبدأ التوزيع في (…)`, en: `${gaEn} a cash dividend for the financial year (…) of SAR (…) per share, totalling SAR (…), to shareholders registered at the end of (…), with distribution starting on (…)`, reqs: [
+        doc("الأرباح القابلة للتوزيع وفق آخر قوائم مالية مدققة", "Distributable profits per the latest audited financial statements", "finance"),
+        doc("سياسة توزيع الأرباح", "Dividend policy", "finance"),
+        doc("الأثر على السيولة والتعهدات البنكية", "Impact on liquidity and bank covenants", "finance"),
+        chk("تاريخا الأحقية والتوزيع في قرار الجمعية (نظام الشركات م125/2)", "Record and distribution dates set in the General Assembly resolution (Companies Law Art. 125(2))"),
+        after("الصرف خلال 15 يوم عمل من تاريخ الأحقية للمدرجة (اللائحة التنفيذية للمدرجة م46)", "Payment within 15 business days of the record date (listed companies; IR Art. 46)", "15bd", "finance"),
+        disclose("الإفصاح الفوري عن التوصية للمدرجة (قواعد الطرح م80)", "Immediate disclosure of the recommendation (listed companies; OSCOs Art. 80)"),
+      ] },
+      { body: "board", keys: ["مرحليه", "توزيع", "ارباح"], kind: "decision", title: `التصويت على توزيع أرباح مرحلية ${period} بواقع (…) ريال للسهم وبإجمالي (…) ريال بناءً على تفويض الجمعية العامة، على أن تكون الأحقية للمساهمين المسجلين بنهاية يوم (…) ويبدأ التوزيع في (…)`, en: `Approving an interim dividend ${periodEn} of SAR (…) per share, totalling SAR (…), under the General Assembly's authorization, to shareholders registered at the end of (…), with distribution starting on (…)`, reqs: [
+        doc("قرار الجمعية بالتفويض", "General Assembly authorization resolution", "secretary"),
+        doc("القوائم المالية الأولية", "Interim financial statements", "finance"),
+        doc("ملاءة السيولة", "Liquidity sufficiency", "finance"),
+        chk("انتظام الربحية وكفاية الأرباح القابلة للتوزيع (اللائحة التنفيذية للمدرجة م47)", "Consistent profitability and sufficient distributable profits (IR Art. 47)"),
+        chk("تاريخا الأحقية والتوزيع في القرار (لائحة الحوكمة م9)", "Record and distribution dates set in the resolution (CGR Art. 9)"),
+        after("الصرف خلال 15 يوم عمل من تاريخ الأحقية (اللائحة التنفيذية للمدرجة م46)", "Payment within 15 business days of the record date (IR Art. 46)", "15bd", "finance"),
+        disclose("الإفصاح الفوري عن القرار (اللائحة التنفيذية للمدرجة م49)", "Immediate disclosure of the resolution (IR Art. 49)"),
+      ] },
+      { body: "board", keys: ["تفويض", "مرحليه"], kind: "decision", title: `${ga} بتفويض مجلس الإدارة بتوزيع أرباح مرحلية على المساهمين بشكل نصف سنوي أو ربع سنوي عن العام المالي (…)`, en: `${gaEn} authorizing the board to distribute interim dividends to shareholders on a semi-annual or quarterly basis for the financial year (…)`, reqs: [
+        chk("نص النظام الأساس الذي يجيز التوزيع المرحلي", "Bylaws permit interim distributions"),
+        doc("سياسة توزيع الأرباح", "Dividend policy", "finance"),
+        doc("مؤشرات الربحية والسيولة المتوقعة", "Expected profitability and liquidity indicators", "finance"),
+        chk("تجديد التفويض سنوياً (اللائحة التنفيذية للمدرجة م47)", "Authorization renewed annually (IR Art. 47)"),
+      ] },
+      { body: "board", keys: ["الاحقيه", "تاريخ الصرف", "صرف الارباح"], kind: "decision", title: "التصويت على اتخاذ إجراءات صرف الأرباح التي أقرتها الجمعية العامة بتاريخ (…) وفق تاريخي الأحقية والتوزيع المحددين في قرارها", en: "Implementing the payment of the dividend approved by the General Assembly on (…) on the record and distribution dates set in its resolution", reqs: [
+        doc("قرار الجمعية متضمناً تاريخي الأحقية والتوزيع، فلا يحددهما المجلس لاحقاً (نظام الشركات م125/2)", "General Assembly resolution stating the record and distribution dates, which the board does not set later (Companies Law Art. 125(2))", "secretary"),
+        after("الصرف خلال 15 يوم عمل من تاريخ الأحقية للمدرجة (اللائحة التنفيذية للمدرجة م46)", "Payment within 15 business days of the record date (listed companies; IR Art. 46)", "15bd", "finance"),
+        after("التنسيق مع مركز إيداع الأوراق المالية", "Coordinate with the Securities Depository Center (Edaa)", undefined, "finance"),
+        doc("توافر السيولة في تاريخ الصرف", "Liquidity available on the payment date", "finance"),
+        disclose(),
+      ] },
     ]),
     ...group("المجلس والإدارة التنفيذية", [
-      { body: "board", keys: ["مكافات", "مكافاه", "المكافات"], kind: "decision", title: `${ga} بصرف مبلغ (…) ريال مكافأة لأعضاء مجلس الإدارة عن العام المالي (…)`, en: `${gaEn} paying SAR (…) as remuneration to board members for the financial year (…)`, needs: "توصية لجنة المكافآت؛ حدود النظام الأساس (نظام الشركات م76)؛ سياسة المكافآت المعتمدة؛ بيان مفصل لمكافأة كل عضو وحضوره؛ الإفصاح في تقرير المجلس (لائحة الحوكمة م90)؛ لا يصوّت أعضاء المجلس على هذا البند في الجمعية (اللائحة التنفيذية للمدرجة م7)" },
-      { body: "board", keys: ["الاعمال والعقود", "مصلحه", "ذات علاقه", "ذي علاقه"], kind: "decision", title: `${ga} بالترخيص بالأعمال والعقود التي ستتم بين الشركة و(…) والتي لعضو مجلس الإدارة (…) مصلحة مباشرة أو غير مباشرة فيها، وهي (…) بقيمة (…) ريال`, en: `${gaEn} authorizing the business and contracts between the company and (…) in which board member (…) has a direct or indirect interest, namely (…) of SAR (…)`, needs: "إفصاح العضو؛ تقرير خاص من مراجع الحسابات؛ مراجعة لجنة المراجعة (بند مستقل لكل عقد)؛ شروط التعامل ومقارنتها بالسوق؛ امتناع العضو صاحب المصلحة عن التصويت (نظام الشركات م27/م71/م96)؛ ترخيص الجمعية إذا لم تفوّض المجلس أو لم تتحقق شروط التفويض (اللائحة التنفيذية للمدرجة م65)" },
-      { body: "board", keys: ["ذات علاقه", "ذي علاقه", "ترخيص", "تعامل"], kind: "decision", title: "التصويت على الترخيص بالأعمال والعقود التي ستتم بين الشركة و(…) والتي لعضو مجلس الإدارة (…) مصلحة فيها، بقيمة (…) ريال، بناءً على تفويض الجمعية العامة الصادر بتاريخ (…)", en: "Authorizing the business and contracts between the company and (…) in which board member (…) has an interest, of SAR (…), under the General Assembly's delegation dated (…)", needs: "قيمة التعامل ونسبته من الإيرادات؛ قرار الجمعية بالتفويض وسريانه سنة من تاريخه أو حتى نهاية دورة المجلس أيهما أسبق (اللائحة التنفيذية للمدرجة م64)؛ شروطه: أقل من 1% من الإيرادات و10 ملايين ريال، ضمن النشاط المعتاد، دون شروط تفضيلية (اللائحة التنفيذية للمدرجة م64)؛ إفصاح العضو وامتناعه عن التصويت" },
-      { body: "board", keys: ["منافس", "منافسه"], kind: "decision", title: `${ga} بالترخيص لعضو مجلس الإدارة (…) بالاشتراك في عمل منافس لأعمال الشركة من خلال (…)`, en: `${gaEn} authorizing board member (…) to participate in a business competing with the company through (…)`, needs: "إفصاح العضو وطبيعة العمل المنافس ونطاقه؛ تقييم المنافسة (لائحة الحوكمة م44)؛ رأي قانوني؛ ترخيص الجمعية شرط لازم (نظام الشركات م27)؛ امتناع العضو عن التصويت" },
-      { body: "board", keys: ["انتخاب", "الدوره القادمه", "دوره المجلس"], kind: "decision", title: `${ga} بانتخاب أعضاء مجلس الإدارة من بين المرشحين للدورة القادمة التي تبدأ في (…) وتنتهي في (…)`, en: `${gaEn} the election of board members from among the nominees for the next term starting on (…) and ending on (…)`, needs: "توصية لجنة الترشيحات؛ مدة الدورة وفق النظام الأساس بحد أقصى 4 سنوات (نظام الشركات م68)؛ التصويت التراكمي للمدرجة (اللائحة التنفيذية للمدرجة م5)؛ إعلان الترشح (شهر على الأقل، لائحة الحوكمة م65)؛ السير الذاتية وإقرارات الاستقلال والإفصاح عن تعارض المصالح (لائحة الحوكمة م43)؛ نشر معلومات المرشحين مع الدعوة (لائحة الحوكمة م8)" },
-      { body: "board", keys: ["استقاله", "استقال", "المستقيل"], kind: "decision", title: "التصويت على قبول استقالة عضو مجلس الإدارة (…) اعتباراً من (…)", en: "Accepting the resignation of board member (…) effective (…)", needs: "خطاب الاستقالة وتاريخ نفاذها (نظام الشركات م69)؛ أسباب الاستقالة وملاحظات العضو إن وجدت؛ أثرها على النصاب وتشكيل اللجان؛ إبلاغ الهيئة والسوق فوراً مع الأسباب (اللائحة التنفيذية للمدرجة م6؛ قواعد الطرح م80)" },
-      { body: "board", keys: ["شاغر", "المقعد", "بدل", "بدلا", "بديل", "المستقيل", "استقال"], kind: "decision", title: "التصويت على تعيين (…) عضواً في مجلس الإدارة اعتباراً من (…) بدلاً من العضو المستقيل (…) لإكمال مدة الدورة، وعرض التعيين على أول جمعية عامة عادية", en: "Appointing (…) as a board member effective (…) replacing resigned member (…) for the remainder of the term, subject to the next Ordinary General Assembly", needs: "توصية لجنة الترشيحات؛ السيرة الذاتية وإقرار الاستقلال وتصنيف العضوية (تنفيذي، غير تنفيذي، مستقل)؛ إبلاغ السجل التجاري والهيئة خلال 15 يوماً من التعيين (نظام الشركات م69)؛ ألا يقل عدد الأعضاء بالشغور عن الحد اللازم لصحة الاجتماعات؛ الإفصاح الفوري للمدرجة (قواعد الطرح م80)" },
-      { body: "board", keys: ["رئيس المجلس", "نائب الرئيس", "نائبه"], kind: "decision", title: "التصويت على تعيين (…) رئيساً لمجلس الإدارة و(…) نائباً للرئيس اعتباراً من (…) حتى نهاية الدورة الحالية", en: "Appointing (…) as chairman and (…) as vice-chairman of the board effective (…) until the end of the current term", needs: "قرار الجمعية بانتخاب المجلس؛ التعيين في أول اجتماع للمجلس، ونائب الرئيس إلزامي للمدرجة (نظام الشركات م78)؛ عدم الجمع بين رئاسة المجلس وأي منصب تنفيذي (لائحة الحوكمة م23)؛ تحديد الصلاحيات كتابةً إن خلا منها النظام الأساس (نظام الشركات م78)؛ إبلاغ الجهات وتحديث السجل التجاري" },
-      { body: "board", keys: ["امين السر", "امين سر"], kind: "decision", title: "التصويت على تعيين (…) أميناً لسر مجلس الإدارة وتحديد مهامه ومكافأته", en: "Appointing (…) as board secretary and determining the duties and remuneration", needs: "السيرة الذاتية (لائحة الحوكمة م36)؛ تحديد مهامه وفق لائحة الحوكمة م35؛ مكافأته إن لم يحددها النظام الأساس (نظام الشركات م78)" },
-      { body: "board", keys: ["الرئيس التنفيذي", "التنفيذي"], kind: "decision", title: "التصويت على تعيين (…) رئيساً تنفيذياً للشركة اعتباراً من (…) وتحديد صلاحياته ومكافأته", en: "Appointing (…) as CEO effective (…) and determining the powers and remuneration", needs: "توصية لجنة الترشيحات والمكافآت؛ السيرة الذاتية والتحقق من المؤهلات؛ عدم الجمع بين منصب الرئيس التنفيذي ورئاسة المجلس (لائحة الحوكمة م23)؛ مسودة العقد والمكافأة والصلاحيات (نظام الشركات م78)؛ الإفصاح الفوري للمدرجة (قواعد الطرح م80)؛ تحديث السجل التجاري والمفوضين بالتوقيع" },
-      { body: "board", keys: ["استقاله الرئيس التنفيذي", "انهاء خدمات", "انهاء عقد"], kind: "decision", title: "التصويت على استقالة/إعفاء الرئيس التنفيذي (…) اعتباراً من (…) وتكليف (…) بمهامه مؤقتاً", en: "Resignation/dismissal of CEO (…) effective (…) and assigning (…) as acting CEO", needs: "توصية لجنة الترشيحات والمكافآت؛ صلاحية المجلس في الإعفاء (نظام الشركات م78)؛ الإفصاح الفوري للمدرجة (قواعد الطرح م80)؛ خطاب الاستقالة أو مبررات الإنهاء؛ الرأي القانوني والأثر المالي وفق العقد؛ خطة الإحلال؛ تحديث المفوضين بالتوقيع" },
-      { body: "board", keys: ["المدير المالي", "كبار التنفيذيين", "تعيين مدير"], kind: "decision", title: "التصويت على تعيين (…) في منصب (…) من كبار التنفيذيين اعتباراً من (…)", en: "Appointing (…) as (…) among the senior executives effective (…)", needs: "توصية لجنة الترشيحات والمكافآت؛ السيرة الذاتية؛ الوصف الوظيفي والعرض الوظيفي والمكافأة؛ التحقق من المؤهلات؛ عدم ممانعة الجهة الرقابية في القطاعات المنظمة" },
-      { body: "board", keys: ["متغيب", "انهاء عضويه", "غياب"], kind: "decision", title: `${ga} بإنهاء عضوية العضو (…) لتغيبه عن الاجتماعات`, en: `${gaEn} terminating the membership of (…) for absence from meetings`, needs: "سجل الحضور (نظام الشركات م70: 3 اجتماعات متتالية أو 5 متفرقة دون عذر يقبله المجلس)؛ توصية المجلس للجمعية؛ ما يثبت إبلاغ العضو؛ نص النظام الأساس؛ إبلاغ الهيئة والسوق فوراً بانتهاء العضوية وأسبابها (اللائحة التنفيذية للمدرجة م6)" },
-      { body: "board", keys: ["تقييم", "تقييم اداء"], kind: "decision", title: `التصويت على اعتماد نتائج تقييم أداء المجلس ولجانه للعام (…)`, en: `Approving the results of the board and committees' performance assessment for (…)`, needs: "تقرير لجنة الترشيحات؛ نتائج تقييم المجلس واللجان والأعضاء ونقاط القوة والضعف (لائحة الحوكمة م39)؛ خطة المعالجة؛ التقييم الخارجي كل 3 سنوات" },
-      { body: "board", keys: ["الهيكل التنظيمي", "هيكل"], kind: "decision", title: "التصويت على اعتماد الهيكل التنظيمي للشركة", en: "Approving the company's organizational structure", needs: "الهيكل الحالي والمقترح؛ الأثر على التكاليف؛ مبررات التعديل؛ توصية لجنة الترشيحات والمكافآت؛ مواءمته مع جدول الصلاحيات واستقلال وظائف المراجعة الداخلية والالتزام والمخاطر" },
-      { body: "board", keys: ["الموارد البشريه", "لائحه شؤون الموظفين", "سلم الرواتب"], kind: "decision", title: "التصويت على اعتماد/تحديث لائحة الموارد البشرية وسلم الرواتب", en: "Approving/updating the HR policy and salary scale", needs: "توصية لجنة المكافآت؛ مقارنة التعديلات؛ الأثر المالي؛ مقارنة سلم الرواتب بالسوق؛ المراجعة القانونية والتوافق مع نظام العمل" },
-      { body: "board", keys: ["حوافز", "مكافات الاداره", "مكافات التنفيذيين"], kind: "decision", title: `التصويت على اعتماد مكافآت الأداء السنوية للإدارة التنفيذية عن العام (…) بإجمالي (…) ريال`, en: `Approving the annual performance bonuses of the executive management for (…) totalling SAR (…)`, needs: "توصية لجنة المكافآت؛ نتائج مؤشرات الأداء؛ سياسة المكافآت المعتمدة (لائحة الحوكمة م59)؛ القوائم المالية المعتمدة التي بُني عليها الاستحقاق؛ الإفصاح في تقرير المجلس (لائحة الحوكمة م90)" },
-      { body: "board", keys: ["اسهم الموظفين", "برنامج حوافز", "خطه حوافز"], kind: "decision", title: `${ega} باعتماد برنامج أسهم الموظفين بحد أقصى (…) سهم، وتفويض مجلس الإدارة بتحديد شروطه`, en: `${egaEn} approving the employee share program of up to (…) shares and authorizing the board to set its terms`, needs: "وثيقة البرنامج؛ توصية لجنة المكافآت؛ نص النظام الأساس الذي يجيزه؛ مصدر الأسهم: شراء الشركة لأسهمها بشروطه (اللائحة التنفيذية للمدرجة م17) أو تخصيص أسهم عند زيادة رأس المال (نظام الشركات م127)؛ عند تمويله بشراء أسهم: لا يشارك غير التنفيذيين ولا يصوّت التنفيذيون (اللائحة التنفيذية للمدرجة م29)" },
-      { body: "board", keys: ["تعريف", "تدريب", "الاعضاء الجدد"], kind: "decision", title: "التصويت على اعتماد برنامج تعريف الأعضاء الجدد وخطة تدريب أعضاء المجلس", en: "Approving the induction program for new members and the board training plan", needs: "توصية لجنة الترشيحات؛ برنامج التعريف (الاستراتيجية، الجوانب المالية والتشغيلية، واجبات الأعضاء، مهام اللجان)؛ خطة التدريب وتكلفتها (لائحة الحوكمة م37)" },
+      { body: "board", keys: ["مكافات", "مكافاه", "المكافات"], kind: "decision", title: `${ga} بصرف مبلغ (…) ريال مكافأة لأعضاء مجلس الإدارة عن العام المالي (…)`, en: `${gaEn} paying SAR (…) as remuneration to board members for the financial year (…)`, reqs: [
+        rec("توصية لجنة المكافآت", "Remuneration committee recommendation", "nrc"),
+        chk("حدود النظام الأساس (نظام الشركات م76)", "Within the limits set by the bylaws (Companies Law Art. 76)"),
+        doc("سياسة المكافآت المعتمدة", "Approved remuneration policy"),
+        doc("بيان مفصل لمكافأة كل عضو وحضوره", "Detailed statement of each member's remuneration and attendance", "finance"),
+        after("الإفصاح في تقرير المجلس (لائحة الحوكمة م90)", "Disclose in the board report (CGR Art. 90)", undefined, "secretary"),
+        after("لا يصوّت أعضاء المجلس على هذا البند في الجمعية (اللائحة التنفيذية للمدرجة م7)", "Board members do not vote on this item at the General Assembly (IR Art. 7)", undefined, "secretary"),
+      ] },
+      { body: "board", keys: ["الاعمال والعقود", "مصلحه", "ذات علاقه", "ذي علاقه"], kind: "decision", title: `${ga} بالترخيص بالأعمال والعقود التي ستتم بين الشركة و(…) والتي لعضو مجلس الإدارة (…) مصلحة مباشرة أو غير مباشرة فيها، وهي (…) بقيمة (…) ريال`, en: `${gaEn} authorizing the business and contracts between the company and (…) in which board member (…) has a direct or indirect interest, namely (…) of SAR (…)`, reqs: [
+        doc("إفصاح العضو", "Member's disclosure", "secretary"),
+        doc("تقرير خاص من مراجع الحسابات", "External auditor's special report", "finance"),
+        rec("مراجعة لجنة المراجعة (بند مستقل لكل عقد)", "Audit committee review (a separate item for each contract)", "audit"),
+        doc("شروط التعامل ومقارنتها بالسوق", "Transaction terms compared with the market"),
+        noInterest("امتناع العضو صاحب المصلحة عن التصويت (نظام الشركات م27/م71/م96)", "Interested member abstains from voting (Companies Law Arts. 27/71/96)"),
+        chk("ترخيص الجمعية إذا لم تفوّض المجلس أو لم تتحقق شروط التفويض (اللائحة التنفيذية للمدرجة م65)", "General Assembly authorization where it has not delegated the board or the delegation conditions are not met (IR Art. 65)"),
+      ] },
+      { body: "board", keys: ["ذات علاقه", "ذي علاقه", "ترخيص", "تعامل"], kind: "decision", title: "التصويت على الترخيص بالأعمال والعقود التي ستتم بين الشركة و(…) والتي لعضو مجلس الإدارة (…) مصلحة فيها، بقيمة (…) ريال، بناءً على تفويض الجمعية العامة الصادر بتاريخ (…)", en: "Authorizing the business and contracts between the company and (…) in which board member (…) has an interest, of SAR (…), under the General Assembly's delegation dated (…)", reqs: [
+        doc("قيمة التعامل ونسبته من الإيرادات", "Transaction value and its share of revenue", "finance"),
+        doc("قرار الجمعية بالتفويض وسريانه سنة من تاريخه أو حتى نهاية دورة المجلس أيهما أسبق (اللائحة التنفيذية للمدرجة م64)", "General Assembly delegation, valid for one year or until the end of the board term, whichever is earlier (IR Art. 64)", "secretary"),
+        chk("شروطه: أقل من 1% من الإيرادات و10 ملايين ريال، ضمن النشاط المعتاد، دون شروط تفضيلية (اللائحة التنفيذية للمدرجة م64)", "Conditions: below 1% of revenue and SAR 10 million, in the ordinary course of business, with no preferential terms (IR Art. 64)"),
+        noInterest("إفصاح العضو وامتناعه عن التصويت", "Member's disclosure and abstention from voting"),
+      ] },
+      { body: "board", keys: ["منافس", "منافسه"], kind: "decision", title: `${ga} بالترخيص لعضو مجلس الإدارة (…) بالاشتراك في عمل منافس لأعمال الشركة من خلال (…)`, en: `${gaEn} authorizing board member (…) to participate in a business competing with the company through (…)`, reqs: [
+        doc("إفصاح العضو وطبيعة العمل المنافس ونطاقه", "Member's disclosure of the competing business, its nature and scope", "secretary"),
+        doc("تقييم المنافسة (لائحة الحوكمة م44)", "Assessment of the competition (CGR Art. 44)"),
+        doc("رأي قانوني", "Legal opinion", "legal"),
+        chk("ترخيص الجمعية شرط لازم (نظام الشركات م27)", "General Assembly authorization is required (Companies Law Art. 27)"),
+        noInterest("امتناع العضو عن التصويت", "Member abstains from voting"),
+      ] },
+      { body: "board", keys: ["انتخاب", "الدوره القادمه", "دوره المجلس"], kind: "decision", title: `${ga} بانتخاب أعضاء مجلس الإدارة من بين المرشحين للدورة القادمة التي تبدأ في (…) وتنتهي في (…)`, en: `${gaEn} the election of board members from among the nominees for the next term starting on (…) and ending on (…)`, reqs: [
+        rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
+        chk("مدة الدورة وفق النظام الأساس بحد أقصى 4 سنوات (نظام الشركات م68)", "Term per the bylaws, 4 years maximum (Companies Law Art. 68)"),
+        chk("التصويت التراكمي للمدرجة (اللائحة التنفيذية للمدرجة م5)", "Cumulative voting for listed companies (IR Art. 5)"),
+        doc("إعلان الترشح (شهر على الأقل، لائحة الحوكمة م65)", "Call for nominations (at least one month, CGR Art. 65)", "secretary"),
+        doc("السير الذاتية وإقرارات الاستقلال والإفصاح عن تعارض المصالح (لائحة الحوكمة م43)", "CVs, independence declarations and conflict-of-interest disclosures (CGR Art. 43)", "secretary"),
+        after("نشر معلومات المرشحين مع الدعوة (لائحة الحوكمة م8)", "Publish the nominees' information with the invitation (CGR Art. 8)", "before_ga", "secretary"),
+      ] },
+      { body: "board", keys: ["استقاله", "استقال", "المستقيل"], kind: "decision", title: "التصويت على قبول استقالة عضو مجلس الإدارة (…) اعتباراً من (…)", en: "Accepting the resignation of board member (…) effective (…)", reqs: [
+        doc("خطاب الاستقالة وتاريخ نفاذها (نظام الشركات م69)", "Resignation letter and effective date (Companies Law Art. 69)", "secretary"),
+        doc("أسباب الاستقالة وملاحظات العضو إن وجدت", "Reasons for the resignation and the member's remarks, if any", "secretary"),
+        chk("أثرها على النصاب وتشكيل اللجان", "Impact on quorum and committee composition"),
+        after("إبلاغ الهيئة والسوق فوراً مع الأسباب (اللائحة التنفيذية للمدرجة م6؛ قواعد الطرح م80)", "Notify the CMA and the market immediately with the reasons (IR Art. 6; OSCOs Art. 80)", "immediate", "ir"),
+      ] },
+      { body: "board", keys: ["شاغر", "المقعد", "بدل", "بدلا", "بديل", "المستقيل", "استقال"], kind: "decision", title: "التصويت على تعيين (…) عضواً في مجلس الإدارة اعتباراً من (…) بدلاً من العضو المستقيل (…) لإكمال مدة الدورة، وعرض التعيين على أول جمعية عامة عادية", en: "Appointing (…) as a board member effective (…) replacing resigned member (…) for the remainder of the term, subject to the next Ordinary General Assembly", reqs: [
+        rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
+        doc("السيرة الذاتية وإقرار الاستقلال وتصنيف العضوية (تنفيذي، غير تنفيذي، مستقل)", "CV, independence declaration and membership classification (executive, non-executive, independent)", "secretary"),
+        after("إبلاغ السجل التجاري والهيئة خلال 15 يوماً من التعيين (نظام الشركات م69)", "Notify the commercial register and the CMA within 15 days of the appointment (Companies Law Art. 69)", "15d", "secretary"),
+        chk("ألا يقل عدد الأعضاء بالشغور عن الحد اللازم لصحة الاجتماعات", "The vacancy does not reduce membership below the quorum needed for valid meetings"),
+        disclose("الإفصاح الفوري للمدرجة (قواعد الطرح م80)", "Immediate disclosure (listed companies; OSCOs Art. 80)"),
+      ] },
+      { body: "board", keys: ["رئيس المجلس", "نائب الرئيس", "نائبه"], kind: "decision", title: "التصويت على تعيين (…) رئيساً لمجلس الإدارة و(…) نائباً للرئيس اعتباراً من (…) حتى نهاية الدورة الحالية", en: "Appointing (…) as chairman and (…) as vice-chairman of the board effective (…) until the end of the current term", reqs: [
+        doc("قرار الجمعية بانتخاب المجلس", "General Assembly resolution electing the board", "secretary"),
+        chk("التعيين في أول اجتماع للمجلس، ونائب الرئيس إلزامي للمدرجة (نظام الشركات م78)", "Appointment at the board's first meeting; a vice-chairman is mandatory for listed companies (Companies Law Art. 78)"),
+        chk("عدم الجمع بين رئاسة المجلس وأي منصب تنفيذي (لائحة الحوكمة م23)", "The chairman holds no executive position (CGR Art. 23)"),
+        doc("تحديد الصلاحيات كتابةً إن خلا منها النظام الأساس (نظام الشركات م78)", "Written powers if the bylaws are silent (Companies Law Art. 78)", "legal"),
+        after("إبلاغ الجهات وتحديث السجل التجاري", "Notify the authorities and update the commercial register", undefined, "secretary"),
+      ] },
+      { body: "board", keys: ["امين السر", "امين سر"], kind: "decision", title: "التصويت على تعيين (…) أميناً لسر مجلس الإدارة وتحديد مهامه ومكافأته", en: "Appointing (…) as board secretary and determining the duties and remuneration", reqs: [
+        doc("السيرة الذاتية (لائحة الحوكمة م36)", "CV (CGR Art. 36)"),
+        doc("تحديد مهامه وفق لائحة الحوكمة م35", "Duties defined per CGR Art. 35"),
+        doc("مكافأته إن لم يحددها النظام الأساس (نظام الشركات م78)", "Remuneration, if not set by the bylaws (Companies Law Art. 78)"),
+      ] },
+      { body: "board", keys: ["الرئيس التنفيذي", "التنفيذي"], kind: "decision", title: "التصويت على تعيين (…) رئيساً تنفيذياً للشركة اعتباراً من (…) وتحديد صلاحياته ومكافأته", en: "Appointing (…) as CEO effective (…) and determining the powers and remuneration", reqs: [
+        rec("توصية لجنة الترشيحات والمكافآت", "Nomination and remuneration committee recommendation", "nrc"),
+        doc("السيرة الذاتية والتحقق من المؤهلات", "CV and verification of qualifications", "hr"),
+        chk("عدم الجمع بين منصب الرئيس التنفيذي ورئاسة المجلس (لائحة الحوكمة م23)", "The CEO is not also the chairman (CGR Art. 23)"),
+        doc("مسودة العقد والمكافأة والصلاحيات (نظام الشركات م78)", "Draft contract, remuneration and powers (Companies Law Art. 78)", "hr"),
+        disclose("الإفصاح الفوري للمدرجة (قواعد الطرح م80)", "Immediate disclosure (listed companies; OSCOs Art. 80)"),
+        after("تحديث السجل التجاري والمفوضين بالتوقيع", "Update the commercial register and authorized signatories", undefined, "secretary"),
+      ] },
+      { body: "board", keys: ["استقاله الرئيس التنفيذي", "انهاء خدمات", "انهاء عقد"], kind: "decision", title: "التصويت على استقالة/إعفاء الرئيس التنفيذي (…) اعتباراً من (…) وتكليف (…) بمهامه مؤقتاً", en: "Resignation/dismissal of CEO (…) effective (…) and assigning (…) as acting CEO", reqs: [
+        rec("توصية لجنة الترشيحات والمكافآت", "Nomination and remuneration committee recommendation", "nrc"),
+        chk("صلاحية المجلس في الإعفاء (نظام الشركات م78)", "Board's power to dismiss (Companies Law Art. 78)"),
+        disclose("الإفصاح الفوري للمدرجة (قواعد الطرح م80)", "Immediate disclosure (listed companies; OSCOs Art. 80)"),
+        doc("خطاب الاستقالة أو مبررات الإنهاء", "Resignation letter or grounds for termination"),
+        doc("الرأي القانوني وفق العقد", "Legal opinion under the contract", "legal"),
+        doc("الأثر المالي وفق العقد", "Financial impact under the contract", "finance"),
+        doc("خطة الإحلال", "Succession plan", "hr"),
+        after("تحديث المفوضين بالتوقيع", "Update the authorized signatories", undefined, "secretary"),
+      ] },
+      { body: "board", keys: ["المدير المالي", "كبار التنفيذيين", "تعيين مدير"], kind: "decision", title: "التصويت على تعيين (…) في منصب (…) من كبار التنفيذيين اعتباراً من (…)", en: "Appointing (…) as (…) among the senior executives effective (…)", reqs: [
+        rec("توصية لجنة الترشيحات والمكافآت", "Nomination and remuneration committee recommendation", "nrc"),
+        doc("السيرة الذاتية", "CV", "hr"),
+        doc("الوصف الوظيفي والعرض الوظيفي والمكافأة", "Job description, offer and remuneration", "hr"),
+        chk("التحقق من المؤهلات", "Qualifications verified"),
+        doc("عدم ممانعة الجهة الرقابية في القطاعات المنظمة", "Regulator's no-objection in regulated sectors", "legal"),
+      ] },
+      { body: "board", keys: ["متغيب", "انهاء عضويه", "غياب"], kind: "decision", title: `${ga} بإنهاء عضوية العضو (…) لتغيبه عن الاجتماعات`, en: `${gaEn} terminating the membership of (…) for absence from meetings`, reqs: [
+        doc("سجل الحضور (نظام الشركات م70: 3 اجتماعات متتالية أو 5 متفرقة دون عذر يقبله المجلس)", "Attendance record (Companies Law Art. 70: 3 consecutive or 5 separate meetings without an excuse accepted by the board)", "secretary"),
+        after("رفع توصية المجلس للجمعية", "Submit the board's recommendation to the General Assembly", "before_ga", "secretary"),
+        doc("ما يثبت إبلاغ العضو", "Proof the member was notified", "secretary"),
+        doc("نص النظام الأساس", "Relevant bylaws provision", "legal"),
+        after("إبلاغ الهيئة والسوق فوراً بانتهاء العضوية وأسبابها (اللائحة التنفيذية للمدرجة م6)", "Notify the CMA and the market immediately of the termination and its reasons (IR Art. 6)", "immediate", "ir"),
+      ] },
+      { body: "board", keys: ["تقييم", "تقييم اداء"], kind: "decision", title: `التصويت على اعتماد نتائج تقييم أداء المجلس ولجانه للعام (…)`, en: `Approving the results of the board and committees' performance assessment for (…)`, reqs: [
+        doc("تقرير لجنة الترشيحات", "Nomination committee report", "nrc"),
+        doc("نتائج تقييم المجلس واللجان والأعضاء ونقاط القوة والضعف (لائحة الحوكمة م39)", "Assessment results for the board, committees and members, with strengths and weaknesses (CGR Art. 39)", "nrc"),
+        doc("خطة المعالجة", "Remediation plan", "nrc"),
+        chk("التقييم الخارجي كل 3 سنوات", "External assessment every 3 years"),
+      ] },
+      { body: "board", keys: ["الهيكل التنظيمي", "هيكل"], kind: "decision", title: "التصويت على اعتماد الهيكل التنظيمي للشركة", en: "Approving the company's organizational structure", reqs: [
+        doc("الهيكل الحالي والمقترح", "Current and proposed structure"),
+        doc("الأثر على التكاليف", "Cost impact", "finance"),
+        doc("مبررات التعديل", "Rationale for the change"),
+        rec("توصية لجنة الترشيحات والمكافآت", "Nomination and remuneration committee recommendation", "nrc"),
+        chk("مواءمته مع جدول الصلاحيات واستقلال وظائف المراجعة الداخلية والالتزام والمخاطر", "Aligned with the delegation of authority and the independence of internal audit, compliance and risk"),
+      ] },
+      { body: "board", keys: ["الموارد البشريه", "لائحه شؤون الموظفين", "سلم الرواتب"], kind: "decision", title: "التصويت على اعتماد/تحديث لائحة الموارد البشرية وسلم الرواتب", en: "Approving/updating the HR policy and salary scale", reqs: [
+        rec("توصية لجنة المكافآت", "Remuneration committee recommendation", "nrc"),
+        doc("مقارنة التعديلات", "Comparison of changes", "hr"),
+        doc("الأثر المالي", "Financial impact", "finance"),
+        doc("مقارنة سلم الرواتب بالسوق", "Salary scale benchmarked against the market", "hr"),
+        doc("المراجعة القانونية والتوافق مع نظام العمل", "Legal review of compliance with the Labor Law", "legal"),
+      ] },
+      { body: "board", keys: ["حوافز", "مكافات الاداره", "مكافات التنفيذيين"], kind: "decision", title: `التصويت على اعتماد مكافآت الأداء السنوية للإدارة التنفيذية عن العام (…) بإجمالي (…) ريال`, en: `Approving the annual performance bonuses of the executive management for (…) totalling SAR (…)`, reqs: [
+        rec("توصية لجنة المكافآت", "Remuneration committee recommendation", "nrc"),
+        doc("نتائج مؤشرات الأداء", "KPI results", "hr"),
+        doc("سياسة المكافآت المعتمدة (لائحة الحوكمة م59)", "Approved remuneration policy (CGR Art. 59)", "hr"),
+        doc("القوائم المالية المعتمدة التي بُني عليها الاستحقاق", "Approved financial statements the entitlement is based on", "finance"),
+        after("الإفصاح في تقرير المجلس (لائحة الحوكمة م90)", "Disclose in the board report (CGR Art. 90)", undefined, "secretary"),
+      ] },
+      { body: "board", keys: ["اسهم الموظفين", "برنامج حوافز", "خطه حوافز"], kind: "decision", title: `${ega} باعتماد برنامج أسهم الموظفين بحد أقصى (…) سهم، وتفويض مجلس الإدارة بتحديد شروطه`, en: `${egaEn} approving the employee share program of up to (…) shares and authorizing the board to set its terms`, reqs: [
+        doc("وثيقة البرنامج", "Program document", "hr"),
+        rec("توصية لجنة المكافآت", "Remuneration committee recommendation", "nrc"),
+        chk("نص النظام الأساس الذي يجيزه", "Bylaws permit the program"),
+        chk("مصدر الأسهم: شراء الشركة لأسهمها بشروطه (اللائحة التنفيذية للمدرجة م17) أو تخصيص أسهم عند زيادة رأس المال (نظام الشركات م127)", "Source of shares: a buyback on its conditions (IR Art. 17) or an allocation on a capital increase (Companies Law Art. 127)"),
+        chk("عند تمويله بشراء أسهم: لا يشارك غير التنفيذيين ولا يصوّت التنفيذيون (اللائحة التنفيذية للمدرجة م29)", "If funded by a buyback: non-executives do not participate and executives do not vote (IR Art. 29)"),
+      ] },
+      { body: "board", keys: ["تعريف", "تدريب", "الاعضاء الجدد"], kind: "decision", title: "التصويت على اعتماد برنامج تعريف الأعضاء الجدد وخطة تدريب أعضاء المجلس", en: "Approving the induction program for new members and the board training plan", reqs: [
+        rec("توصية لجنة الترشيحات", "Nomination committee recommendation", "nrc"),
+        doc("برنامج التعريف (الاستراتيجية، الجوانب المالية والتشغيلية، واجبات الأعضاء، مهام اللجان)", "Induction program (strategy, financial and operational matters, members' duties, committee roles)"),
+        doc("خطة التدريب وتكلفتها (لائحة الحوكمة م37)", "Training plan and its cost (CGR Art. 37)"),
+      ] },
     ]),
-    ...group("اللجان والسياسات والخطط", [
-      { body: "board", keys: ["تشكيل", "لجنه", "اللجان"], kind: "decision", title: "التصويت على تشكيل لجان المجلس وتعيين أعضائها وتحديد مهامها ومدتها", en: "Forming the board committees, appointing their members and defining their duties and terms", needs: "توصية لجنة الترشيحات؛ الإبلاغ خلال 5 أيام للشركات المدرجة؛ لوائح عمل اللجان؛ السير الذاتية وإقرارات الاستقلال؛ التحقق من شروط العضوية (لائحة الحوكمة م48/م51)؛ الإفصاح عن تشكيل لجنة المراجعة (قواعد الطرح م80)" },
-      { body: "board", keys: ["رئيس لجنه المراجعه", "لجنه المراجعه", "رئيس لجنه"], kind: "decision", title: "التصويت على تعيين (…) رئيساً للجنة المراجعة", en: "Appointing (…) as chair of the audit committee", needs: "توصية لجنة الترشيحات؛ ما يثبت الاستقلال والخبرة المالية؛ ألا يكون رئيس المجلس (لائحة الحوكمة م48/م51)؛ الإبلاغ خلال 5 أيام والإفصاح الفوري للمدرجة" },
-      { body: "board", keys: ["عضو لجنه المراجعه", "لجنه المراجعه", "بدل", "المستقيل"], kind: "decision", title: "التصويت على تعيين (…) عضواً في لجنة المراجعة بدلاً من العضو المستقيل (…) لإكمال مدة اللجنة", en: "Appointing (…) as an audit committee member replacing resigned member (…) for the remainder of the term", needs: "توصية لجنة الترشيحات؛ السيرة الذاتية وإقرار الاستقلال؛ ألا يكون قد عمل في الإدارة المالية أو التنفيذية أو لدى المراجع خلال السنتين السابقتين (لائحة الحوكمة م51)؛ آلية تعيين العضو المؤقت في لائحة عمل اللجنة المعتمدة من الجمعية (لائحة الحوكمة م51)؛ الإبلاغ خلال 5 أيام (لائحة الحوكمة م47)؛ الإفصاح الفوري للمدرجة (قواعد الطرح م80)" },
-      { body: "board", keys: ["رئيس لجنه", "لجنه المكافات", "لجنه الترشيحات", "لجنه المخاطر", "اللجنه التنفيذيه"], kind: "decision", title: "التصويت على تعيين (…) رئيساً للجنة (…)", en: "Appointing (…) as chair of the (…) committee", needs: "توصية لجنة الترشيحات؛ السيرة الذاتية وإقرار الاستقلال؛ التحقق من شروط الرئاسة في لائحة اللجنة (لائحة الحوكمة م48)؛ الإبلاغ خلال 5 أيام للشركات المدرجة" },
-      { body: "board", keys: ["عضو لجنه", "اعضاء لجنه", "بدل", "المستقيل"], kind: "decision", title: "التصويت على تعيين (…) عضواً في لجنة (…) بدلاً من العضو المستقيل (…) لإكمال مدة اللجنة", en: "Appointing (…) as a member of the (…) committee replacing resigned member (…)", needs: "توصية لجنة الترشيحات؛ السيرة الذاتية وإقرار الاستقلال؛ التحقق من شروط العضوية في لائحة اللجنة؛ الإبلاغ خلال 5 أيام للشركات المدرجة" },
-      { body: "board", keys: ["اعاده تشكيل", "تشكيل لجنه المراجعه"], kind: "decision", title: "التصويت على إعادة تشكيل لجنة المراجعة للدورة الجديدة وتحديد مهامها وضوابط عملها ومكافآت أعضائها", en: "Re-forming the audit committee for the new term and setting its duties, rules and members' remuneration", needs: "توصية لجنة الترشيحات؛ لائحة عمل اللجنة؛ السير الذاتية وإقرارات الاستقلال؛ التحقق من التشكيل (3–5 أعضاء، رئيس مستقل، مختص بالمالية والمحاسبة: لائحة الحوكمة م51)؛ الإبلاغ والإفصاح للمدرجة" },
-      { body: "board", keys: ["لائحه عمل", "لائحه لجنه"], kind: "decision", title: `${ga} باعتماد لائحة عمل لجنة (…)`, en: `${gaEn} approving the charter of the (…) committee`, needs: "مسودة اللائحة؛ مقارنة التعديلات (عند التحديث)؛ توصية اللجنة المعنية؛ تضمينها قواعد اختيار الأعضاء ومدة العضوية والمكافآت؛ تعتمد الجمعية لوائح لجان المراجعة والمكافآت والترشيحات فقط (لائحة الحوكمة م51/م57/م61)، أما لوائح اللجان الأخرى فيعتمدها المجلس (لائحة الحوكمة م47)؛ إدراجها في دعوة الجمعية" },
-      { body: "board", keys: ["سياسه", "سياسات", "لائحه"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة (…)", en: "Approving/updating the (…) policy", needs: POLICY },
-      { body: "board", keys: ["الخطه الاستراتيجيه", "الاستراتيجيه", "استراتيجيه"], kind: "decision", title: `التصويت على اعتماد الخطة الاستراتيجية للأعوام (…)`, en: `Approving the strategic plan for (…)`, needs: "مسودة الخطة الاستراتيجية؛ تحليل البيئة الداخلية والخارجية؛ الأهداف ومؤشرات الأداء؛ الخطة المالية ومتطلبات التمويل؛ المخاطر الرئيسة ومستوى قبولها؛ آلية المتابعة الدورية" },
-      { body: "board", keys: ["المراجعه الداخليه", "خطه المراجعه"], kind: "decision", title: `التصويت على اعتماد خطة المراجعة الداخلية لعام (…)`, en: `Approving the internal audit plan for (…)`, needs: "توصية لجنة المراجعة؛ الخطة المبنية على المخاطر بما فيها أنشطة المخاطر والالتزام (لائحة الحوكمة م74)؛ الموارد والميزانية" },
-      { body: "board", keys: ["المخاطر", "مخاطر"], kind: "discussion", title: "مناقشة تقرير إدارة المخاطر", en: "Discussing the risk management report", needs: "تقرير لجنة/إدارة المخاطر؛ المخاطر الرئيسة ومؤشراتها مقارنة بمستوى القبول؛ المخاطر المستجدة؛ خطط المعالجة ومسؤولوها" },
-      { body: "board", keys: ["الاحلال", "التعاقب", "خطه الاحلال"], kind: "decision", title: "التصويت على اعتماد خطة الإحلال والتعاقب للمناصب القيادية", en: "Approving the succession plan for leadership positions", needs: "توصية لجنة الترشيحات؛ المناصب المشمولة والمرشحون الداخليون وجاهزيتهم؛ خطط التطوير؛ ترتيبات الإحلال الطارئ" },
-    ]),
-    ...group("الحوكمة والالتزام", [
-      { body: "board", keys: ["الالتزام بلائحه الحوكمه", "الحوكمه", "الالتزام"], kind: "decision", title: `التصويت على اعتماد تقرير الالتزام بلائحة حوكمة الشركات ${fy} وأسباب عدم تطبيق ما لم يُطبق من أحكامها`, en: `Approving the corporate governance compliance report ${fyEn}, with reasons for any provision not applied`, needs: "جدول الالتزام بمواد اللائحة (لائحة الحوكمة م87)؛ أسباب عدم تطبيق ما لم يُطبق والبدائل المتخذة؛ مراجعة لجنة المراجعة أو لجنة الحوكمة؛ إدراجه في تقرير المجلس" },
-      { body: "board", keys: ["سياسه الافصاح", "الافصاح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإفصاح والشفافية", en: "Approving/updating the disclosure and transparency policy", needs: `${POLICY} (لائحة الحوكمة م86)` },
-      { body: "board", keys: ["تعارض المصالح", "سياسه تعارض"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة تعارض المصالح", en: "Approving/updating the conflict of interest policy", needs: `${POLICY} (لائحة الحوكمة م41)` },
-      { body: "board", keys: ["المخالفات", "الابلاغ", "بلاغات"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة الإبلاغ عن المخالفات وحماية المبلّغين", en: "Approving/updating the whistleblowing policy", needs: `${POLICY}؛ اقتراح لجنة المراجعة (لائحة الحوكمة م81)` },
-      { body: "board", keys: ["ميثاق", "السلوك", "قواعد السلوك"], kind: "decision", title: "التصويت على اعتماد/تحديث ميثاق السلوك المهني والأخلاقي", en: "Approving/updating the code of conduct", needs: "مسودة الميثاق النهائية؛ جدول مقارنة التعديلات (عند التحديث)؛ المراجعة القانونية؛ آلية الإقرار السنوي من الأعضاء والموظفين ومتابعة الالتزام (لائحة الحوكمة م83)" },
-      { body: "board", keys: ["سياسه توزيع الارباح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة توزيع الأرباح", en: "Approving/updating the dividend policy", needs: `${POLICY} (لائحة الحوكمة م9)` },
-      { body: "board", keys: ["اصحاب المصالح"], kind: "decision", title: "التصويت على اعتماد/تحديث سياسة العلاقة مع أصحاب المصالح", en: "Approving/updating the stakeholder relations policy", needs: `${POLICY} (لائحة الحوكمة م80)` },
-      { body: "board", keys: ["البيانات الشخصيه", "حمايه البيانات", "الخصوصيه"], kind: "decision", title: "التصويت على اعتماد سياسة حماية البيانات الشخصية", en: "Approving the personal data protection policy", needs: `${POLICY}؛ متطلبات نظام حماية البيانات الشخصية` },
-      { body: "board", keys: ["استمراريه الاعمال", "الطوارئ"], kind: "decision", title: "التصويت على اعتماد خطة استمرارية الأعمال", en: "Approving the business continuity plan", needs: "الخطة؛ نتائج آخر اختبار؛ تحليل أثر الأعمال والأنظمة الحرجة؛ توصية لجنة المخاطر؛ أدوار فريق إدارة الأزمات؛ متطلبات الجهة الرقابية للقطاع" },
-      { body: "board", keys: ["مخالفه", "غرامه", "جزاء", "عقوبه"], kind: "information", title: "الاطلاع على المخالفات والغرامات النظامية المفروضة على الشركة والإجراءات المتخذة", en: "Reviewing regulatory violations and penalties imposed on the company and the actions taken", needs: "بيان المخالفات؛ رأي الإدارة القانونية؛ قيمة الغرامات وأثرها المالي؛ أسباب المخالفة والإجراءات التصحيحية لمنع تكرارها؛ تقييم الإفصاح للمدرجة إن كانت جوهرية" },
-    ]),
-    ...group("العقود والتمويل والاستثمار", [
-      { body: "board", keys: ["عقد", "توقيع عقد", "ترسيه", "اتفاقيه"], kind: "decision", title: "التصويت على الموافقة على توقيع عقد (…) مع (…) بقيمة (…) ريال ولمدة (…)", en: "Approving the signing of a (…) contract with (…) of SAR (…) for (…)", needs: "مسودة العقد؛ المراجعة القانونية؛ الأثر المالي؛ التحقق من عدم وجود مصلحة لعضو؛ مقارنة العروض أو مبررات التعاقد المباشر؛ الإفصاح للمدرجة إن بلغت إيراداته 5% من الإيرادات (قواعد الطرح م80)" },
-      { body: "board", keys: ["تجديد", "عقد", "اتفاقيه"], kind: "decision", title: "التصويت على تجديد عقد/اتفاقية (…) مع (…) بقيمة (…) ريال لمدة (…)", en: "Renewing the (…) contract/agreement with (…) of SAR (…) for (…)", needs: "تقييم أداء الطرف الآخر؛ الشروط المعدلة؛ الأثر المالي؛ المراجعة القانونية؛ التحقق من عدم وجود مصلحة لعضو" },
-      { body: "board", keys: ["مناقصه", "ترسيه", "عروض"], kind: "decision", title: "التصويت على ترسية مناقصة (…) على (…) بقيمة (…) ريال", en: "Awarding the (…) tender to (…) for SAR (…)", needs: "محضر لجنة فحص العروض؛ مقارنة العروض؛ كراسة الشروط؛ مبررات الترسية على غير الأقل سعراً (إن وجدت)؛ توافر الاعتماد في الموازنة؛ التحقق من عدم وجود مصلحة لعضو (والمناقصات العامة مستثناة من ترخيص الجمعية، نظام الشركات م27/5)" },
-      { body: "board", keys: ["مذكره تفاهم", "تفاهم"], kind: "decision", title: "التصويت على الموافقة على توقيع مذكرة تفاهم غير ملزمة مع (…) بشأن (…)", en: "Approving the signing of a non-binding memorandum of understanding with (…) regarding (…)", needs: "مسودة المذكرة؛ تقييم الإفصاح إن كانت جوهرية؛ المراجعة القانونية لعدم الإلزام وبنود السرية والحصرية؛ التحقق من عدم وجود مصلحة لعضو" },
-      { body: "board", keys: ["شراكه", "مشروع مشترك", "تحالف"], kind: "decision", title: "التصويت على الموافقة على الدخول في اتفاقية شراكة/تحالف مع (…) بشأن (…)", en: "Approving entry into a partnership/alliance agreement with (…) regarding (…)", needs: "دراسة الجدوى؛ المراجعة القانونية؛ هيكل الملكية؛ مسودة الاتفاقية (الحوكمة، التمويل، التخارج)؛ الفحص النافي للجهالة عن الشريك؛ التحقق من عدم وجود مصلحة لعضو؛ موافقة الهيئة العامة للمنافسة عند الاقتضاء" },
-      { body: "board", keys: ["تسهيلات", "قرض", "قروض", "تمويل", "بنك"], kind: "decision", title: "التصويت على الموافقة على توقيع اتفاقية تسهيلات ائتمانية متوافقة مع أحكام الشريعة مع (…) بمبلغ (…) ريال ولمدة (…)", en: "Approving a Sharia-compliant credit facility agreement with (…) of SAR (…) for (…)", needs: "عرض الجهة الممولة؛ الضمانات المطلوبة؛ الأثر على السيولة والتعهدات المالية؛ الشهادة الشرعية؛ صلاحية المجلس وفق النظام الأساس (نظام الشركات م74)؛ تقييم الإفصاح للمدرجة (قواعد الطرح م80)" },
-      { body: "board", keys: ["تجديد", "تسهيلات", "قرض", "اعاده تمويل", "جدوله"], kind: "decision", title: "التصويت على تجديد/جدولة التسهيلات الائتمانية القائمة مع (…) بمبلغ (…) ريال ولمدة (…)", en: "Renewing/rescheduling the existing credit facilities with (…) of SAR (…) for (…)", needs: "الشروط الحالية والمقترحة؛ مبررات التجديد أو إعادة الجدولة؛ الأثر على التدفقات النقدية والتعهدات المالية؛ الضمانات؛ المراجعة القانونية؛ تقييم الإفصاح للمدرجة" },
-      { body: "board", keys: ["ضمان", "كفاله", "سند لامر", "تابعه"], kind: "decision", title: "التصويت على تقديم كفالة/ضمان لصالح (…) لتسهيلات الشركة التابعة (…) بمبلغ (…) ريال", en: "Providing a guarantee in favour of (…) for the facilities of subsidiary (…) of SAR (…)", needs: "حجم الالتزام؛ الوضع المالي للشركة التابعة؛ نسبة الملكية وحصة بقية الشركاء من الضمان؛ صلاحية المجلس وفق النظام الأساس؛ المراجعة القانونية؛ ألا يكون الضمان لقرض عضو أو قريبه (نظام الشركات م72)" },
-      { body: "board", keys: ["رهن", "ضمانات", "اصول"], kind: "decision", title: "التصويت على رهن (…) لصالح (…) ضماناً لتسهيلات بمبلغ (…) ريال", en: "Pledging (…) in favour of (…) as security for facilities of SAR (…)", needs: "تقييم الأصل؛ شروط الرهن؛ صلاحية المجلس وفق النظام الأساس (نظام الشركات م74)؛ القيود القائمة على الأصل؛ الإفصاح للمدرجة إن بلغت قيمته 10% من صافي الأصول (قواعد الطرح م80)" },
-      { body: "board", keys: ["صكوك", "ادوات دين", "سندات"], kind: "decision", title: "التصويت على إصدار صكوك/سندات بقيمة (…) ريال لمدة (…)", en: "Issuing sukuk/bonds of SAR (…) with a term of (…)", needs: "المستشار المالي؛ هيكل الإصدار؛ الموافقات النظامية وفق نظام السوق المالية (نظام الشركات م117)؛ الشهادة الشرعية؛ استخدام المتحصلات والأثر على المديونية؛ قرار الجمعية غير العادية إن كانت قابلة للتحويل إلى أسهم (نظام الشركات م117)" },
-      { body: "board", keys: ["استحواذ", "شراء حصه", "تملك"], kind: "decision", title: "التصويت على الاستحواذ على (…)% من حصص/أسهم شركة (…) بقيمة (…) ريال", en: "Acquiring (…)% of the shares of (…) for SAR (…)", needs: "الفحص النافي للجهالة؛ التقييم المستقل؛ المراجعة القانونية؛ مسودة اتفاقية الاستحواذ ومصادر التمويل؛ التحقق من عدم وجود مصلحة لعضو؛ موافقة الهيئة العامة للمنافسة عند الاقتضاء؛ الإفصاح للمدرجة (قواعد الطرح م80)" },
-      { body: "board", keys: ["استثمار", "محفظه", "ودائع"], kind: "decision", title: "التصويت على استثمار مبلغ (…) ريال في (…)", en: "Investing SAR (…) in (…)", needs: "سياسة الاستثمار؛ تقييم المخاطر والعائد؛ وصف أداة الاستثمار وسيولتها؛ حدود جدول الصلاحيات؛ الضوابط الشرعية؛ التحقق من عدم وجود مصلحة لعضو" },
-      { body: "board", keys: ["عقار", "ارض", "شراء", "بيع"], kind: "decision", title: "التصويت على شراء/بيع العقار (…) بقيمة (…) ريال", en: "Purchasing/selling the property (…) for SAR (…)", needs: "تقييم من مقيّم معتمد؛ المراجعة القانونية للصك؛ المبررات والأثر المالي؛ التحقق من عدم وجود مصلحة لعضو في الطرف الآخر؛ الإفصاح للمدرجة إن بلغت القيمة 10% من صافي الأصول (قواعد الطرح م80)" },
-      { body: "board", keys: ["ديون", "شطب", "معدومه", "اعفاء"], kind: "decision", title: "التصويت على شطب ديون معدومة بقيمة (…) ريال", en: "Writing off bad debts of SAR (…)", needs: "تقرير التحصيل؛ رأي مراجع الحسابات؛ ما يثبت استنفاد إجراءات التحصيل؛ الرأي القانوني؛ كفاية المخصص المكوّن؛ صلاحية المجلس في الإبراء وفق النظام الأساس (نظام الشركات م74)؛ التحقق من عدم وجود مصلحة لعضو" },
-      { body: "board", keys: ["دعوي", "نزاع", "تسويه", "قضيه"], kind: "decision", title: "التصويت على تسوية النزاع/الدعوى (…) مع (…) بمبلغ (…) ريال", en: "Settling the dispute/lawsuit (…) with (…) for SAR (…)", needs: "رأي المستشار القانوني؛ الأثر المالي؛ مسودة اتفاقية التسوية؛ مقارنتها بنتيجة الاستمرار في النزاع؛ الإفصاح للمدرجة إن بلغت قيمة النزاع 5% من صافي الأصول (قواعد الطرح م80)" },
-      { body: "board", keys: ["تبرع", "تبرعات", "المسؤوليه الاجتماعيه"], kind: "decision", title: "التصويت على اعتماد برنامج المسؤولية الاجتماعية والتبرعات لعام (…) بمبلغ (…) ريال", en: "Approving the social responsibility and donations program for (…) of SAR (…)", needs: "سياسة المسؤولية الاجتماعية (لائحة الحوكمة م84)؛ البرامج والجهات المستفيدة ومعايير اختيارها؛ الموازنة وحدود الصلاحية؛ التحقق من عدم وجود مصلحة لعضو في الجهات المستفيدة" },
-    ]),
-    ...group("البنوك والتفويضات والشركات التابعة", [
-      { body: "board", keys: ["حساب بنكي", "حسابات بنكيه", "فتح حساب", "اغلاق حساب"], kind: "decision", title: "التصويت على فتح/إغلاق حساب بنكي لدى (…)", en: "Opening/closing a bank account with (…)", needs: "الغرض من الحساب؛ نوعه وعملته؛ المفوضون بالتشغيل وحدود صلاحياتهم؛ عند الإغلاق: الرصيد وجهة تحويله" },
-      { body: "board", keys: ["المفوضين", "التوقيع البنكي", "صلاحيات التوقيع"], kind: "decision", title: "التصويت على تحديد المفوضين بالتوقيع على الحسابات البنكية وحدود صلاحياتهم", en: "Designating the authorized bank signatories and their limits", needs: "جدول الصلاحيات؛ أسماء المفوضين؛ حدود الصلاحيات ونوع التوقيع (منفرد/مشترك)؛ التفويضات السابقة الملغاة؛ صور الهويات لإبلاغ البنوك" },
-      { body: "board", keys: ["تفويض", "توقيع", "نيابه"], kind: "decision", title: "التصويت على تفويض (…) بتوقيع (…) نيابة عن الشركة", en: "Authorizing (…) to sign (…) on behalf of the company", needs: "حدود التفويض ومدته؛ المستند محل التوقيع أو نطاقه؛ صلاحية المجلس في التفويض وفق النظام الأساس؛ حق التفويض للغير من عدمه" },
-      { body: "board", keys: ["جدول الصلاحيات", "مصفوفه الصلاحيات", "الصلاحيات"], kind: "decision", title: "التصويت على اعتماد/تحديث جدول الصلاحيات المالية والإدارية", en: "Approving/updating the financial and administrative delegation of authority", needs: "الجدول الحالي والمقترح مع المقارنة؛ مبررات التعديل؛ توصية لجنة المراجعة؛ التوافق مع النظام الأساس وما تحتفظ به الجمعية والمجلس من صلاحيات" },
-      { body: "board", keys: ["وكاله", "الجهات الحكوميه", "تفويض حكومي"], kind: "decision", title: "التصويت على إصدار وكالة/تفويض لـ(…) لتمثيل الشركة أمام (…)", en: "Issuing a power of attorney to (…) to represent the company before (…)", needs: "نطاق الوكالة ومدتها؛ بيانات الوكيل؛ حق التوكيل للغير من عدمه؛ صلاحية مُصدر الوكالة وفق النظام الأساس" },
-      { body: "board", keys: ["مستشار", "استشاري", "مكتب محاماه"], kind: "decision", title: "التصويت على تعيين (…) مستشاراً (قانونياً/مالياً) للشركة بشأن (…) بأتعاب قدرها (…) ريال", en: "Appointing (…) as the company's (legal/financial) adviser on (…) for fees of SAR (…)", needs: "العروض؛ نطاق العمل والأتعاب؛ مسودة خطاب التكليف؛ التحقق من استقلال المستشار وعدم تعارض مصالحه؛ التحقق من عدم وجود مصلحة لعضو" },
-      { body: "board", keys: ["تاسيس", "شركه تابعه", "فرع"], kind: "decision", title: "التصويت على تأسيس شركة تابعة باسم (…) برأس مال (…) ريال مملوكة للشركة بنسبة (…)%", en: "Establishing a subsidiary named (…) with capital of SAR (…), (…)% owned by the company", needs: "دراسة الجدوى؛ هيكل الملكية؛ مسودة النظام الأساس أو عقد التأسيس؛ مصدر تمويل رأس المال؛ متطلبات الترخيص؛ ترتيبات الحوكمة والإشراف؛ تقييم الإفصاح للمدرجة" },
-      { body: "board", keys: ["فتح فرع", "فرع"], kind: "decision", title: "التصويت على فتح فرع للشركة في (…)", en: "Opening a company branch in (…)", needs: "دراسة الجدوى؛ متطلبات السجل التجاري للفرع؛ تحديد مدير الفرع وصلاحياته" },
-      { body: "board", keys: ["ممثلي الشركه", "مجالس الشركات التابعه", "ممثل"], kind: "decision", title: "التصويت على تعيين (…) ممثلين للشركة في مجلس إدارة الشركة التابعة (…)", en: "Appointing (…) as the company's representatives on the board of subsidiary (…)", needs: "السير الذاتية؛ التحقق من عدم تعارض المصالح؛ صلاحيات الممثلين وآلية رفع تقاريرهم للمجلس؛ متطلبات النظام الأساس للشركة التابعة" },
-      { body: "board", keys: ["تصفيه", "شركه تابعه", "دمج تابعه"], kind: "decision", title: "التصويت على تصفية/دمج الشركة التابعة (…)", en: "Liquidating/merging subsidiary (…)", needs: "الأثر المالي والقانوني؛ مبررات القرار؛ القرار النهائي لجمعية الشركة التابعة أو شركائها، فيُفوَّض ممثل الشركة بالتصويت فيها؛ القوائم المالية الحالية للتابعة والتزاماتها القائمة؛ مشروع الاندماج عند الدمج (نظام الشركات م225)؛ الإفصاح للمدرجة (قواعد الطرح م80)" },
-    ]),
-    ...group("رأس المال والجمعيات", [
-      { body: "board", keys: ["النظام الاساس", "تعديل النظام"], kind: "decision", title: `${ega} بتعديل المادة (…) من النظام الأساس للشركة المتعلقة بـ(…)`, en: `${egaEn} amending Article (…) of the company's bylaws relating to (…)`, needs: "مسودة التعديلات والمقارنة؛ رأي قانوني؛ إدراجها بنوداً مستقلة في دعوة الجمعية؛ قيد التعديل في السجل التجاري خلال 15 يوماً من صدوره (نظام الشركات م8 وم93)؛ الإفصاح للمدرجة (قواعد الطرح م80)" },
-      { body: "board", keys: ["راس المال", "زياده", "تخفيض"], kind: "decision", title: `${ega} بزيادة/تخفيض رأس مال الشركة من (…) ريال إلى (…) ريال عن طريق (…)`, en: `${egaEn} increasing/reducing the company's capital from SAR (…) to SAR (…) through (…)`, needs: "عند الزيادة: سداد رأس المال المصدر كاملاً (نظام الشركات م127)، وبيان المجلس وتقرير مراجع الحسابات إن كانت بتحويل ديون (نظام الشركات م126)؛ عند التخفيض: بيان المجلس بأسبابه والتزامات الشركة وأثره عليها مع تقرير مراجع الحسابات (نظام الشركات م134) ودعوة الدائنين للاعتراض قبل الجمعية بـ45 يوماً إن كان لزيادته عن الحاجة (نظام الشركات م135)؛ المستشار المالي ومبررات التغيير؛ موافقة هيئة السوق المالية للمدرجة؛ الإفصاح الفوري (قواعد الطرح م80)؛ قيد التعديل في السجل التجاري" },
-      { body: "board", keys: ["شراء اسهم", "اسهم الخزينه", "اسهمها"], kind: "decision", title: `${ega} بشراء الشركة لعدد أقصاه (…) من أسهمها بغرض (…) وتمويل ذلك من (…)، وتفويض مجلس الإدارة بإتمام الشراء خلال مدة أقصاها (…) شهراً من تاريخ قرار الجمعية`, en: `${egaEn} the purchase by the company of up to (…) of its shares for (…), funded from (…), authorizing the board to complete the purchase within (…) months of the assembly's resolution`, needs: "نص النظام الأساس (نظام الشركات م114)؛ تقرير ملاءة من مراجع الحسابات؛ الغرض والحد الأقصى للأسهم (10% لأسهم الخزينة) وطريقة التمويل، وتفويض المجلس لمدة أقصاها 18 شهراً (اللائحة التنفيذية للمدرجة م17)؛ ألا يتجاوز المبلغ الأرباح القابلة للتوزيع (اللائحة التنفيذية للمدرجة م21)؛ مدة الاحتفاظ بأسهم الخزينة (اللائحة التنفيذية للمدرجة م24)؛ الإفصاح فور قرار الجمعية" },
-      { body: "board", keys: ["بيع اصول", "الاصول"], kind: "decision", title: `${ga} ببيع (…) بقيمة (…) ريال، وهي أصول تتجاوز قيمتها 50% من إجمالي أصول الشركة`, en: `${gaEn} the sale of (…) for SAR (…), being assets exceeding 50% of the company's total assets`, needs: "تقييم الأصول (نظام الشركات م75)؛ مسودة اتفاقية البيع؛ المستشار المالي والمبررات والأثر على نشاط الشركة؛ التحقق من عدم وجود مصلحة لعضو؛ الإفصاح الفوري للمدرجة (قواعد الطرح م80)" },
-      { body: "board", keys: ["الخسائر", "نصف راس المال"], kind: "decision", title: `${ega} بشأن استمرار الشركة أو حلها لبلوغ الخسائر نصف رأس المال`, en: `${egaEn} on the continuation or dissolution of the company as losses reached half the capital`, needs: "القوائم المالية؛ الإعلان خلال 60 يوماً (نظام الشركات م132)؛ دعوة الجمعية غير العادية خلال 180 يوماً؛ خطة المعالجة والبدائل؛ رأي قانوني" },
-      { body: "board", keys: ["الجمعيه", "دعوه", "الجمعيه العامه"], kind: "decision", title: "التصويت على دعوة الجمعية العامة (…) للانعقاد في (…) واعتماد جدول أعمالها", en: "Calling the (…) General Assembly to convene on (…) and approving its agenda", needs: "مسودة الدعوة متضمنةً نوع الجمعية ومكانها وتاريخها ووقتها وجدول الأعمال (21 يوماً على الأقل؛ بند مستقل لكل عقد فيه مصلحة، نظام الشركات م91/م96)؛ مستندات كل بند؛ إرسال نسخة للسجل التجاري والهيئة؛ الإفصاح في تداول للمدرجة" },
-      { body: "board", keys: ["قرارات الجمعيه", "نتائج الجمعيه", "متابعه الجمعيه"], kind: "information", title: "متابعة تنفيذ قرارات الجمعية العامة الأخيرة", en: "Follow-up on the resolutions of the last General Assembly", needs: "محضر الجمعية؛ الإفصاح عن النتائج؛ حالة تنفيذ كل قرار (التوزيعات، التعيينات، تعديلات النظام الأساس)؛ قيد ما يلزم في السجل التجاري" },
-      { body: "board", keys: ["اعاده الدعوه", "النصاب", "الاجتماع الثاني"], kind: "decision", title: "التصويت على الدعوة لاجتماع ثانٍ للجمعية العامة (…) في (…) لعدم اكتمال نصاب الاجتماع الأول", en: "Calling a second meeting of the (…) General Assembly on (…) as the first meeting lacked quorum", needs: "محضر عدم اكتمال النصاب؛ نص النظام الأساس بشأن الاجتماع الثاني ونصابه؛ انعقاد الاجتماع الثاني للجمعية العادية خلال 30 يوماً (نظام الشركات م92)، ونصابه للجمعية غير العادية ربع الأسهم (نظام الشركات م93)؛ مسودة الدعوة وموعدها؛ الإفصاح للمدرجة" },
-    ]),
-    ...group("اجتماعات لجنة المراجعة", [
-      { body: "audit", keys: ["القوائم الماليه", "الاوليه", "الربع", "توصيه"], kind: "decision", title: `مراجعة القوائم المالية الأولية ${period} والتوصية للمجلس باعتمادها`, en: `Reviewing the interim financial statements ${periodEn} and recommending them to the board`, needs: "القوائم؛ تقرير الفحص؛ ملاحظات المراجع (لائحة الحوكمة م52)؛ تحليل التغيرات الجوهرية مقارنة بالفترة المماثلة؛ التقديرات والأحكام المحاسبية المهمة؛ إقرار الإدارة" },
-      { body: "audit", keys: ["القوائم الماليه", "السنويه", "توصيه"], kind: "decision", title: `مراجعة القوائم المالية السنوية ${fy} والتوصية للمجلس باعتمادها`, en: `Reviewing the annual financial statements ${fyEn} and recommending them to the board`, needs: "القوائم؛ تقرير مراجع الحسابات؛ خطاب الإدارة؛ أمور المراجعة الرئيسة؛ السياسات والتقديرات المحاسبية الجوهرية؛ الفروقات غير المصححة؛ إقرار الإدارة (لائحة الحوكمة م52)" },
-      { body: "audit", keys: ["المراجع الخارجي", "بدون حضور الاداره", "اجتماع مع المراجع"], kind: "discussion", title: "الاجتماع مع مراجع الحسابات الخارجي دون حضور الإدارة التنفيذية", en: "Meeting the external auditor without the executive management", needs: "خطة المراجعة ونتائجها؛ الصعوبات أو القيود التي واجهت المراجع؛ مدى تعاون الإدارة؛ تأكيد الاستقلال" },
-      { body: "audit", keys: ["خطاب الاداره", "ملاحظات المراجع"], kind: "discussion", title: "مناقشة خطاب الإدارة الصادر من مراجع الحسابات ومتابعة معالجة ملاحظاته", en: "Discussing the external auditor's management letter and follow-up of its findings", needs: "خطاب الإدارة؛ ردود الإدارة وخطط المعالجة؛ الجهة المسؤولة والمواعيد؛ حالة ملاحظات السنة السابقة" },
-      { body: "audit", keys: ["ترشيح المراجع", "مراجع الحسابات", "عروض المراجعين", "استقلال"], kind: "decision", title: `دراسة عروض مراجعي الحسابات والتوصية للمجلس بترشيح مراجع الحسابات للعام (…) وأتعابه`, en: `Evaluating external audit proposals and recommending the auditor for (…) and its fees to the board`, needs: "العروض الفنية والمالية؛ إقرارات الاستقلال؛ مرشحان على الأقل مرخص لهما (لائحة الحوكمة م78)؛ مدة المراجع الحالي (7 سنوات حداً أقصى للمدرجة، اللائحة التنفيذية للمدرجة م3)" },
-      { body: "audit", keys: ["المراجعه الداخليه", "تقرير المراجعه", "تقارير المراجعه"], kind: "discussion", title: `مناقشة تقارير المراجعة الداخلية ${period} ومتابعة الملاحظات`, en: `Discussing the internal audit reports ${periodEn} and follow-up of findings`, needs: "تقارير المراجعة الداخلية؛ سجل متابعة الملاحظات؛ تقييم نظام الرقابة الداخلية؛ الملاحظات المتأخرة وأسبابها (لائحة الحوكمة م75)" },
-      { body: "audit", keys: ["خطه المراجعه", "المراجعه الداخليه"], kind: "decision", title: `اعتماد خطة المراجعة الداخلية لعام (…) والتوصية بها للمجلس`, en: `Approving the internal audit plan for (…) and recommending it to the board`, needs: "الخطة المبنية على المخاطر؛ الموارد؛ تغطية أنشطة المخاطر والالتزام سنوياً (لائحة الحوكمة م74)؛ نسبة تنفيذ خطة العام الحالي" },
-      { body: "audit", keys: ["مدير المراجعه", "رئيس المراجعه"], kind: "decision", title: "التوصية للمجلس بتعيين/عزل مدير إدارة المراجعة الداخلية (…) وتحديد مكافأته", en: "Recommending to the board the appointment/removal of the head of internal audit (…) and the remuneration", needs: "السيرة الذاتية؛ تقييم الأداء؛ يعيّنه المجلس ويعزله ويحدد مكافأته بتوصية لجنة المراجعة (لائحة الحوكمة م24 وم52)؛ مقترح المكافأة؛ ما يضمن استقلال الوظيفة وارتباطها باللجنة" },
-      { body: "audit", keys: ["ذات علاقه", "ذي علاقه", "تعاملات"], kind: "decision", title: "مراجعة التعاملات مع الأطراف ذات العلاقة ورفع التوصيات للمجلس", en: "Reviewing related-party transactions and recommending to the board", needs: "بيان التعاملات وقيمها وشروطها؛ مقارنة الشروط بالسوق؛ إفصاحات الأعضاء؛ ما يتطلب منها ترخيص الجمعية أو الإفصاح الفوري (1% من الإيرادات، قواعد الطرح م80)" },
-      { body: "audit", keys: ["الالتزام", "تقرير الالتزام"], kind: "discussion", title: `مناقشة تقرير إدارة الالتزام ${period}`, en: `Discussing the compliance report ${periodEn}`, needs: "تقرير الالتزام؛ المخالفات والملاحظات الرقابية؛ المستجدات النظامية وأثرها؛ حالة خطة الالتزام" },
-      { body: "audit", keys: ["بلاغات", "المخالفات", "الاحتيال"], kind: "discussion", title: "مناقشة البلاغات الواردة عن المخالفات والإجراءات المتخذة بشأنها", en: "Discussing whistleblowing reports and the actions taken", needs: "سجل البلاغات (دون كشف هوية المبلّغين)؛ نتائج التحقيق والإجراءات المتخذة؛ البلاغات المفتوحة ومدد معالجتها (لائحة الحوكمة م81)" },
-      { body: "audit", keys: ["السياسات المحاسبيه", "التقديرات"], kind: "decision", title: "مراجعة السياسات والتقديرات المحاسبية الجوهرية وإبداء التوصية للمجلس", en: "Reviewing significant accounting policies and estimates and recommending to the board", needs: "مذكرة الإدارة المالية؛ رأي المراجع؛ المعيار المحاسبي ذو الصلة؛ أثر التغيير على القوائم المالية" },
-      { body: "audit", keys: ["تقرير اللجنه", "تقرير لجنه المراجعه"], kind: "decision", title: `اعتماد تقرير لجنة المراجعة ${fy} لرفعه للمجلس والجمعية العامة`, en: `Approving the audit committee report ${fyEn} for the board and the General Assembly`, needs: "مسودة التقرير (لائحة الحوكمة م88)؛ رأي اللجنة في كفاية أنظمة الرقابة الداخلية والمالية وإدارة المخاطر؛ سجل اجتماعات اللجنة وحضورها" },
-    ]),
-    ...group("اجتماعات لجنة الترشيحات والمكافآت", [
-      { body: "nrc", keys: ["استقلال", "الاعضاء المستقلين"], kind: "decision", title: `التحقق السنوي من استقلال الأعضاء المستقلين للعام (…)`, en: `Annual verification of the independence of independent directors for (…)`, needs: "إقرارات الاستقلال المحدّثة؛ التحقق من عوارض الاستقلال (لائحة الحوكمة م19)؛ إفصاحات الأعضاء عن مصالحهم وعلاقاتهم" },
-      { body: "nrc", keys: ["المهارات", "احتياجات المجلس", "مصفوفه"], kind: "discussion", title: "مراجعة هيكل المجلس ومصفوفة المهارات المطلوبة ورفع التوصيات", en: "Reviewing the board structure and skills matrix and recommending changes", needs: "مصفوفة المهارات الحالية؛ نتائج تقييم المجلس؛ الاحتياجات المستقبلية وفق الاستراتيجية؛ نسب الاستقلال وتنوع التشكيل (لائحة الحوكمة م62)" },
-      { body: "nrc", keys: ["ترشيح", "المرشحين", "عضويه المجلس"], kind: "decision", title: "دراسة المرشحين لعضوية مجلس الإدارة والتوصية للمجلس", en: "Evaluating candidates for board membership and recommending to the board", needs: "طلبات الترشح؛ السير الذاتية؛ إعلان الترشح (شهر على الأقل، لائحة الحوكمة م65)؛ إقرارات الاستقلال والإفصاح عن تعارض المصالح (لائحة الحوكمة م43)؛ تقييم المرشحين مقابل مصفوفة المهارات" },
-      { body: "nrc", keys: ["مكافات", "مكافات الاداره", "التنفيذيين"], kind: "decision", title: `مراجعة مكافآت الإدارة التنفيذية عن العام (…) والتوصية للمجلس`, en: `Reviewing the executive management remuneration for (…) and recommending to the board`, needs: "سياسة المكافآت؛ نتائج مؤشرات الأداء؛ القوائم المالية المعتمدة؛ مقارنة بالسوق؛ الإفصاح في تقرير المجلس (لائحة الحوكمة م90)" },
-      { body: "nrc", keys: ["مكافات المجلس", "مكافات الاعضاء"], kind: "decision", title: `التوصية للمجلس بمكافآت أعضاء المجلس واللجان عن العام (…) بإجمالي (…) ريال`, en: `Recommending to the board the remuneration of board and committee members for (…) totalling SAR (…)`, needs: "سياسة المكافآت؛ حدود النظام الأساس (نظام الشركات م76)؛ سجل حضور الاجتماعات؛ بيان مفصل لكل عضو" },
-      { body: "nrc", keys: ["سياسه المكافات"], kind: "decision", title: "مراجعة سياسة المكافآت والتوصية للمجلس بتحديثها", en: "Reviewing the remuneration policy and recommending updates to the board", needs: "السياسة الحالية؛ مقارنة السوق؛ مسودة التعديلات؛ التوافق مع لائحة الحوكمة م59 ونظام الشركات" },
-      { body: "nrc", keys: ["الاحلال", "التعاقب"], kind: "decision", title: "مراجعة خطة الإحلال والتعاقب للمناصب القيادية والتوصية للمجلس", en: "Reviewing the succession plan for leadership positions and recommending to the board", needs: "الخطة الحالية؛ تقييم المرشحين الداخليين؛ المناصب الحرجة؛ خطط التطوير؛ ترتيبات الإحلال الطارئ" },
-      { body: "nrc", keys: ["تقييم", "تقييم الاداء"], kind: "decision", title: `الإشراف على تقييم أداء المجلس ولجانه للعام (…) ورفع النتائج`, en: `Overseeing the board and committees' performance assessment for (…) and reporting the results`, needs: "نماذج التقييم؛ تقييم خارجي كل 3 سنوات؛ نتائج تقييم المجلس واللجان والأعضاء (لائحة الحوكمة م39)؛ نقاط القوة والضعف والمعالجات المقترحة" },
-    ]),
-    ...group("اجتماعات لجنة المخاطر", [
-      { body: "risk", keys: ["سجل المخاطر", "المخاطر"], kind: "discussion", title: `مراجعة سجل المخاطر ومؤشراتها ${period}`, en: `Reviewing the risk register and indicators ${periodEn}`, needs: "سجل المخاطر المحدّث؛ مؤشرات المخاطر الرئيسة مقارنة بمستوى القبول؛ المخاطر المستجدة؛ حالة خطط المعالجة" },
-      { body: "risk", keys: ["قبول المخاطر", "شهيه المخاطر"], kind: "decision", title: "مراجعة مستوى قبول المخاطر والتوصية للمجلس باعتماده", en: "Reviewing the risk appetite and recommending it to the board", needs: "بيان مستوى قبول المخاطر؛ نتائج اختبارات الضغط؛ حدود التحمل لكل فئة؛ مواءمته مع الاستراتيجية (لائحة الحوكمة م68)" },
-      { body: "risk", keys: ["الامن السيبراني", "سيبراني", "امن المعلومات"], kind: "discussion", title: "مناقشة تقرير الأمن السيبراني وأمن المعلومات", en: "Discussing the cybersecurity and information security report", needs: "تقرير الأمن السيبراني؛ نتائج الاختبارات؛ الحوادث وأثرها؛ مستوى الالتزام بضوابط الهيئة الوطنية للأمن السيبراني؛ خطط المعالجة" },
-      { body: "risk", keys: ["استمراريه الاعمال", "الطوارئ"], kind: "discussion", title: "مراجعة جاهزية خطة استمرارية الأعمال ونتائج اختبارها", en: "Reviewing business continuity readiness and test results", needs: "نتائج آخر اختبار؛ الخطة المحدّثة؛ الملاحظات وخطط معالجتها؛ جاهزية مواقع وأنظمة التعافي" },
-      { body: "risk", keys: ["سياسه المخاطر", "اداره المخاطر"], kind: "decision", title: "مراجعة سياسة إدارة المخاطر والتوصية للمجلس بتحديثها", en: "Reviewing the risk management policy and recommending updates to the board", needs: "السياسة الحالية والمقترحة؛ جدول مقارنة التعديلات؛ مواءمتها مع مستوى قبول المخاطر (لائحة الحوكمة م68)؛ المراجعة القانونية" },
-    ]),
+    ...[...partTwo(), ...partThree()].flatMap(([category, items]) => group(category, items)),
   ];
 }
