@@ -60,7 +60,17 @@ export function buildSidebar(allowed: string[], committees: { id: string; name: 
       collapsible: true,
       items: [
         { href: "/committees", label: "لوحة اللجان", icon: UsersRound, permission: "/committees" },
-        ...committees.map((c): SideBranch => ({ href: `/committees/${c.id}`, label: c.name, icon: Landmark, permission: "/committees", children: bodyPages(`/committees/${c.id}`, "لوحة اللجنة", "/committees", `committee:${c.id}`) })),
+        ...committees.map((c): SideBranch => ({
+          href: `/committees/${c.id}`,
+          label: c.name,
+          icon: Landmark,
+          permission: "/committees",
+          children: [
+            ...bodyPages(`/committees/${c.id}`, "لوحة اللجنة", "/committees", `committee:${c.id}`).slice(0, 2),
+            { href: `/committees/${c.id}/charter`, label: "اللائحة والصلاحيات", icon: ScrollText, permission: "/committees" },
+            ...bodyPages(`/committees/${c.id}`, "لوحة اللجنة", "/committees", `committee:${c.id}`).slice(2),
+          ],
+        })),
       ],
     },
     {

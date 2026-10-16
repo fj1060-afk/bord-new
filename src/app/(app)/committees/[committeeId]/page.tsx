@@ -9,7 +9,8 @@ import { riyadhToday } from "@/lib/minutes";
 import { COMMITTEE_POSITIONS, currentYear, sortByPosition } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 import { Panel, StatTile } from "../../_dashboard/widgets";
-import { committeeOf } from "../_committee";
+import { committeeOf, compositionMembers } from "../_committee";
+import { committeeRules, compositionChecks } from "@/lib/committee-powers";
 
 export const metadata: Metadata = { title: "لوحة اللجنة" };
 
@@ -31,6 +32,10 @@ export default async function CommitteePage({ params }: PageProps<"/committees/[
   const upcoming = (meetings ?? []).filter((m) => m.live_status !== "ended" && m.starts_at >= new Date().toISOString()).slice(0, 3);
   const tasks = implementation(((resolutions ?? []) as unknown as { resolution_tasks: { status: string; due_date: string | null }[] }[]).flatMap((r) => r.resolution_tasks), today);
   const base = `/committees/${committeeId}`;
+  // Statutory checks for the four regulated committee kinds.
+  const rules = committeeRules(committee.kind);
+  const gaps = rules ? compositionChecks(committee.kind, await compositionMembers(committeeId)).filter((c) => !c.ok) : [];
+  const fewMeetings = rules?.minMeetings && held < rules.minMeetings.perYear ? rules.minMeetings : null;
 
   return (
     <>
@@ -41,6 +46,27 @@ export default async function CommitteePage({ params }: PageProps<"/committees/[
           <StatTile label={`اجتماعات ${year}`} value={held} note={`${upcoming.length ? "وقادم " + upcoming.length : "لا اجتماعات قادمة"}`} href={`${base}/meetings`} />
           <StatTile label="تنفيذ القرارات" value={tasks.percent === null ? "—" : `${tasks.percent}%`} note={tasks.overdue ? `${tasks.overdue} مهمة متأخرة` : `${tasks.total} مهمة`} tone={tasks.overdue ? "alert" : "default"} href={`${base}/resolutions`} />
         </div>
+        {rules && (
+          <Panel title="الأحكام النظامية" action={<Link href={`${base}/charter`} className="text-sm text-primary hover:underline">اللائحة والصلاحيات</Link>}>
+            <ul className="divide-y divide-rule text-sm">
+              {gaps.map((g) => (
+                <li key={g.ref + g.ar} className="flex justify-between gap-3 px-5 py-3">
+                  <span>{g.ar}</span>
+                  <span className="text-xs text-ink-muted">لائحة الحوكمة {g.ref}</span>
+                </li>
+              ))}
+              {fewMeetings && (
+                <li className="flex justify-between gap-3 px-5 py-3">
+                  <span>
+                    انعقد {held} من {fewMeetings.perYear} اجتماعات على الأقل هذه السنة
+                  </span>
+                  <span className="text-xs text-ink-muted">لائحة الحوكمة {fewMeetings.ref}</span>
+                </li>
+              )}
+              {gaps.length === 0 && !fewMeetings && <li className="px-5 py-4 text-ink-muted">التشكيل والاجتماعات مستوفاة لما يعرفه النظام.</li>}
+            </ul>
+          </Panel>
+        )}
         <Panel title="المهام والاختصاصات">
           <p className="whitespace-pre-line px-5 py-4 text-sm leading-7">{committee.mandate || "لم تُحدد بعد."}</p>
         </Panel>

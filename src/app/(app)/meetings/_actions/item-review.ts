@@ -2,7 +2,8 @@
 
 import { requirePage } from "@/lib/auth";
 import { reviewItem, type Finding } from "@/lib/item-review";
-import { meetingAffiliations, meetingBody, meetingDisclosures } from "@/lib/item-review-server";
+import { meetingAffiliations, meetingCommitteeKind, meetingDisclosures } from "@/lib/item-review-server";
+import { bodyOf } from "@/lib/item-templates";
 import { bodyMismatch } from "@/lib/item-body";
 import { currentYear } from "@/lib/org";
 import { companyProfile } from "@/lib/live-server";
@@ -21,15 +22,16 @@ export async function reviewDraft(meetingId: string, draft: { title: string; des
   const supabase = await createClient();
   const { external_spelling } = await serviceSettings(supabase);
   // One request for both fields: the title, a line break, then the description.
-  const [spelling, disclosures, profile, powers, { data: own }, affiliations, body] = await Promise.all([
+  const [spelling, disclosures, profile, powers, { data: own }, affiliations, committeeKind] = await Promise.all([
     checkSpelling(`${draft.title}\n${draft.description}`, online && external_spelling),
     meetingDisclosures(supabase, meetingId),
     companyProfile(supabase),
     loadPowers(supabase),
     supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
     meetingAffiliations(supabase, meetingId),
-    meetingBody(supabase, meetingId),
+    meetingCommitteeKind(supabase, meetingId),
   ]);
+  const body = bodyOf({ board_id: committeeKind === undefined ? "board" : null, committee_kind: committeeKind });
   const library = libraryTemplates(own ?? []);
   const template = matchTemplate(draft.title, library, body);
   const mismatch = bodyMismatch(draft.title, library, body);
@@ -37,7 +39,7 @@ export async function reviewDraft(meetingId: string, draft: { title: string; des
   return {
     title: spelling.matches.filter((m) => m.offset < cut),
     description: spelling.matches.filter((m) => m.offset >= cut).map((m) => ({ ...m, offset: m.offset - cut })),
-    findings: [...(mismatch ? [mismatch] : []), ...reviewItem(draft, { disclosures, year: currentYear() - 1, listed: profile?.company_type === "listed_jsc", template, powers, affiliations, company: profile?.name ?? "" })],
+    findings: [...(mismatch ? [mismatch] : []), ...reviewItem(draft, { disclosures, year: currentYear() - 1, listed: profile?.company_type === "listed_jsc", template, powers, affiliations, company: profile?.name ?? "", committeeKind })],
     online: spelling.online,
     spellingOff: !external_spelling,
   };

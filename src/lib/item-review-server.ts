@@ -42,8 +42,14 @@ export async function bodyAffiliations(supabase: SupabaseClient, body: { board?:
   }));
 }
 
+/** The committee kind of a committee meeting; undefined for the board's. */
+export async function meetingCommitteeKind(supabase: SupabaseClient, meetingId: string): Promise<string | undefined> {
+  const { data } = await supabase.from("meetings").select("board_id, committee:committees(kind)").eq("id", meetingId).maybeSingle();
+  return data?.board_id ? undefined : ((data?.committee as { kind?: string } | null)?.kind ?? "other");
+}
+
 /** Which wordings a meeting may use: the board's, one committee kind's, or only the general ones. */
 export async function meetingBody(supabase: SupabaseClient, meetingId: string): Promise<Body> {
-  const { data } = await supabase.from("meetings").select("board_id, committee:committees(kind)").eq("id", meetingId).maybeSingle();
-  return bodyOf({ board_id: data?.board_id ?? null, committee_kind: (data?.committee as { kind?: string } | null)?.kind });
+  const kind = await meetingCommitteeKind(supabase, meetingId);
+  return bodyOf({ board_id: kind === undefined ? "board" : null, committee_kind: kind });
 }

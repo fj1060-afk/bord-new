@@ -65,3 +65,9 @@ Article numbers were checked against the official English translations; the Arab
 - No more than five listed boards at once (CGR 17/c), counted from the CV; CMA notified within five business days of the term's start, an appointment or a change (CGR 17/d).
 - Directors, senior executives and audit committee members do not deal in the company's securities 15 days before a quarter end and 30 days before the year end, until the statements are disclosed (OSCOs 86).
 - Owning or being interested in 5% or more, or a change, notified to the Exchange by the end of the third trading day (OSCOs 85), on Tadawul's ownership notice form.
+
+## Committee competencies (`src/lib/committee-powers.ts`)
+- The board sets each committee's duties, term and powers (CGR 47/2); committees recommend unless the regulations let them decide.
+- Audit: competencies CGR 52 (statements, controls, internal audit, external auditor, compliance, related parties), approves the internal audit plan (CGR 74), whistleblowing arrangements (CGR 55), powers CGR 56; composition CGR 51 (51/c and 51/d guiding); four meetings a year (CGR 54/a); charter issued by the assembly (CGR 51/e).
+- Remuneration CGR 57-58, at least once a year (CGR 60); nomination CGR 61-62, at least once a year (CGR 64); combined committee every six months (CGR 47/7); charters issued by the assembly (CGR 57/b, 61/b).
+- Risk CGR 67-69, guiding articles: chair and majority non-executive, every six months.

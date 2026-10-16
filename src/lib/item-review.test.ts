@@ -152,3 +152,16 @@ describe("members' CV positions", () => {
     expect(f.find((x) => x.ref === "نظام الشركات م71")?.text).toContain("خالد رئيس مجلس الإدارة");
   });
 });
+
+describe("committee competencies", () => {
+  it("asks an audit committee to recommend the statements, not approve them", () => {
+    const f = reviewItem({ title: "التصويت على اعتماد القوائم المالية للربع الثالث", description: "", kind: "decision" }, { committeeKind: "audit" });
+    const w = f.find((x) => x.ref === "لائحة الحوكمة م52/أ/1");
+    expect(w?.fixes?.[0]).toBe("التوصية لمجلس الإدارة باعتماد القوائم المالية للربع الثالث");
+  });
+
+  it("lets an audit committee approve the internal audit plan", () => {
+    const f = reviewItem({ title: "اعتماد خطة المراجعة الداخلية لعام 2027", description: "", kind: "decision" }, { committeeKind: "audit" });
+    expect(f.some((x) => x.ref?.startsWith("لائحة الحوكمة م"))).toBe(false);
+  });
+});

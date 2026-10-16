@@ -5,6 +5,7 @@
 import { affiliationNotices, type Affiliation } from "./affiliations";
 import { authorityFindings, type AuthorityTemplate, type Powers } from "./authority";
 import { fold } from "./fold";
+import { asRecommendation, checkAgainstPowers, committeeRules, POWER_KINDS } from "./committee-powers";
 import { withoutRequirements } from "./requirements";
 import { withPhraseFixes } from "./spelling";
 
@@ -213,12 +214,14 @@ export type ReviewContext = {
   /** Members' positions from their CVs, and the company's own name (never a conflict). */
   affiliations?: Affiliation[];
   company?: string;
+  /** The committee kind when the meeting is a committee's: its decisions are checked against its statutory competencies. */
+  committeeKind?: string;
 };
 
 /** `year` is the last completed financial year, used in suggested titles; `listed` adds the CMA rules; `template` and `powers` add who decides. */
 export function reviewItem(
   item: ItemDraft,
-  { disclosures = [], year = new Date().getFullYear() - 1, listed = false, template, powers, affiliations = [], company = "" }: ReviewContext = {},
+  { disclosures = [], year = new Date().getFullYear() - 1, listed = false, template, powers, affiliations = [], company = "", committeeKind }: ReviewContext = {},
 ): Finding[] {
   // The auto-filled requirements block lists documents, not what the item is about.
   const about = withoutRequirements(item.description ?? "");
@@ -250,6 +253,15 @@ export function reviewItem(
   }
   for (const a of affiliationNotices(`${item.title} ${about}`, affiliations, company))
     findings.push({ level: "warn", text: `مصلحة محتملة: ورد في البند «${a.organization}»، و${a.name} ${a.role} فيها بحسب سيرته الذاتية. إن كانت له مصلحة مباشرة أو غير مباشرة فيُفصح للمجلس فوراً ويُثبت ذلك في المحضر، ولا يشارك في التصويت.`, ref: "نظام الشركات م71" });
+  // A committee recommends to the board unless the regulations let it decide (CGR Art. 47/2 and each committee's articles).
+  const rules = committeeKind ? committeeRules(committeeKind) : null;
+  if (rules && item.kind === "decision") {
+    const c = checkAgainstPowers(`${item.title} ${about}`, rules.powers);
+    if (c.power && c.deciding && c.power.kind !== "decide")
+      findings.push({ level: "warn", text: `اختصاص اللجنة هنا: ${c.power.ar} (${POWER_KINDS[c.power.kind]}). صُغ البند توصيةً لمجلس الإدارة، فالقرار للمجلس.`, ref: `لائحة الحوكمة ${c.power.ref}`, fixes: [asRecommendation(item.title)] });
+    else if (!c.power && c.deciding)
+      findings.push({ level: "tip", text: "لم يرد هذا القرار في الاختصاصات النظامية للجنة؛ تأكد أنه ضمن لائحة عملها أو تفويض من المجلس، وإلا فصُغه توصيةً للمجلس.", ref: "لائحة الحوكمة م47/2", fixes: [asRecommendation(item.title)] });
+  }
   // A wording classified "per the bylaws" already carries the company-specific Art. 74 remark.
   const known = template?.authority === "bylaws" ? "نظام الشركات م74" : null;
   for (const r of RULES) if (has(text, r.when) && !(r.unless && has(text, r.unless)) && (!r.listed || listed) && r.finding.ref !== known) findings.push(r.finding);
