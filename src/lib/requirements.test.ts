@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { departmentFor, isRequirementsOnly, needsText, planSync, requirementsText, unassigned, withoutRequirements, type Req, type ReqRow } from "./requirements";
+import { departmentFor, isRequirementsOnly, withoutBeforeMeeting, needsText, planSync, requirementsText, unassigned, withoutRequirements, type Req, type ReqRow } from "./requirements";
 
 const reqs: Req[] = [
   { k: "doc", ar: "مسودة العقد", en: "Draft contract", from: "owner" },
@@ -37,17 +37,27 @@ describe("requirements", () => {
   });
 
   it("groups the description block by who provides each requirement", () => {
-    expect(requirementsText(reqs)).toBe(
+    expect(requirementsText(reqs)).toBe(["بعد القرار:", "• الإفصاح الفوري (فوراً)"].join("\n"));
+    expect(requirementsText(reqs, false, true)).toBe(
       ["المتطلبات قبل الاجتماع:", "• من المسؤول عن البند: مسودة العقد", "• من لجنة المراجعة: توصية لجنة المراجعة", "• يتحقق منه أمين السر: التحقق من عدم وجود مصلحة لعضو", "بعد القرار:", "• الإفصاح الفوري (فوراً)"].join("\n"),
     );
-    expect(requirementsText(reqs, true)).toContain("• From the Audit Committee: Audit committee recommendation");
+    expect(requirementsText(reqs, true, true)).toContain("• From the Audit Committee: Audit committee recommendation");
   });
 
   it("recognizes and strips auto-filled blocks", () => {
-    const block = requirementsText(reqs);
+    const block = requirementsText(reqs, false, true);
     expect(isRequirementsOnly(block)).toBe(true);
     expect(isRequirementsOnly("المستندات الداعمة: أ؛ ب")).toBe(true);
     expect(isRequirementsOnly(`ملاحظة الأمين\n${block}`)).toBe(false);
     expect(withoutRequirements(`ملاحظة الأمين\n${block}`)).toBe("ملاحظة الأمين");
+  });
+});
+
+describe("withoutBeforeMeeting", () => {
+  it("keeps the note and the after-resolution actions", () => {
+    const desc = `ملاحظة الأمين\nالمتطلبات قبل الاجتماع:\n• من الإدارة المالية: القوائم المالية\nبعد القرار:\n• توقيع القوائم`;
+    expect(withoutBeforeMeeting(desc)).toBe("ملاحظة الأمين\nبعد القرار:\n• توقيع القوائم");
+    expect(withoutBeforeMeeting("Before the meeting:\n• From Finance: X\nAfter the resolution:\n• Y")).toBe("After the resolution:\n• Y");
+    expect(withoutBeforeMeeting("المستندات الداعمة: أ؛ ب")).toBe("");
   });
 });

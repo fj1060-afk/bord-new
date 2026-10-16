@@ -12,6 +12,7 @@ import { AuthorityBadge } from "./authority-badge";
 import { ExpandAll } from "./expand-all";
 import { reviewItem, type ReviewContext } from "@/lib/item-review";
 import { bodyMismatch, duplicateOf } from "@/lib/item-body";
+import { withoutBeforeMeeting } from "@/lib/requirements";
 import { matchTemplate, type Body, type Template } from "@/lib/item-templates";
 
 type Doc = { id: string; title: string; file_name: string; size_bytes: number | null; agenda_item_id: string | null; document_request_id: string | null };
@@ -111,6 +112,8 @@ export function AgendaTab({
           const requests = docRequests.filter((r) => r.agenda_item_id === item.id);
           const notes = review ? notesFor(item) : [];
           const waiting = requests.filter((r) => r.status !== "accepted").length;
+          const description = withoutBeforeMeeting(item.description ?? "");
+          const descriptionEn = withoutBeforeMeeting(item.description_en ?? "");
           const content = (
             <>
               {(ownerLabel(item) || item.presenter) && (
@@ -120,18 +123,18 @@ export function AgendaTab({
                   {item.presenter && item.presenter !== ownerLabel(item) && <>يقدّمه: {item.presenter}</>}
                 </p>
               )}
-              {(item.description || item.description_en) && (
+              {(description || descriptionEn) && (
                 <details className="group/desc rounded-md border border-rule">
                   <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-medium hover:bg-paper [&::-webkit-details-marker]:hidden">
                     <ListChecks size={16} aria-hidden="true" className="shrink-0 text-primary" />
-                    <span className="min-w-0 flex-1">الوصف والمتطلبات</span>
+                    <span className="min-w-0 flex-1">{/(بعد القرار:|After the resolution:)/.test(description + descriptionEn) ? "الوصف وما بعد القرار" : "الوصف"}</span>
                     <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-200 group-open/desc:rotate-180" />
                   </summary>
                   <div className="flex flex-col gap-3 border-t border-rule px-3 py-3">
-                    {item.description && <p className="whitespace-pre-line text-sm leading-7">{item.description}</p>}
-                    {item.description_en && (
+                    {description && <p className="whitespace-pre-line text-sm leading-7">{description}</p>}
+                    {descriptionEn && (
                       <p dir="ltr" lang="en" className="whitespace-pre-line border-t border-rule pt-3 text-start text-xs leading-6 text-ink-muted">
-                        {item.description_en}
+                        {descriptionEn}
                       </p>
                     )}
                   </div>

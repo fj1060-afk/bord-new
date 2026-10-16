@@ -80,18 +80,18 @@ function provider(r: Req, en: boolean) {
 }
 
 /**
- * The requirements block written into an item's description: before-meeting
- * requirements grouped by who provides them, then the follow-up actions with
- * their owner and deadline.
+ * The requirements block written into an item's description: the follow-up
+ * actions with their owner and deadline. Before-meeting requirements live in
+ * the item's requirements panel, so they are written only when asked for.
  */
-export function requirementsText(reqs: Req[] = [], en = false): string {
+export function requirementsText(reqs: Req[] = [], en = false, withBefore = false): string {
   if (!reqs.length) return "";
   const groups = new Map<string, string[]>();
   for (const r of beforeMeeting(reqs)) groups.set(provider(r, en), [...(groups.get(provider(r, en)) ?? []), en ? r.en : r.ar]);
   const lines = [...groups].map(([who, list]) => `• ${who}: ${list.join(en ? "; " : "؛ ")}`);
   const after = reqs.filter((r) => r.k === "after");
   const out: string[] = [];
-  if (lines.length) out.push(en ? "Before the meeting:" : "المتطلبات قبل الاجتماع:", ...lines);
+  if (withBefore && lines.length) out.push(en ? "Before the meeting:" : "المتطلبات قبل الاجتماع:", ...lines);
   if (after.length) {
     out.push(en ? "After the resolution:" : "بعد القرار:");
     for (const r of after) {
@@ -111,3 +111,21 @@ export const withoutRequirements = (description: string) =>
 
 /** Whether a description is nothing but an auto-filled block (so it may follow the title). */
 export const isRequirementsOnly = (description: string) => !!description.trim() && !withoutRequirements(description).trim();
+
+/** Drops a "before the meeting" block (Arabic or English) from a description; the requirements panel shows it instead. */
+export function withoutBeforeMeeting(description: string): string {
+  const out: string[] = [];
+  let skipping = false;
+  for (const line of description.split("\n")) {
+    const t = line.trim();
+    if (/^(المتطلبات قبل الاجتماع:|Before the meeting:)/.test(t)) {
+      skipping = true;
+      continue;
+    }
+    if (t.startsWith("المستندات الداعمة:")) continue; // the older one-line form
+    if (skipping && (!t || t.startsWith("•"))) continue;
+    skipping = false;
+    out.push(line);
+  }
+  return out.join("\n").trim();
+}
