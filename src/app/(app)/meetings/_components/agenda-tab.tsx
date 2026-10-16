@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ChevronDown, FileText, Paperclip, Printer } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, FileText, ListChecks, Paperclip, Printer, Trash2 } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { buttonClass } from "@/components/ui/styles";
 import { DOC_REQUEST_STATUS, ITEM_KINDS } from "@/lib/meetings";
@@ -118,11 +118,22 @@ export function AgendaTab({
                   {item.presenter && item.presenter !== ownerLabel(item) && <>يقدّمه: {item.presenter}</>}
                 </p>
               )}
-              {item.description && <p className="whitespace-pre-line text-sm leading-7">{item.description}</p>}
-              {item.description_en && (
-                <p dir="ltr" lang="en" className="whitespace-pre-line text-start text-xs leading-6 text-ink-muted">
-                  {item.description_en}
-                </p>
+              {(item.description || item.description_en) && (
+                <details className="group/desc rounded-md border border-rule">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-medium hover:bg-paper [&::-webkit-details-marker]:hidden">
+                    <ListChecks size={16} aria-hidden="true" className="shrink-0 text-primary" />
+                    <span className="min-w-0 flex-1">الوصف والمتطلبات</span>
+                    <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-200 group-open/desc:rotate-180" />
+                  </summary>
+                  <div className="flex flex-col gap-3 border-t border-rule px-3 py-3">
+                    {item.description && <p className="whitespace-pre-line text-sm leading-7">{item.description}</p>}
+                    {item.description_en && (
+                      <p dir="ltr" lang="en" className="whitespace-pre-line border-t border-rule pt-3 text-start text-xs leading-6 text-ink-muted">
+                        {item.description_en}
+                      </p>
+                    )}
+                  </div>
+                </details>
               )}
               {review && <ItemNotes findings={notes} />}
             </>
@@ -196,10 +207,13 @@ export function AgendaTab({
                       )}
                       {editable && (
                         <>
-                          <UploadDocument meetingId={meetingId} agendaItemId={item.id} />
-                          <DocumentRequestForm meetingId={meetingId} itemId={item.id} targets={targets} owner={ownerOf(item)} dueDate={dueDefault} />
-                          <div>
-                            <ConfirmButton action={removeAgendaItem.bind(null, meetingId, item.id)} label="حذف البند" confirm={`حذف البند "${item.title}"؟`} />
+                          <div className="flex flex-col gap-2">
+                            <p className="text-xs font-medium text-ink-muted">مستندات البند</p>
+                            <UploadDocument meetingId={meetingId} agendaItemId={item.id} />
+                            <DocumentRequestForm meetingId={meetingId} itemId={item.id} targets={targets} owner={ownerOf(item)} dueDate={dueDefault} />
+                          </div>
+                          <div className="flex justify-end border-t border-rule pt-3">
+                            <ConfirmButton action={removeAgendaItem.bind(null, meetingId, item.id)} label="حذف البند" icon={<span className="inline-flex items-center gap-1.5 px-1 text-xs"><Trash2 size={14} aria-hidden="true" /> حذف البند</span>} confirm={`حذف البند "${item.title}"؟`} />
                           </div>
                         </>
                       )}

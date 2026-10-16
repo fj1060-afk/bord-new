@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Upload } from "lucide-react";
+import { Paperclip, Upload, X } from "lucide-react";
 import { FormMessage, inputClass, type ActionState } from "@/components/ui/form";
 import { buttonClass } from "@/components/ui/styles";
 import { MAX_UPLOAD_BYTES, storagePath } from "@/lib/meetings";
@@ -24,6 +24,7 @@ export function UploadDocument({
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
+  const [picked, setPicked] = useState<File | null>(null);
 
   async function upload() {
     const file = fileRef.current?.files?.[0];
@@ -50,15 +51,45 @@ export function UploadDocument({
     if (result.ok && fileRef.current && titleRef.current) {
       fileRef.current.value = "";
       titleRef.current.value = "";
+      setPicked(null);
     }
   }
 
+  const size = picked ? (picked.size < 1048576 ? `${Math.max(1, Math.round(picked.size / 1024))} ك.ب` : `${(picked.size / 1048576).toFixed(1)} م.ب`) : "";
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-2 rounded-md border border-dashed border-rule p-3">
+      <label className="flex cursor-pointer items-center gap-3 rounded-md bg-paper px-3 py-2.5 text-sm transition-colors hover:bg-primary-soft">
+        <Paperclip size={16} aria-hidden="true" className="shrink-0 text-primary" />
+        <span className="min-w-0 flex-1">
+          {picked ? (
+            <>
+              <span className="block truncate" dir="auto">{picked.name}</span>
+              <span className="block font-mono text-[11px] text-ink-muted">{size}</span>
+            </>
+          ) : (
+            <span className="text-ink-muted">اختر ملفاً (حتى 25 م.ب)</span>
+          )}
+        </span>
+        {picked && (
+          <button
+            type="button"
+            aria-label="إزالة الملف"
+            onClick={(e) => {
+              e.preventDefault();
+              if (fileRef.current) fileRef.current.value = "";
+              setPicked(null);
+            }}
+            className="rounded p-1 text-ink-muted hover:bg-surface"
+          >
+            <X size={14} aria-hidden="true" />
+          </button>
+        )}
+        <input ref={fileRef} type="file" className="sr-only" onChange={(e) => setPicked(e.target.files?.[0] ?? null)} />
+      </label>
+      <div className="flex flex-col gap-2 sm:flex-row">
         <input ref={titleRef} placeholder="عنوان المستند (اختياري)" className={`${inputClass} min-w-0 flex-1`} />
-        <input ref={fileRef} type="file" aria-label="الملف" className="min-w-0 flex-1 text-sm file:me-3 file:rounded-md file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:text-primary" />
-        <button type="button" onClick={upload} disabled={busy} className={buttonClass("secondary")}>
+        <button type="button" onClick={upload} disabled={busy || !picked} className={buttonClass("secondary", "shrink-0 justify-center disabled:opacity-50")}>
           <Upload size={16} aria-hidden="true" />
           {busy ? "جارٍ الرفع…" : label}
         </button>

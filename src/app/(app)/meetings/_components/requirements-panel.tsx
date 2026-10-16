@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckSquare, FileText, Landmark } from "lucide-react";
+import { CalendarDays, CheckSquare, ChevronDown, FileText, Landmark, X } from "lucide-react";
 import { useActionState, useState, useTransition } from "react";
 import { ActionForm } from "@/components/ui/action-form";
 import { FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
@@ -43,20 +43,19 @@ export function RequirementsPanel({ meetingId, itemId, rows, targets, dueDefault
       </>
     );
 
+  const summary = [drafts.length > 0 && `${drafts.length} مسودة`, sent > 0 && `${sent} مُرسلة`, checks.length > 0 && `${checks.filter((c) => c.checked_at).length}/${checks.length} تحقق`].filter(Boolean).join(" · ");
+  const unassigned = drafts.filter((r) => !targetOf(r)).length;
+
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-rule p-3 text-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <strong>متطلبات البند</strong>
-        <span className="text-xs text-ink-muted">
-          {[
-            drafts.length > 0 && `${drafts.length} مسودة لم تُرسل`,
-            sent > 0 && `${sent} مُرسلة (طلباتها أعلاه)`,
-            checks.length > 0 && `${checks.filter((c) => c.checked_at).length}/${checks.length} تحقق مؤكد`,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </span>
-      </div>
+    <>
+      <details className="group/req rounded-md border border-rule text-sm" open={unassigned > 0}>
+        <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 hover:bg-paper [&::-webkit-details-marker]:hidden">
+          <strong className="min-w-0 flex-1">متطلبات البند</strong>
+          {unassigned > 0 && <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[11px] text-danger">{unassigned} بلا جهة</span>}
+          <span className="text-xs text-ink-muted">{summary}</span>
+          <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-200 group-open/req:rotate-180" />
+        </summary>
+        <div className="flex flex-col gap-2 border-t border-rule p-3">
       {drafts.map((r) => (
         <DraftRow key={r.id} meetingId={meetingId} row={r} targets={targets} />
       ))}
@@ -83,9 +82,11 @@ export function RequirementsPanel({ meetingId, itemId, rows, targets, dueDefault
           </ul>
         </details>
       )}
-      <AddRequirement meetingId={meetingId} itemId={itemId} targets={targets} dueDefault={dueDefault} />
+          <AddRequirement meetingId={meetingId} itemId={itemId} targets={targets} dueDefault={dueDefault} />
+        </div>
+      </details>
       {send}
-    </div>
+    </>
   );
 }
 
@@ -93,24 +94,29 @@ function DraftRow({ meetingId, row, targets }: { meetingId: string; row: Require
   const Icon = ICONS[row.kind];
   const [pending, start] = useTransition();
   const save = (target: string, due: string | null) => start(() => setRequirementTarget(meetingId, row.id, target, due));
+  const missing = !targetOf(row);
   return (
-    <div className="grid gap-2 rounded bg-paper p-2 md:grid-cols-[1fr_14rem_10rem_auto] md:items-center">
-      <span className="flex items-start gap-2">
-        <Icon size={14} className="mt-1 shrink-0 text-ink-muted" aria-label={REQ_KINDS[row.kind]} />
-        {row.label}
-      </span>
-      <div onChange={(e) => save((e.target as unknown as HTMLSelectElement).value, row.due_date)}>
-        <TargetSelect name={`t-${row.id}`} targets={targets} defaultValue={targetOf(row)} placeholder="المطلوب منه؟" />
-      </div>
-      <div className="flex items-center gap-2 md:contents">
-        <input type="date" aria-label="آخر موعد" defaultValue={row.due_date ?? ""} onChange={(e) => save(targetOf(row), e.target.value)} className={inputClass} />
-        <form action={setRequirementStatus.bind(null, meetingId, row.id, "dismissed")} className="shrink-0 md:justify-self-end">
-          <button disabled={pending} className="px-1 py-2 text-xs text-ink-muted hover:text-danger">
-            استبعاد
+    <div className={`flex flex-col gap-2 rounded-md border bg-paper p-3 transition-opacity ${missing ? "border-danger/40" : "border-transparent"} ${pending ? "opacity-60" : ""}`}>
+      <div className="flex items-start gap-2">
+        <Icon size={15} className="mt-0.5 shrink-0 text-primary" aria-label={REQ_KINDS[row.kind]} />
+        <span className="min-w-0 flex-1 font-medium">{row.label}</span>
+        <form action={setRequirementStatus.bind(null, meetingId, row.id, "dismissed")} className="shrink-0">
+          <button disabled={pending} title="استبعاد هذا المتطلب" aria-label={`استبعاد ${row.label}`} className="grid size-7 place-items-center rounded text-ink-muted hover:bg-danger/10 hover:text-danger">
+            <X size={15} aria-hidden="true" />
           </button>
         </form>
       </div>
-      {!targetOf(row) && <span className="text-xs text-danger md:col-span-4">حدّد المطلوب منه قبل الإرسال.</span>}
+      <div className="grid gap-2 sm:grid-cols-[1fr_11rem]">
+        <div onChange={(e) => save((e.target as unknown as HTMLSelectElement).value, row.due_date)}>
+          <TargetSelect name={`t-${row.id}`} targets={targets} defaultValue={targetOf(row)} placeholder="المطلوب منه؟" />
+        </div>
+        <label className="relative">
+          <span className="sr-only">آخر موعد</span>
+          <CalendarDays size={15} aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 my-auto text-ink-muted" />
+          <input type="date" lang="ar" defaultValue={row.due_date ?? ""} onChange={(e) => save(targetOf(row), e.target.value)} className={`${inputClass} ps-9`} />
+        </label>
+      </div>
+      {missing && <span className="text-xs text-danger">حدّد المطلوب منه قبل الإرسال.</span>}
     </div>
   );
 }
