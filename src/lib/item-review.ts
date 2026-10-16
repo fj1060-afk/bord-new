@@ -164,8 +164,8 @@ const YEAR_WORD = /\s*(لعام|عام|للعام|لسن[ةه]|سن[ةه]|للس
 // "زيادة/تخفيض" or "(قانونياً/مالياً)": a choice the author must make.
 const CHOICE = /\(?([^\s()/]+)\/([^\s()/]+)\)?/;
 
-/** Unmade choices and unfilled blanks left from a standard wording. */
-function templateGaps(title: string): Finding[] {
+/** Unmade choices and unfilled blanks left from a standard wording; an item cannot be saved with them. */
+export function templateGaps(title: string): Finding[] {
   const gaps: Finding[] = [];
   const choice = title.match(CHOICE);
   if (choice) {

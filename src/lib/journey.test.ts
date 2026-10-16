@@ -32,6 +32,13 @@ describe("meeting journey", () => {
     expect(currentStage(journeyChecks({ ...i, items: [{ ...i.items[0], owned: true }] }))).toBe(2);
   });
 
+  it("blocks items left with a choice or a blank", () => {
+    const i = { ...base, items: [{ title: "التوصية بزيادة/تخفيض رأس المال", kind: "information", owned: true }] };
+    expect(find(i, "definite").ok).toBe(false);
+    expect(currentStage(journeyChecks(i))).toBe(1);
+    expect(find({ ...i, items: [{ ...i.items[0], title: "التوصية بزيادة رأس المال" }] }, "definite").ok).toBe(true);
+  });
+
   it("lets a pending document pass only with a reason", () => {
     const i = { ...base, items: [{ title: "أ", kind: "information", owned: false }], requests: [{ title: "القوائم", status: "requested" }] };
     expect(currentStage(journeyChecks(i))).toBe(1);

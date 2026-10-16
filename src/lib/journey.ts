@@ -3,6 +3,7 @@
 // (an override); "info" never blocks.
 
 import type { CompanyType } from "./company";
+import { templateGaps } from "./item-review";
 
 export const STAGES = [
   { n: 1, title: "التحضير", tabs: ["overview", "agenda", "invitees"] },
@@ -41,11 +42,13 @@ export function journeyChecks(j: JourneyInput): Check[] {
   const pending = j.requests.filter((r) => r.status !== "accepted");
   const notice = m.pack_published_at ? Math.floor((Date.parse(m.starts_at) - Date.parse(m.pack_published_at)) / 86400000) : null;
   const unowned = j.items.filter((i) => i.kind === "decision" && !i.owned);
+  const vague = j.items.filter((i) => templateGaps(i.title).length);
   const checks: Check[] = [
     { id: "details", stage: 1, tab: "overview", label: "بيانات الاجتماع: التاريخ والوقت والمكان أو الرابط", level: "block", ok: !!m.starts_at && (m.mode === "virtual" ? !!m.virtual_link : !!m.location) && (m.mode === "in_person" || !!m.virtual_link) },
     ...(j.isBoard ? [{ id: "term", stage: 1 as const, tab: "overview", label: "دورة المجلس سارية في تاريخ الاجتماع", level: (jsc ? "block" : "warn") as Level, ref: "نظام الشركات م68", ok: !!j.boardTermEnd && day(m.starts_at) <= j.boardTermEnd }] : []),
     ...(j.isBoard ? [{ id: "secretary", stage: 1 as const, tab: "overview", label: "أمين سر المجلس معيّن", level: "warn" as Level, ref: "نظام الشركات م78/4", ok: j.secretary }] : []),
     { id: "items", stage: 1, tab: "agenda", label: "جدول الأعمال: بند واحد على الأقل", level: "block", ok: j.items.length > 0, detail: `${j.items.length} بند` },
+    { id: "definite", stage: 1, tab: "agenda", label: "عناوين البنود محددة: لا خيارات «/» ولا فراغات «(…)»", level: "block", ok: vague.length === 0, detail: vague.length ? `تحتاج تحديداً: ${vague.map((i) => i.title).join("، ")}` : undefined },
     { id: "owners", stage: 1, tab: "agenda", label: "كل بند للقرار له مسؤول", level: "block", ok: unowned.length === 0, detail: unowned.length ? `بلا مسؤول: ${unowned.map((i) => i.title).join("، ")}` : undefined },
     { id: "docs", stage: 1, tab: "agenda", label: "المستندات المطلوبة مسلّمة ومعتمدة", level: "warn", ok: pending.length === 0, detail: pending.length ? `بانتظار: ${pending.map((r) => r.title).join("، ")}` : undefined },
     { id: "quorum-possible", stage: 1, tab: "invitees", label: "الأعضاء المدعوون يكفون لاكتمال النصاب", level: "block", ref: "نظام الشركات م80/2", ok: j.invitedMembers >= j.quorumNeeded, detail: `مدعوون ${j.invitedMembers}، والنصاب ${j.quorumNeeded}` },

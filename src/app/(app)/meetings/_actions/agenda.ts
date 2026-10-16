@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
 import { isOneOf } from "@/lib/org";
+import { templateGaps } from "@/lib/item-review";
 import { ITEM_KINDS, moveItem } from "@/lib/meetings";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -15,6 +16,8 @@ function readItem(form: FormData) {
   const kind = form.get("kind");
   const duration = form.get("duration_minutes") ? Number(form.get("duration_minutes")) : null;
   if (!title) return { error: "عنوان البند مطلوب." };
+  const gap = templateGaps(title)[0];
+  if (gap) return { error: `لا يمكن حفظ البند: ${gap.text}` };
   if (!isOneOf(kind, ITEM_KINDS)) return { error: "اختر نوع البند." };
   if (duration !== null && (!Number.isInteger(duration) || duration < 1 || duration > 480)) return { error: "المدة غير صحيحة." };
   return {
