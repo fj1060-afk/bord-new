@@ -46,3 +46,13 @@ Article numbers were checked against the official English translations; the Arab
 - CL: 8 (registering bylaw amendments), 78 (chair/CEO/secretary powers and pay), 83 (minutes register), 117 (debt instruments and sukuk), 121-122 (statements to auditor and shareholders), 123-124 (reserves).
 - CGR: 8 (board election), 9 (dividends), 19 (independence), 23 (separating chair and executive roles), 30, 33 (agenda), 35, 37 (training), 39 (assessment), 43 (nominee disclosure), 59 (remuneration policy), 62 (nomination committee), 65 (nomination announcement), 68 (risk committee), 74-75 (internal audit plan and report), 78 (external auditor), 80 (stakeholders), 81 (whistleblowing), 83 (code of conduct), 84 (social responsibility), 86 (disclosure policy), 90 (remuneration disclosure).
 - IR: 29 (employee shares). OSCOs: 80-81.
+
+## Operative elements a resolution must state
+- Dividends: eligibility and distribution dates in the assembly decision (CL 125/2; CGR 9 for interim); paid within 15 business days of eligibility (IR 46); interim on a semi-annual or quarterly basis under an annually renewed authorization (IR 47), disclosed immediately (IR 49).
+- Auditor: the assembly sets fees, term and scope of work (CL 18/1; IR 3).
+- Capital: methods of increase (CL 126) and decrease (CL 133); creditors invited 45 days before a decrease for excess capital, with capital before and after (CL 135); EGA decisions registered within 15 days (CL 93/5).
+- Buy-back (listed): EGA sets purpose, maximum shares and funding, and authorizes the board for up to 18 months (IR 17); within distributable profits (IR 21); treasury retention period (IR 24); articles must permit it (CL 114).
+- Board term at most 4 years (CL 68/4); cumulative voting (IR 5); end of membership notified immediately with reasons (IR 6); members do not vote on their remuneration (IR 7).
+- Related parties: board authorization under a delegation lasts at most one year or the board term (IR 64(d)); otherwise the assembly authorizes (IR 65). Public tenders are exempt from CL 27(1) (CL 27/5).
+- Second assembly meeting: ordinary within 30 days (CL 92/2); extraordinary quorum a quarter at the second meeting (CL 93/2).
+- Head of internal audit appointed, removed and paid by the board (CGR 24) on the audit committee's recommendation (CGR 52).

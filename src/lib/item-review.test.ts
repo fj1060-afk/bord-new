@@ -97,3 +97,39 @@ describe("dividend dates", () => {
     expect(dates("التصويت على اعتماد سياسة توزيع الأرباح")).toBe(false);
   });
 });
+
+describe("operative elements the law requires in the resolution", () => {
+  const refs = (title: string, listed = false) => reviewItem({ title, kind: "decision", description: "x" }, { listed }).map((f) => f.ref ?? "");
+
+  it("asks for the auditor's fees and scope", () => {
+    expect(refs("التوصية للجمعية العامة العادية بتعيين مراجع الحسابات للعام 2026")).toContain("نظام الشركات م18؛ اللائحة التنفيذية للشركات المدرجة م3");
+    expect(refs("التوصية للجمعية العامة العادية بتعيين مراجع الحسابات لمراجعة القوائم المالية للعام 2026 وتحديد أتعابه")).not.toContain("نظام الشركات م18؛ اللائحة التنفيذية للشركات المدرجة م3");
+  });
+
+  it("asks for the capital before and after a change", () => {
+    const ref = "نظام الشركات م126 وم133 وم135";
+    expect(refs("التوصية للجمعية العامة غير العادية بزيادة رأس المال")).toContain(ref);
+    expect(refs("التوصية للجمعية العامة غير العادية بزيادة رأس مال الشركة من 100,000,000 ريال إلى 150,000,000 ريال عن طريق منح أسهم")).not.toContain(ref);
+    expect(refs("التصويت على زيادة رأس مال الشركة التابعة")).not.toContain(ref);
+  });
+
+  it("asks a listed company's buy-back for its purpose, size, funding and period", () => {
+    const ref = "اللائحة التنفيذية للشركات المدرجة م17 وم24";
+    expect(refs("التوصية للجمعية العامة غير العادية بشراء الشركة لعدد 1,000,000 من أسهمها", true)).toContain(ref);
+    expect(refs("التوصية للجمعية العامة غير العادية بشراء الشركة لعدد 1,000,000 من أسهمها", false)).not.toContain(ref);
+    expect(refs("التوصية للجمعية العامة غير العادية بشراء الشركة لعدد أقصاه 1,000,000 من أسهمها بغرض الاحتفاظ بها أسهم خزينة", true)).not.toContain(ref);
+    expect(refs("التوصية للجمعية العامة غير العادية بشراء الشركة لعدد 1,000,000 من أسهمها", true).some((r) => r.startsWith("نظام الشركات م27"))).toBe(false);
+  });
+
+  it("asks for the board term on election", () => {
+    const ref = "نظام الشركات م68؛ اللائحة التنفيذية للشركات المدرجة م5";
+    expect(refs("التوصية للجمعية العامة العادية بانتخاب أعضاء مجلس الإدارة للدورة القادمة")).toContain(ref);
+    expect(refs("التوصية للجمعية العامة العادية بانتخاب أعضاء مجلس الإدارة للدورة القادمة التي تبدأ في 1 يناير 2027")).not.toContain(ref);
+  });
+
+  it("leaves a subsidiary's liquidation, a dividend policy and an approved dividend alone", () => {
+    expect(refs("التصويت على تصفية الشركة التابعة شركة النخبة")).not.toContain("نظام الشركات م85");
+    expect(reviewItem({ title: "التصويت على اعتماد سياسة توزيع الأرباح", kind: "decision", description: "x" }).some((f) => f.text.startsWith("حدّد الفترة"))).toBe(false);
+    expect(refs("التصويت على اتخاذ إجراءات صرف الأرباح التي أقرتها الجمعية العامة بتاريخ 1 مايو 2026 وفق تاريخي الأحقية والتوزيع المحددين في قرارها")).toEqual([]);
+  });
+});

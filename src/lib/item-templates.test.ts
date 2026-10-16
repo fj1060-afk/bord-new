@@ -17,7 +17,7 @@ describe("suggestTitles", () => {
 
   it("knows assembly items", () => {
     expect(suggestTitles("زيادة رأس المال")[0].title).toContain("للجمعية العامة غير العادية");
-    expect(suggestTitles("أمين السر")[0].title).toBe("التصويت على تعيين أمين سر مجلس الإدارة وتحديد مكافأته");
+    expect(suggestTitles("أمين السر")[0].title).toBe("التصويت على تعيين (…) أميناً لسر مجلس الإدارة وتحديد مهامه ومكافأته");
   });
 
   it("covers resignations and committee chairs", () => {
@@ -29,7 +29,7 @@ describe("suggestTitles", () => {
     const found = suggestTitles("تعي");
     expect(found).toHaveLength(5);
     expect(found.every((s) => s.title.includes("تعيين"))).toBe(true);
-    expect(suggestTitles("تعيين أمين")[0].title).toBe("التصويت على تعيين أمين سر مجلس الإدارة وتحديد مكافأته");
+    expect(suggestTitles("تعيين أمين")[0].title).toBe("التصويت على تعيين (…) أميناً لسر مجلس الإدارة وتحديد مهامه ومكافأته");
     expect(suggestTitles("قوائم مال")[0].title).toContain("القوائم المالية");
   });
 
@@ -43,6 +43,8 @@ describe("suggestTitles", () => {
 
   it("has English for every built-in item and ranks the meeting's own items first", () => {
     expect(templates().every((t) => t.en)).toBe(true);
+    const blanks = (s = "") => (s.match(/\(…\)/g) ?? []).length;
+    expect(templates().filter((t) => blanks(t.title) !== blanks(t.en)).map((t) => t.title)).toEqual([]);
     expect(suggestTitles("القوائم المالية", 5, [], "audit")[0].title).toContain("والتوصية للمجلس");
     expect(suggestTitles("القوائم المالية", 5, [], "board")[0].title).toBe("التصويت على اعتماد القوائم المالية للسنة المالية المنتهية في (…)");
     expect(suggestTitles("القوائم المالية")[0].en).toBe("Approving the financial statements for the financial year ended (…)");
