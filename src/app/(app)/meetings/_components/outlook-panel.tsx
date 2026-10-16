@@ -30,18 +30,22 @@ export function OutlookPanel({ meetingId, meeting, minutes, invitees, items, dea
       {missing.length > 0 && <p className="text-xs text-danger">بلا بريد إلكتروني: {missing.join("، ")}</p>}
 
       <div className="flex flex-col gap-2">
-        <a href={`/meetings/${meetingId}/invite.ics`} download className={buttonClass("secondary", "w-fit gap-2")}>
+        <a href={web} target="_blank" rel="noreferrer" className={buttonClass("primary", "w-fit gap-2")}>
           <CalendarPlus size={16} aria-hidden="true" /> دعوة الأعضاء في تقويم Outlook
         </a>
+        <p className="text-xs text-ink-muted">يفتح تقويم Outlook بموعد جديد جاهز: الأعضاء والوقت والمكان وجدول الأعمال. أرفق ملف PDF ثم اضغط إرسال، ويظهر الموعد في Outlook على جهازك أيضاً.</p>
         <a href={`/print/meetings/${meetingId}/agenda?do=pdf`} target="_blank" rel="noreferrer" className="flex w-fit items-center gap-1 text-xs text-primary hover:underline">
           <FileDown size={14} aria-hidden="true" /> جدول الأعمال PDF للإرفاق بالدعوة
         </a>
-        <p className="text-xs text-ink-muted">
-          افتح الملف المحمَّل فيظهر الموعد في Outlook بالحضور والوقت والمكان وجدول الأعمال؛ أرفق ملف PDF ثم اضغط إرسال.{" "}
-          <a href={web} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-            أو افتحه في Outlook على الويب
-          </a>
-        </p>
+        <details className="text-xs text-ink-muted">
+          <summary className="w-fit cursor-pointer">أو افتحها في برنامج Outlook على الجهاز</summary>
+          <p className="mt-1">
+            <a href={`/meetings/${meetingId}/invite.ics`} download className="text-primary hover:underline">
+              تحميل ملف الدعوة
+            </a>{" "}
+            ثم افتحه من قائمة التنزيلات. لتفتح مباشرة في كل مرة: في قائمة التنزيلات اضغط «…» على الملف واختر «فتح هذا النوع من الملفات تلقائياً».
+          </p>
+        </details>
       </div>
 
       <div className={`flex flex-col gap-2 rounded-md p-3 ${due ? "border border-brass bg-brass-soft" : "bg-paper"}`}>
