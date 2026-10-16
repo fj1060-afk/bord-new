@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fold, reviewItem } from "./item-review";
+import { fold, repeatedWord, reviewItem, templateGaps } from "./item-review";
 
 describe("reviewItem", () => {
   it("flags a member whose disclosure matches the item", () => {
@@ -163,5 +163,19 @@ describe("committee competencies", () => {
   it("lets an audit committee approve the internal audit plan", () => {
     const f = reviewItem({ title: "اعتماد خطة المراجعة الداخلية لعام 2027", description: "", kind: "decision" }, { committeeKind: "audit" });
     expect(f.some((x) => x.ref?.startsWith("لائحة الحوكمة م"))).toBe(false);
+  });
+});
+
+describe("dates and repeated words", () => {
+  const item = "التوصية للجمعية العامة العادية بتوزيع أرباح نقدية على المساهمين عن العام المالي (2028) بواقع (1.8) ريال للسهم وبإجمالي مليون ريال ريال، على أن تكون الأحقية للمساهمين المسجلين بنهاية يوم الخميس ويبدأ التوزيع في تاريخ 20/10/2028";
+  it("does not read a date as a choice", () => {
+    expect(templateGaps(item)).toEqual([]);
+    expect(templateGaps("بزيادة/تخفيض رأس المال")).toHaveLength(1);
+  });
+  it("flags a word typed twice and offers the fix", () => {
+    const f = repeatedWord(item);
+    expect(f?.text).toContain("«ريال»");
+    expect(f?.fixes?.[0]).toContain("مليون ريال، على");
+    expect(repeatedWord("اعتماد القوائم المالية")).toBeNull();
   });
 });

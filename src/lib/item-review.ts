@@ -186,13 +186,24 @@ const DANGLING = /(?:^|\s)(لعام|عام|لسنه|سنه|للعام|للسنه
 // The same trailing "year of" words, as typed, so they can be cut from the suggestion.
 const YEAR_WORD = /\s*(لعام|عام|للعام|لسن[ةه]|سن[ةه]|للسن[ةه])\s*$/;
 
-// "زيادة/تخفيض" or "(قانونياً/مالياً)": a choice the author must make.
-const CHOICE = /\(?([^\s()/]+)\/([^\s()/]+)\)?/;
+// "زيادة/تخفيض" or "(قانونياً/مالياً)": a choice the author must make. Dates and numbers (20/10/2028) are not choices.
+const CHOICE = /\(?([^\s()/]+)\/([^\s()/]+)\)?/g;
+const HAS_DIGIT = /[0-9٠-٩۰-۹]/;
+
+// A word typed twice in a row, e.g. "مليون ريال ريال" after filling a blank that already ends in "ريال".
+const REPEATED = /(^|\s)([^\s()،,.]{2,})\s+\2(?=$|[\s()،,.])/;
+
+/** A word repeated by mistake, with the title fixed. */
+export function repeatedWord(title: string): Finding | null {
+  const m = title.match(REPEATED);
+  if (!m) return null;
+  return { level: "warn", text: `الكلمة «${m[2]}» مكررة في العنوان.`, fixes: [title.replace(REPEATED, "$1$2")] };
+}
 
 /** Unmade choices and unfilled blanks left from a standard wording; an item cannot be saved with them. */
 export function templateGaps(title: string): Finding[] {
   const gaps: Finding[] = [];
-  const choice = title.match(CHOICE);
+  const choice = [...title.matchAll(CHOICE)].find(([, a, b]) => !HAS_DIGIT.test(a) && !HAS_DIGIT.test(b));
   if (choice) {
     const [whole, a, rest] = choice;
     // "بزيادة/تخفيض": the preposition on the first word belongs to both.
@@ -231,8 +242,9 @@ export function reviewItem(
   const verbless = item.kind === "decision" && !DECISION_VERBS.some((v) => title.startsWith(fold(v)));
   const verb = verbless ? "التصويت على اعتماد " : "";
   const fullPeriod = `للسنة المالية المنتهية في 31 ديسمبر ${year}`;
+  const repeated = repeatedWord(item.title);
   // Who decides: from the standard wording the item follows and the company's bylaws and assembly authorizations.
-  const findings: Finding[] = [...templateGaps(base), ...authorityFindings(template, item.title, powers)];
+  const findings: Finding[] = [...templateGaps(base), ...(repeated ? [repeated] : []), ...authorityFindings(template, item.title, powers)];
   // A delegation is for "certain acts" (CL 77/1): it must say who, in what capacity, for what, and for how long.
   const delegation = /(^|\s)(تفويض|وكاله|توكيل)/.test(title) && !/تفويض مجلس الاداره|بتفويض مجلس|بناء علي تفويض|تفويض الجمعيه|تفويض ممثل|حسابات الشركه/.test(title);
   if (delegation && !(/بصفته/.test(title) && /(لمده|حتي|اعتبارا من|لانجاز|لاتمام)/.test(title)))
