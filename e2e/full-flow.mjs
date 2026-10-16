@@ -74,8 +74,8 @@ await step("إنشاء المجلس (إن لم يوجد)", async () => {
 });
 
 await step("إضافة عضو جديد للمجلس", async () => {
-  await go("/board");
-  await page.click("summary:has-text('إضافة عضو')");
+  await go("/board/members");
+  await page.click("summary:has-text('إضافة شخص مسجّل')");
   await page.selectOption("select[name=person_id]", "new");
   await page.fill("input[name=new_full_name]", `عضو اختبار ${stamp}`);
   await page.click("button:has-text('إضافة العضو')");
@@ -100,6 +100,13 @@ await step("إنشاء لجنة وإضافة عضو", async () => {
   await page.selectOption("select[name=position]", "chair");
   await page.click("button:has-text('إضافة العضو')");
   await status("أُضيف العضو");
+});
+
+await step("أرشفة لجنة الاختبار", async () => {
+  // Test committees would otherwise pile up in the sidebar.
+  await page.click("summary:has-text('تعديل اللجنة')");
+  await page.click("button:has-text('أرشفة اللجنة')");
+  await page.getByText("هذه اللجنة مؤرشفة").waitFor({ timeout: 20000 });
 });
 
 let meetingUrl = "";
@@ -166,7 +173,7 @@ await step("فتح المستند المرفوع", async () => {
 });
 
 await step("تقديم إفصاح لعضو", async () => {
-  await go("/board");
+  await go("/board/members");
   await page.click(`a:has-text('عضو اختبار ${stamp}')`);
   await page.click("button:has-text('تقديم الإفصاح')");
   // Once filed, the form is replaced by the disclosure card, so its message never shows.

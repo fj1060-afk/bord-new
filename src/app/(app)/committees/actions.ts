@@ -35,7 +35,7 @@ export async function saveCommittee(committeeId: string | null, _prev: ActionSta
     .select("id")
     .single();
   if (error || !data) return { ok: false, message: "تعذّر إنشاء اللجنة." };
-  redirect(`${PAGE}/${data.id}`);
+  redirect(`${PAGE}/${data.id}/members`);
 }
 
 export async function setCommitteeStatus(committeeId: string, status: "active" | "archived") {

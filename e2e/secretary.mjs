@@ -70,7 +70,7 @@ await step("تبويب المحضر يعرض الملاحظات والتحفظا
 });
 
 await step("إضافة تنفيذي يظهر في سجل الإفصاحات والامتثال", async () => {
-  await go("/board");
+  await go("/board/members");
   await page.click("summary:has-text('إضافة تنفيذي')");
   const form = page.locator("form", { has: page.locator("input[name=executive_title]") });
   await form.locator("select[name=person_id]").selectOption("new");
