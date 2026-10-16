@@ -36,6 +36,8 @@ export async function saveServices(_: ActionState, fd: FormData): Promise<Action
       circular_enabled: on("circular_enabled"),
       pack_requires_disclosure: on("pack_requires_disclosure"),
       hide_contacts: on("hide_contacts"),
+      watermark_documents: on("watermark_documents"),
+      documents_view_only: on("documents_view_only"),
       updated_by: user.user?.id ?? null,
     })
     .eq("id", true);

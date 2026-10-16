@@ -13,6 +13,8 @@ export type ServiceSettings = {
   circular_enabled: boolean;
   pack_requires_disclosure: boolean;
   hide_contacts: boolean;
+  watermark_documents: boolean;
+  documents_view_only: boolean;
 };
 
 type Env = Record<string, string | undefined>;

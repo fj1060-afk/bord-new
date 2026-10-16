@@ -103,6 +103,26 @@ export function ServicesForm({ settings, ai, canManage }: { settings: ServiceSet
         />
       </Group>
 
+      <Group
+        title="حماية المستندات"
+        intro="تسري على أعضاء المجلس واللجان وبقية القراء؛ ويفتح أمين السر ومنظمو الاجتماعات ورافع المستند ومحررو المكتبة النسخة الأصلية. أثناء التفعيل لا يُفتح للقراء إلا ما كان بصيغة PDF، فارفع المستندات بها."
+      >
+        <SwitchRow
+          name="watermark_documents"
+          label="علامة مائية باسم القارئ"
+          hint="يُطبع على كل صفحة بريد القارئ وتاريخ ووقت الاطلاع، فإن تسربت نسخة عُرف مصدرها. الملف المحمي بكلمة مرور لا يُفتح حتى تُرفع نسخة غير محمية."
+          defaultChecked={settings.watermark_documents}
+          disabled={off}
+        />
+        <SwitchRow
+          name="documents_view_only"
+          label="العرض فقط دون تنزيل"
+          hint="يفتح المستند داخل المتصفح بدل تنزيله، ولا يصل القارئ إلى الملف الأصلي. لا يمنع ذلك تصوير الشاشة أو الحفظ من عارض المتصفح، فالعلامة المائية هي الرادع الأقوى."
+          defaultChecked={settings.documents_view_only}
+          disabled={off}
+        />
+      </Group>
+
       <Group title="الخصوصية">
         <SwitchRow
           name="hide_contacts"

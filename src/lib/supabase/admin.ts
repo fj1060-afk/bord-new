@@ -9,7 +9,8 @@ export function adminConfigured(): boolean {
 
 /**
  * Supabase client with the secret key. It bypasses row-level security, so use it
- * only for Auth admin calls (invite, ban) after checking the caller's permission.
+ * only for Auth admin calls (invite, ban) after checking the caller's permission,
+ * and for reading a protected file the caller already found through RLS.
  */
 export function createAdminClient() {
   const secretKey = process.env.SUPABASE_SECRET_KEY;

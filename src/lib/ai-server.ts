@@ -12,6 +12,8 @@ const FALLBACK: ServiceSettings = {
   circular_enabled: true,
   pack_requires_disclosure: false,
   hide_contacts: false,
+  watermark_documents: false,
+  documents_view_only: false,
 };
 
 /** The site's switches (service_settings). */
