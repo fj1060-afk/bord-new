@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { SidebarBrand } from "./sidebar";
-import { SidebarNav } from "./sidebar-nav";
+import { SidebarNav, type CommitteeLink } from "./sidebar-nav";
 
-export function MobileNav({ allowed }: { allowed: string[] }) {
+export function MobileNav({ allowed, committees }: { allowed: string[]; committees: CommitteeLink[] }) {
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -47,7 +47,7 @@ export function MobileNav({ allowed }: { allowed: string[] }) {
               <X size={20} aria-hidden="true" />
             </button>
           </div>
-          <SidebarNav allowed={allowed} onNavigate={() => setOpen(false)} />
+          <SidebarNav allowed={allowed} committees={committees} onNavigate={() => setOpen(false)} />
         </div>
       </dialog>
     </>

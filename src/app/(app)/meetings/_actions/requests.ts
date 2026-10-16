@@ -30,7 +30,7 @@ export async function submitAgendaRequest(_prev: ActionState, form: FormData): P
     description: text(form, "description"),
   });
   if (error) return { ok: false, message: "تعذّر إرسال الطلب. تأكد أنك مخوّل عن هذه الإدارة." };
-  revalidatePath("/meetings");
+  revalidatePath("/meetings", "layout");
   return { ok: true, message: "أُرسل الطلب للمراجعة." };
 }
 
@@ -73,6 +73,6 @@ export async function reviewAgendaRequest(requestId: string, _prev: ActionState,
       .eq("id", requestId);
     revalidatePath(`/meetings/${meetingId}`);
   }
-  revalidatePath("/meetings");
+  revalidatePath("/meetings", "layout");
   return { ok: true, message: decision === "rejected" ? "رُفض الطلب." : "قُبل الطلب وأُضيف للأجندة." };
 }

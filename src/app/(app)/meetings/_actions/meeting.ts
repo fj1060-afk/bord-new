@@ -92,7 +92,7 @@ export async function setMeetingStatus(meetingId: string, status: "draft" | "sch
   const { error } = await supabase.from("meetings").update({ status }).eq("id", meetingId);
   if (error) throw new Error("Could not update meeting status");
   revalidatePath(`/meetings/${meetingId}`);
-  revalidatePath("/meetings");
+  revalidatePath("/meetings", "layout");
 }
 
 /** Publishing the pack lets invitees open the meeting documents. */

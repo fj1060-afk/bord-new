@@ -30,7 +30,7 @@ export default async function CommitteesPage() {
 
   return (
     <>
-      <PageHeader section="الحوكمة" title="اللجان" description="لجان المجلس وأعضاؤها." />
+      <PageHeader section="اللجان" title="لوحة اللجان" description="لجان المجلس وأعضاؤها. كل لجنة تظهر في القائمة الجانبية بصفحاتها." />
       <RegulationNote notes={NOTES.committees} />
 
       {can(viewer.permissions, "/committees", LEVELS.manage) && (

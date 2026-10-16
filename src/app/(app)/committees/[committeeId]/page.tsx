@@ -1,110 +1,76 @@
 import type { Metadata } from "next";
-import { RegulationNote } from "@/components/ui/regulation-note";
-import { NOTES } from "@/lib/regulations";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ConfirmButton } from "@/components/org/confirm-button";
 import { PageHeader } from "@/components/ui/page-header";
-import { buttonClass } from "@/components/ui/styles";
 import { requirePage } from "@/lib/auth";
-import { formatGregorianDate } from "@/lib/format";
-import { COMMITTEE_POSITIONS, sortByPosition } from "@/lib/org";
-import { listPeople } from "@/lib/people";
-import { can, LEVELS } from "@/lib/permissions";
+import { implementation } from "@/lib/dashboard";
+import { formatDateTime } from "@/lib/format";
+import { meetingReference } from "@/lib/meetings";
+import { riyadhToday } from "@/lib/minutes";
+import { COMMITTEE_POSITIONS, currentYear, sortByPosition } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
-import { endCommitteeMembership, setCommitteeStatus } from "../actions";
-import { AddCommitteeMemberForm, CommitteeForm } from "../committee-forms";
+import { Panel, StatTile } from "../../_dashboard/widgets";
+import { committeeOf } from "../_committee";
 
-export const metadata: Metadata = { title: "اللجنة" };
+export const metadata: Metadata = { title: "لوحة اللجنة" };
 
-type MemberRow = {
-  id: string;
-  position: keyof typeof COMMITTEE_POSITIONS;
-  start_date: string;
-  person: { id: string; full_name: string };
-};
-
+/** One committee at a glance: mandate, members, meetings this year, resolution follow-up. */
 export default async function CommitteePage({ params }: PageProps<"/committees/[committeeId]">) {
-  const viewer = await requirePage("/committees");
+  await requirePage("/committees");
   const { committeeId } = await params;
-  const canEdit = can(viewer.permissions, "/committees", LEVELS.edit);
-  const canManage = can(viewer.permissions, "/committees", LEVELS.manage);
+  const committee = await committeeOf(committeeId);
   const supabase = await createClient();
-
-  const [{ data: committee }, { data: rows }, people] = await Promise.all([
-    supabase.from("committees").select("id, name, mandate, kind, status").eq("id", committeeId).maybeSingle(),
-    supabase
-      .from("committee_members")
-      .select("id, position, start_date, person:people(id, full_name)")
-      .eq("committee_id", committeeId)
-      .eq("status", "active"),
-    canEdit ? listPeople(supabase) : Promise.resolve([]),
+  const year = currentYear();
+  const today = riyadhToday();
+  const [{ data: members }, { data: meetings }, { data: resolutions }] = await Promise.all([
+    supabase.from("committee_members").select("id, position, person:people(id, full_name)").eq("committee_id", committeeId).eq("status", "active"),
+    supabase.from("meetings").select("id, title, number, starts_at, live_status, status").eq("committee_id", committeeId).neq("status", "cancelled").gte("starts_at", `${year}-01-01T00:00:00+03:00`).order("starts_at"),
+    supabase.from("resolutions").select("resolution_tasks(status, due_date), meeting:meetings!inner(committee_id)").eq("meeting.committee_id", committeeId),
   ]);
-  if (!committee) notFound();
-  const members = sortByPosition(
-    ((rows ?? []) as unknown as MemberRow[]).map((m) => ({ ...m, name: m.person.full_name })),
-  );
-  const archived = committee.status === "archived";
+  const rows = sortByPosition(((members ?? []) as unknown as { id: string; position: keyof typeof COMMITTEE_POSITIONS; person: { id: string; full_name: string } }[]).map((m) => ({ ...m, name: m.person.full_name })));
+  const held = (meetings ?? []).filter((m) => m.live_status === "ended").length;
+  const upcoming = (meetings ?? []).filter((m) => m.live_status !== "ended" && m.starts_at >= new Date().toISOString()).slice(0, 3);
+  const tasks = implementation(((resolutions ?? []) as unknown as { resolution_tasks: { status: string; due_date: string | null }[] }[]).flatMap((r) => r.resolution_tasks), today);
+  const base = `/committees/${committeeId}`;
 
   return (
     <>
-      <PageHeader
-        section="اللجان"
-        title={committee.name}
-        actions={
-          <Link href="/committees" className={buttonClass("secondary")}>
-            كل اللجان
-          </Link>
-        }
-      />
-      <RegulationNote notes={NOTES.committees} />
-      {archived && <p className="mb-6 rounded-md bg-brass-soft px-4 py-3 text-sm text-brass">هذه اللجنة مؤرشفة.</p>}
-
-      <section className="mb-8 rounded-lg border border-rule bg-surface p-5">
-        <h2 className="mb-2 text-sm font-medium text-brass">المهام والاختصاصات</h2>
-        <p className="whitespace-pre-line text-sm leading-7">{committee.mandate || "لم تُحدد بعد."}</p>
-      </section>
-
-      <h2 className="mb-3 font-display text-xl font-bold">الأعضاء</h2>
-      {canEdit && !archived && (
-        <div className="mb-4">
-          <AddCommitteeMemberForm committeeId={committee.id} people={people} />
+      <PageHeader section="اللجان" title={committee.name} description={committee.status === "archived" ? "لجنة مؤرشفة" : undefined} />
+      <div className="flex flex-col gap-6">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <StatTile label="الأعضاء" value={rows.length} href={`${base}/members`} />
+          <StatTile label={`اجتماعات ${year}`} value={held} note={`${upcoming.length ? "وقادم " + upcoming.length : "لا اجتماعات قادمة"}`} href={`${base}/meetings`} />
+          <StatTile label="تنفيذ القرارات" value={tasks.percent === null ? "—" : `${tasks.percent}%`} note={tasks.overdue ? `${tasks.overdue} مهمة متأخرة` : `${tasks.total} مهمة`} tone={tasks.overdue ? "alert" : "default"} href={`${base}/resolutions`} />
         </div>
-      )}
-      <ul className="divide-y divide-rule rounded-lg border border-rule bg-surface">
-        {members.length === 0 && <li className="p-8 text-center text-sm text-ink-muted">لا يوجد أعضاء بعد.</li>}
-        {members.map((m) => (
-          <li key={m.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3 text-sm">
-            <Link href={`/people/${m.person.id}`} className="min-w-0 flex-1 font-medium text-primary hover:underline">
-              {m.person.full_name}
-            </Link>
-            <span>{COMMITTEE_POSITIONS[m.position]}</span>
-            <span className="text-ink-muted">منذ {formatGregorianDate(new Date(m.start_date))}</span>
-            {canEdit && !archived && (
-              <ConfirmButton
-                action={endCommitteeMembership.bind(null, committee.id, m.id)}
-                label="إنهاء العضوية"
-                confirm={`إنهاء عضوية ${m.person.full_name} في اللجنة اليوم؟`}
-              />
-            )}
-          </li>
-        ))}
-      </ul>
-
-      {canManage && (
-        <details className="mt-8 rounded-lg border border-rule bg-surface">
-          <summary className="cursor-pointer px-5 py-4 text-sm font-medium">تعديل اللجنة</summary>
-          <div className="flex flex-col gap-6 border-t border-rule p-5">
-            <CommitteeForm committee={committee} />
-            <ConfirmButton
-              action={setCommitteeStatus.bind(null, committee.id, archived ? "active" : "archived")}
-              label={archived ? "إعادة تفعيل اللجنة" : "أرشفة اللجنة"}
-                      variant={archived ? "secondary" : "danger"}
-              confirm={archived ? "إعادة تفعيل اللجنة؟" : "أرشفة اللجنة؟ يبقى سجلها محفوظاً."}
-            />
-          </div>
-        </details>
-      )}
+        <Panel title="المهام والاختصاصات">
+          <p className="whitespace-pre-line px-5 py-4 text-sm leading-7">{committee.mandate || "لم تُحدد بعد."}</p>
+        </Panel>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Panel title="الاجتماعات القادمة" action={<Link href="/meetings/new" className="text-sm text-primary hover:underline">اجتماع جديد</Link>}>
+            <ul className="divide-y divide-rule text-sm">
+              {upcoming.length === 0 && <li className="px-5 py-4 text-ink-muted">لا اجتماعات قادمة.</li>}
+              {upcoming.map((m) => (
+                <li key={m.id}>
+                  <Link href={`/meetings/${m.id}`} className="flex justify-between gap-3 px-5 py-3 hover:bg-paper">
+                    <span>{m.title}</span>
+                    <span className="text-ink-muted">{meetingReference(m.number, m.starts_at)} · {formatDateTime(new Date(m.starts_at))}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+          <Panel title="الأعضاء" action={<Link href={`${base}/members`} className="text-sm text-primary hover:underline">إدارة الأعضاء</Link>}>
+            <ul className="divide-y divide-rule text-sm">
+              {rows.length === 0 && <li className="px-5 py-4 text-ink-muted">لا أعضاء بعد.</li>}
+              {rows.map((m) => (
+                <li key={m.id} className="flex justify-between gap-3 px-5 py-2.5">
+                  <Link href={`/people/${m.person.id}`} className="text-primary hover:underline">{m.person.full_name}</Link>
+                  <span className="text-ink-muted">{COMMITTEE_POSITIONS[m.position]}</span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
+      </div>
     </>
   );
 }

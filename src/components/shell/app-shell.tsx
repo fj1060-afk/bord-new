@@ -7,18 +7,20 @@ import type { Viewer } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { MobileNav } from "./mobile-nav";
 import { Sidebar } from "./sidebar";
+import type { CommitteeLink } from "./sidebar-nav";
 import { Today } from "./today";
 
-export function AppShell({ viewer, children }: { viewer: Viewer; children: ReactNode }) {
+/** `committees` are the active committees the viewer may see, listed in the sidebar by name. */
+export function AppShell({ viewer, committees, children }: { viewer: Viewer; committees: CommitteeLink[]; children: ReactNode }) {
   const allowed = navItems.filter((item) => can(viewer.permissions, item.href)).map((item) => item.href);
 
   return (
     <div className="flex min-h-dvh">
-      <Sidebar allowed={allowed} />
+      <Sidebar allowed={allowed} committees={committees} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b border-rule bg-paper/90 px-4 backdrop-blur sm:px-8">
           <div className="flex items-center gap-3">
-            <MobileNav allowed={allowed} />
+            <MobileNav allowed={allowed} committees={committees} />
             <Today />
           </div>
           <div className="flex items-center gap-3 text-sm">

@@ -74,13 +74,13 @@ export async function BoardOverview({ board, canEdit }: { board: Board; canEdit:
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatTile label="الأعضاء" value={rows.length} note={`${independent} مستقل`} href="/board?tab=members" />
-        <StatTile label={`اجتماعات ${year}`} value={`${held.length} / ${profile?.min_board_meetings ?? 4}`} note="المنعقدة من الحد الأدنى" tone={held.length < (profile?.min_board_meetings ?? 4) && new Date().getMonth() >= 9 ? "alert" : "default"} href="/board?tab=meetings" />
-        <StatTile label="تنفيذ القرارات" value={tasks.percent === null ? "—" : `${tasks.percent}%`} note={tasks.overdue ? `${tasks.overdue} مهمة متأخرة` : `${tasks.total} مهمة`} tone={tasks.overdue ? "alert" : "default"} href="/board?tab=resolutions" />
+        <StatTile label="الأعضاء" value={rows.length} note={`${independent} مستقل`} href="/board/members" />
+        <StatTile label={`اجتماعات ${year}`} value={`${held.length} / ${profile?.min_board_meetings ?? 4}`} note="المنعقدة من الحد الأدنى" tone={held.length < (profile?.min_board_meetings ?? 4) && new Date().getMonth() >= 9 ? "alert" : "default"} href="/board/meetings" />
+        <StatTile label="تنفيذ القرارات" value={tasks.percent === null ? "—" : `${tasks.percent}%`} note={tasks.overdue ? `${tasks.overdue} مهمة متأخرة` : `${tasks.total} مهمة`} tone={tasks.overdue ? "alert" : "default"} href="/board/resolutions" />
         {canEdit ? (
-          <StatTile label={`إفصاحات ${year}`} value={`${filed} / ${rows.length}`} tone={filed < rows.length ? "alert" : "default"} href="/board?tab=members" />
+          <StatTile label={`إفصاحات ${year}`} value={`${filed} / ${rows.length}`} tone={filed < rows.length ? "alert" : "default"} href="/board/members" />
         ) : (
-          <StatTile label="اللجان التابعة" value={(committees ?? []).length} href="/board?tab=committees" />
+          <StatTile label="اللجان التابعة" value={(committees ?? []).length} href="/committees" />
         )}
       </div>
 
@@ -146,7 +146,7 @@ export async function BoardOverview({ board, canEdit }: { board: Board; canEdit:
         </Panel>
       </div>
 
-      <Panel title="اللجان التابعة" action={<Link href="/board?tab=committees" className="text-sm text-primary hover:underline">التفاصيل</Link>}>
+      <Panel title="اللجان التابعة" action={<Link href="/committees" className="text-sm text-primary hover:underline">التفاصيل</Link>}>
         <ul className="divide-y divide-rule text-sm">
           {(committees ?? []).length === 0 && <li className="px-5 py-4 text-ink-muted">لا لجان مرتبطة بالمجلس.</li>}
           {((committees ?? []) as unknown as { id: string; name: string; committee_members: { status: string }[] }[]).map((c) => (

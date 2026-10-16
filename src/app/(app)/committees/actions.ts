@@ -23,7 +23,8 @@ export async function saveCommittee(committeeId: string | null, _prev: ActionSta
   if (committeeId) {
     const { error } = await supabase.from("committees").update({ name, mandate, kind }).eq("id", committeeId);
     if (error) return { ok: false, message: "تعذّر حفظ اللجنة." };
-    revalidatePath(`${PAGE}/${committeeId}`);
+    // The sidebar lists committees by name.
+    revalidatePath("/", "layout");
     return { ok: true, message: "حُفظت بيانات اللجنة." };
   }
 
@@ -42,8 +43,8 @@ export async function setCommitteeStatus(committeeId: string, status: "active" |
   const supabase = await createClient();
   const { error } = await supabase.from("committees").update({ status }).eq("id", committeeId);
   if (error) throw new Error("Could not update committee");
-  revalidatePath(PAGE);
-  revalidatePath(`${PAGE}/${committeeId}`);
+  revalidatePath("/", "layout");
+  revalidatePath(`${PAGE}/${committeeId}`, "layout");
 }
 
 export async function addCommitteeMember(committeeId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
@@ -62,7 +63,7 @@ export async function addCommitteeMember(committeeId: string, _prev: ActionState
     start_date: String(form.get("start_date") || "") || undefined,
   });
   if (error) return { ok: false, message: membershipError(error.code, error.message) };
-  revalidatePath(`${PAGE}/${committeeId}`);
+  revalidatePath(`${PAGE}/${committeeId}`, "layout");
   return { ok: true, message: "أُضيف العضو." };
 }
 
@@ -75,5 +76,5 @@ export async function endCommitteeMembership(committeeId: string, membershipId: 
     .update({ status: "ended", end_date: today })
     .eq("id", membershipId);
   if (error) throw new Error("Could not end membership");
-  revalidatePath(`${PAGE}/${committeeId}`);
+  revalidatePath(`${PAGE}/${committeeId}`, "layout");
 }

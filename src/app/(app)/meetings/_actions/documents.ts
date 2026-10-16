@@ -41,6 +41,6 @@ export async function registerDocument(input: {
     return { ok: false, message: "تعذّر حفظ المستند." };
   }
   revalidatePath(`/meetings/${input.meetingId}`);
-  revalidatePath("/meetings");
+  revalidatePath("/meetings", "layout");
   return { ok: true, message: "رُفع المستند." };
 }
