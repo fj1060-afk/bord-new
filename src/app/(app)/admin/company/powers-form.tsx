@@ -14,7 +14,7 @@ export function PowersForm({ restricted, grants, today, canEdit }: { restricted:
   const [state, action] = useActionState(saveRestrictions, null);
   const [addState, add] = useActionState(addAuthorization, null);
   return (
-    <section className="mt-8 flex flex-col gap-6 rounded-lg border border-rule bg-surface p-5">
+    <section className="flex flex-col gap-6 rounded-lg border border-rule bg-surface p-5">
       <div>
         <h2 className="font-display text-lg font-bold">صلاحيات المجلس وتفويضات الجمعية</h2>
         <p className="mt-1 text-sm text-ink-muted">تحدد هل يتخذ المجلس القرار بنفسه أم يرفعه توصيةً للجمعية العامة، ويستند إليها التدقيق النظامي لبنود الاجتماعات.</p>

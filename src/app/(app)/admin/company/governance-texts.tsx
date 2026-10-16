@@ -92,7 +92,7 @@ export function GovernanceTexts({ texts, articles, canEdit }: { texts: Governanc
   const hits = q.length >= 2 ? current.flatMap((t) => (byText.get(t.id) ?? []).filter((a) => fold(`${a.heading ?? ""} ${a.body}`).includes(q) || a.number === query.trim()).map((a) => ({ t, a }))) : [];
 
   return (
-    <section className="mt-8 flex flex-col gap-5 rounded-lg border border-rule bg-surface p-5">
+    <section className="flex flex-col gap-5 rounded-lg border border-rule bg-surface p-5">
       <div>
         <h2 className="font-display text-lg font-bold">النظام الأساس واللوائح</h2>
         <p className="mt-1 text-sm text-ink-muted">النظام الأساس ولوائح المجلس واللجان والسياسات المعتمدة، مقسمة إلى مواد يُبحث فيها، مع إصداراتها السابقة.</p>

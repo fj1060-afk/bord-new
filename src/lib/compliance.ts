@@ -144,7 +144,7 @@ function boardChecks(s: Snapshot): Check[] {
       title: "تعيين أمين سر للمجلس",
       source: "law",
       article: "م78/4",
-      href: "/admin/company",
+      href: "/admin/company?tab=secretary",
       status: s.profile.secretary_person_id ? "ok" : "violation",
       detail: s.profile.secretary_person_id ? "أمين السر معيّن." : "لم يُحدد أمين السر في ملف الشركة.",
     },

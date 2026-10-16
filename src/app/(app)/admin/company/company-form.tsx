@@ -8,16 +8,19 @@ import { saveCompanyProfile } from "./actions";
 
 const MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+export type ProfileSection = "company" | "rules" | "secretary";
+
+// Sections of other tabs stay in the form, hidden, so one save keeps every field.
+function Section({ title, hidden, children }: { title: string; hidden: boolean; children: React.ReactNode }) {
   return (
-    <fieldset className="grid gap-4 rounded-lg border border-rule bg-surface p-5 sm:grid-cols-2">
+    <fieldset hidden={hidden} className="grid gap-4 rounded-lg border border-rule bg-surface p-5 sm:grid-cols-2">
       <legend className="px-2 font-display text-lg font-bold">{title}</legend>
       {children}
     </fieldset>
   );
 }
 
-export function CompanyForm({ profile, people, canEdit }: { profile: CompanyProfile; people: { id: string; full_name: string }[]; canEdit: boolean }) {
+export function CompanyForm({ profile, people, canEdit, show }: { profile: CompanyProfile; people: { id: string; full_name: string }[]; canEdit: boolean; show: ProfileSection }) {
   const [state, action] = useActionState(saveCompanyProfile, null);
   const num = (name: keyof CompanyProfile, label: string, min: number, max: number, hint?: string) => (
     <Field label={label} hint={hint}>
@@ -27,7 +30,7 @@ export function CompanyForm({ profile, people, canEdit }: { profile: CompanyProf
   return (
     <ActionForm action={action} state={state} className="flex flex-col gap-6">
       <fieldset disabled={!canEdit} className="flex flex-col gap-6">
-        <Section title="الشركة">
+        <Section title="الشركة" hidden={show !== "company"}>
           <Field label="اسم الشركة">
             <input name="name" defaultValue={profile.name} className={inputClass} />
             <EnglishField name="name_en" defaultValue={profile.name_en} />
@@ -58,7 +61,7 @@ export function CompanyForm({ profile, people, canEdit }: { profile: CompanyProf
           </Field>
         </Section>
 
-        <Section title="أحكام نظام الشركة الأساس">
+        <Section title="أحكام نظام الشركة الأساس" hidden={show !== "rules"}>
           {num("min_board_meetings", "الحد الأدنى لاجتماعات المجلس في السنة", 1, 24, "نظام الشركات م80: أربعة على الأقل لشركات المساهمة.")}
           {num("invite_days", "إرسال الدعوة قبل الاجتماع (أيام)", 0, 30, "لائحة الحوكمة م30/ج: خمسة أيام على الأقل.")}
           {num("quorum_percent", "نصاب المجلس (% من الأعضاء)", 50, 100, "نظام الشركات م80/2: النصف على الأقل.")}
@@ -70,7 +73,7 @@ export function CompanyForm({ profile, people, canEdit }: { profile: CompanyProf
           </label>
         </Section>
 
-        <Section title="أمين سر المجلس">
+        <Section title="أمين سر المجلس" hidden={show !== "secretary"}>
           <Field label="أمين السر">
             <select name="secretary_person_id" defaultValue={profile.secretary_person_id ?? ""} className={inputClass}>
               <option value="">—</option>
