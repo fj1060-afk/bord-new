@@ -88,8 +88,12 @@ function TitleField({ defaultValue, library, body, onPicked }: { defaultValue?: 
     input.value = s.title;
     const kind = input.form?.elements.namedItem("kind") as HTMLSelectElement | null;
     if (kind) kind.value = s.kind;
+    // The description follows the picked wording unless the author has written their own.
     const description = input.form?.elements.namedItem("description") as HTMLTextAreaElement | null;
-    if (description && !description.value.trim() && s.needs) description.value = `المستندات الداعمة: ${s.needs}`;
+    if (description && (!description.value.trim() || description.value === description.dataset.auto)) {
+      description.value = s.needs ? `المستندات الداعمة: ${s.needs}` : "";
+      description.dataset.auto = description.value;
+    }
     const en = input.form?.elements.namedItem("title_en") as HTMLInputElement | null;
     if (en && s.en) {
       // The English wording is exact; filling the Arabic blanks later updates it.
