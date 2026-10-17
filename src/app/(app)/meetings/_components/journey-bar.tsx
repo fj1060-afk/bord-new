@@ -41,7 +41,7 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
 
   return (
     <section className="mb-6 rounded-xl border border-rule bg-surface">
-      <ol className="flex items-start gap-1 border-b border-rule px-3 sm:px-5" aria-label="مراحل الاجتماع">
+      <ol className="flex items-start justify-between gap-1 border-b border-rule px-3 sm:px-5" aria-label="مراحل الاجتماع">
         {STAGES.map((s, i) => {
           const complete = stageDone(checks, s.n) && s.n < current + (stageDone(checks, current) ? 1 : 0);
           const reachable = s.n <= current;
@@ -50,7 +50,8 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
               <span className={clsx("motion-colors grid size-8 shrink-0 place-items-center rounded-full border-2 text-sm font-bold", complete ? "border-primary bg-primary text-on-primary" : s.n === view ? "border-brass bg-brass-soft text-brass" : "border-rule text-ink-muted")}>
                 {complete ? <CheckIcon size={15} aria-hidden="true" /> : s.n}
               </span>
-              <span className={clsx("text-sm leading-tight", s.n === view ? "font-bold" : "text-ink-muted")}>{s.title}</span>
+              {/* On a phone only the viewed stage keeps its name, so the four steps fit the width. */}
+              <span className={clsx("text-sm leading-tight", s.n === view ? "font-bold" : "hidden text-ink-muted sm:inline")}>{s.title}</span>
             </>
           );
           return (
@@ -78,11 +79,11 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
           <span className={clsx("grid size-9 shrink-0 place-items-center rounded-full", done ? "bg-primary text-on-primary" : "bg-brass text-white")}>
             {done ? <CheckIcon size={18} aria-hidden="true" /> : <span className="text-lg font-bold" aria-hidden="true">!</span>}
           </span>
-          <span className="min-w-0 flex-1">
+          <span className="min-w-0 flex-1 basis-48">
             <strong className="block">{done ? (view === 4 ? "اكتملت رحلة الاجتماع" : "المرحلة مكتملة") : "استكمل المتطلبات للانتقال"}</strong>
             <span className="text-xs text-ink-muted">{done ? (view === 4 ? "لا شيء متبقٍّ." : "جاهز للانتقال إلى المرحلة التالية.") : `لا يمكن الانتقال بعد: ${blockersText(blockers)}`}</span>
           </span>
-          <span className="flex gap-2">
+          <span className="flex flex-wrap gap-2">
             {blockers > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-danger/50 bg-danger/10 px-3 py-1.5 text-xs font-medium text-danger">
                 <CircleAlert size={14} aria-hidden="true" /> {blockers} {blockers === 1 ? "مانع" : "موانع"}
@@ -105,9 +106,9 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
                 return (
                   <li key={c.id}>
                     <details className="group/row">
-                      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-paper [&::-webkit-details-marker]:hidden">
+                      <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 hover:bg-paper [&::-webkit-details-marker]:hidden">
                         <span className={clsx("size-2 shrink-0 rounded-full", DOT[tone(c)])} aria-hidden="true" />
-                        <span className="min-w-0 flex-1">
+                        <span className="min-w-0 flex-1 basis-44">
                           <span className="block font-medium">{c.label}</span>
                           {c.ref && <span className="text-xs text-ink-muted">{c.ref}</span>}
                         </span>
@@ -148,7 +149,7 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
             <p className="mb-1.5 text-xs font-medium text-ink-muted">على البنود</p>
             <div className={clsx(card, "flex flex-wrap items-center gap-3 px-4 py-3 text-sm")}>
               <ChevronLeft size={16} aria-hidden="true" className="shrink-0 text-ink-muted" />
-              <span className="min-w-0 flex-1">
+              <span className="min-w-0 flex-1 basis-32">
                 <strong>{notesText(notes)}</strong> في {items.length === 1 ? "بند واحد" : items.length === 2 ? "بندين" : `${items.length} بنود`}
               </span>
               <FixLink href={agendaHref} anchor={items[0].anchor} className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs text-on-primary hover:opacity-90">

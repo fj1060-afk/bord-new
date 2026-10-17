@@ -175,7 +175,7 @@ export function MeetingsTableView({
   return (
     <section className="rounded-xl border border-rule bg-surface">
       <div className="flex flex-wrap items-center gap-3 border-b border-rule p-4">
-        <TabBar id="meetings-period" label="الفترة" variant="pill" className="flex rounded-lg border border-rule p-0.5 text-sm">
+        <TabBar id="meetings-period" label="الفترة" variant="pill" className="flex max-w-full overflow-x-auto rounded-lg border border-rule p-0.5 text-sm">
           {(Object.entries(PERIODS) as [Period, string][]).map(([value, label]) => (
             <Link key={value} href={tableHref(base, query, { period: value })} scroll={false} aria-current={query.period === value ? "page" : undefined} className={clsx("motion-colors relative z-[1] rounded-md px-4 py-1.5", query.period === value ? "font-medium text-on-primary" : "hover:bg-primary-soft")}>
               {label}
