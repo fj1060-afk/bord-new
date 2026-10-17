@@ -36,7 +36,21 @@ function fixFor(c: Check, t: Target): QuickFixKind {
   }
 }
 
-const SEND_NOTE = "تحديد الإدارة لا يكفي: الطلب لا يصلها حتى يُرسل.";
+/** What is wrong with the item and what to do about it, in plain words. */
+function explainFor(c: Check, t: Target): string {
+  const n = t.count ?? 0;
+  switch (c.id) {
+    case "owners": return "لا توجد جهة مسؤولة عن البند. حدّدها لتتابعه وتعرضه في الاجتماع.";
+    case "requirements-sent": return `${n || "بعض"} متطلبات محفوظة مسودةً ولم تصل إلى أحد بعد. أرسلها لتصل إلى الإدارات المطلوبة منها.`;
+    case "requirements-due": return `مواعيد ${n > 1 ? `${n} متطلبات` : "متطلب"} فاتت أو تقع بعد الاجتماع. اضبطها على موعد قبل الاجتماع.`;
+    case "definite": return "العنوان فيه خيارات «/» أو فراغ «(…)». اختر صيغة واحدة وأكمل الفراغ.";
+    case "periods": return "البند يعتمد قوائم أو أرباح فترة لا تنتهي قبل تاريخ الاجتماع. صحّح الفترة في العنوان.";
+    case "item-dates": return `${t.note ? `${t.note}. ` : ""}صحّح التاريخ في عنوان البند.`;
+    case "docs": return `${n > 1 ? `${n} مستندات لم تُسلَّم` : "مستند لم يُسلَّم"} أو لم يُعتمد بعد. تابعه في مستندات البند أدناه.`;
+    case "requirements-checks": return `تحققات لم تُؤكَّد بعد${c.detail ? ` (${c.detail.replace(/^بانتظار: /, "")})` : ""}. أكّدها في متطلبات البند أدناه.`;
+    default: return [c.label, t.note].filter(Boolean).join(": ");
+  }
+}
 
 /** Open checks that name items, regrouped per item so each item shows once, worst first. */
 export function itemIssues(checks: Check[]): IssueItem[] {
@@ -44,8 +58,8 @@ export function itemIssues(checks: Check[]): IssueItem[] {
   for (const c of checks.filter((c) => !c.ok && !c.overridden))
     for (const t of c.fix?.targets ?? []) {
       const item = items.get(t.anchor) ?? { anchor: t.anchor, n: t.n, label: t.label, issues: [] };
-      const explain = [c.label, t.note ?? (c.id === "requirements-checks" ? c.detail : undefined)].filter(Boolean).join(": ") + (c.ref ? ` (${c.ref})` : "");
-      item.issues.push({ id: c.id, level: tone(c), chip: chipFor(c, t), explain: c.id === "requirements-sent" ? `${explain}. ${SEND_NOTE}` : explain, overridable: c.level === "warn", fix: fixFor(c, t) });
+      const explain = explainFor(c, t) + (c.ref ? ` (${c.ref})` : "");
+      item.issues.push({ id: c.id, level: tone(c), chip: chipFor(c, t), explain, overridable: c.level === "warn", fix: fixFor(c, t) });
       items.set(t.anchor, item);
     }
   const rank = { block: 0, warn: 1, info: 2 };

@@ -30,7 +30,7 @@ export function QuickFix({ meetingId, itemId, fix }: { meetingId: string; itemId
         <>
           {fix.suggest && (
             <button type="button" disabled={pending} onClick={() => run(() => setItemOwner(meetingId, itemId, fix.suggest!.value))} className={solid}>
-              <Wand2 size={13} aria-hidden="true" /> اجعل {fix.suggest.label} مسؤولة عن البند
+              <Wand2 size={13} aria-hidden="true" /> اجعل {fix.suggest.label} مسؤولة
             </button>
           )}
           {open(fix.suggest ? "اختر غيره" : "اختر المسؤول")}
@@ -50,8 +50,8 @@ export function QuickFix({ meetingId, itemId, fix }: { meetingId: string; itemId
         </>
       )}
       {fix.kind === "send" && (
-        <button type="button" disabled={pending} onClick={() => run(() => sendRequirements(meetingId))} className={solid}>
-          <Send size={13} aria-hidden="true" /> أرسل طلبات الاجتماع الآن
+        <button type="button" disabled={pending} onClick={() => run(() => sendRequirements(meetingId))} title="يرسل كل طلبات متطلبات الاجتماع" className={solid}>
+          <Send size={13} aria-hidden="true" /> أرسل الطلبات
         </button>
       )}
       {fix.kind === "edit" && open("عدّل البند")}

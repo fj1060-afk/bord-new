@@ -149,7 +149,6 @@ export function AgendaTab({
                   </div>
                 </details>
               )}
-              {review && <ItemNotes findings={notes} />}
             </>
           );
 
@@ -172,7 +171,6 @@ export function AgendaTab({
                           </span>
                         )}
                         {waiting > 0 && <span className="text-brass">{waiting} مستند مطلوب</span>}
-                        {notes.length > 0 && <span className="text-brass">{notes.length} ملاحظات</span>}
                       </span>
                     </span>
                     {issues && <IssueBadge level={needs.level} count={needs.count} />}
@@ -180,7 +178,7 @@ export function AgendaTab({
                   </summary>
 
                   <div className="border-t border-rule p-4">
-                    {issues && <ItemNeeds meetingId={meetingId} itemId={item.id} issues={itemIssues} />}
+                    {(issues || review) && <ItemNeeds meetingId={meetingId} itemId={item.id} issues={itemIssues} notes={<ItemFindings findings={notes} />} notesCount={notes.length} />}
                     {editable ? (
                       <EditableAgendaItem meetingId={meetingId} item={item} targets={targets} library={library} body={body}>
                         {content}
@@ -282,17 +280,5 @@ export function AgendaTab({
         </section>
       )}
     </div>
-  );
-}
-
-function ItemNotes({ findings }: { findings: ReturnType<typeof reviewItem> }) {
-  if (!findings.length) return null;
-  return (
-    <details className="text-sm">
-      <summary className="w-fit cursor-pointer text-brass">ملاحظات نظامية ({findings.length})</summary>
-      <div className="mt-2">
-        <ItemFindings findings={findings} />
-      </div>
-    </details>
   );
 }
