@@ -16,7 +16,7 @@ describe("meetings", () => {
 
   it("builds the meeting reference from the Riyadh year", () => {
     expect(meetingReference(3, "2026-10-20T06:30:00Z")).toBe("رقم 3 لعام 2026");
-    expect(meetingReference(null, "2026-10-20T06:30:00Z")).toBe("لعام 2026");
+    expect(meetingReference(null, "2026-10-20T06:30:00Z")).toBe("لعام 2026 (يُرقَّم عند إصدار الدعوة)");
   });
 
   it("sums agenda durations, ignoring blanks", () => {

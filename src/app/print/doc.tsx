@@ -116,7 +116,7 @@ export type Cell = { ar: string; en: string; icon: LucideIcon; value: ReactNode;
 export type Day = { weekday: string; weekdayEn: string; day: string; month: string; monthEn: string; year: string; hijri: string };
 
 /** The date block beside a grid of cells: icon and label (Arabic | English) above, the value in each language below. */
-export function InfoCard({ day, cells, bi }: { day: Day; cells: Cell[]; bi: boolean }) {
+export function InfoCard({ day, cells, bi, caption }: { day: Day; cells: Cell[]; bi: boolean; /** What the date is, e.g. the meeting date or the day it was held. */ caption?: [string, string] }) {
   const both = (ar: ReactNode, en: ReactNode) =>
     bi ? (
       <>
@@ -130,6 +130,12 @@ export function InfoCard({ day, cells, bi }: { day: Day; cells: Cell[]; bi: bool
   return (
     <div className="doc-card">
       <div className="doc-date">
+        {caption && (
+          <span className="cap">
+            <span>{caption[0]}</span>
+            {bi && <span>{caption[1]}</span>}
+          </span>
+        )}
         <span className="dl">{both(day.weekday, day.weekdayEn)}</span>
         <span className="d">{day.day}</span>
         <span className="dl my">{bi ? both(day.month, `${day.monthEn} ${day.year}`) : `${day.month} ${day.year}`}</span>
@@ -224,4 +230,4 @@ export function DocChrome({ footer, header, bi, note, fileName }: { footer: stri
 }
 
 /** Latin reference that reads the same in Arabic and English: BD-2026-07 (board) or CM-2026-03 (committee). */
-export const reference = (isBoard: boolean, number: number | null, startsAt: string) => `${isBoard ? "BD" : "CM"}-${startsAt.slice(0, 4)}-${String(number ?? 0).padStart(2, "0")}`;
+export const reference = (isBoard: boolean, number: number | null, startsAt: string) => `${isBoard ? "BD" : "CM"}-${startsAt.slice(0, 4)}-${number ? String(number).padStart(2, "0") : "DRAFT"}`;

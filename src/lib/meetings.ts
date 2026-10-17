@@ -32,7 +32,8 @@ export function riyadhParts(iso: string): { date: string; time: string } {
 /** "اجتماع المجلس رقم 3 لعام 2026" style reference. */
 export function meetingReference(number: number | null, startsAt: string): string {
   const year = riyadhParts(startsAt).date.slice(0, 4);
-  return number ? `رقم ${number} لعام ${year}` : `لعام ${year}`;
+  // Drafts are numbered when their invitation is issued.
+  return number ? `رقم ${number} لعام ${year}` : `لعام ${year} (يُرقَّم عند إصدار الدعوة)`;
 }
 
 export function totalMinutes(items: { duration_minutes: number | null }[]): number {

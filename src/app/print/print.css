@@ -71,6 +71,7 @@
 /* Meeting card: a green date block, then label rows (icon · Arabic | English) over their values. */
 .doc-card { display: grid; grid-template-columns: 30mm 1fr; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; margin-bottom: 8px; break-inside: avoid; }
 .doc-date { background: var(--primary); color: var(--on-primary); text-align: center; padding: 8px 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1px; }
+.doc-date .cap { display: flex; flex-direction: column; font-size: 6.8pt; line-height: 1.25; opacity: .85; border-bottom: 1px solid rgb(255 255 255 / .35); padding-bottom: 3px; margin-bottom: 2px; width: 100%; }
 .doc-date .dl { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 9pt; }
 .doc-date .dl .en { font-size: 8.5pt; }
 .doc-date .d { font-size: 26pt; font-weight: 700; line-height: 1.1; font-family: var(--font-mono-latin), monospace; }
@@ -90,6 +91,13 @@
 .doc-grid .v.pair > .en { font-weight: 400; font-size: 8.5pt; color: var(--ink-muted); }
 
 /* Sections and tables */
+/* Invitation issue date, kept apart from the meeting date. */
+.doc-issued { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--rule); padding: 0 2px 4px; margin: -2px 0 8px; font-size: 8.3pt; color: var(--ink-muted); }
+.doc-issued b { color: var(--ink); font-weight: 600; }
+.doc-issued .en { direction: ltr; }
+.doc-grid .ok { color: var(--primary); }
+.doc-grid .warn { color: var(--danger); }
+
 /* Section heading: Arabic on the right, English on the left, a brass rule beneath. */
 .doc h2 { font-size: 13pt; color: var(--primary); margin: 12px 0 6px; padding-bottom: 3px; line-height: 1.35; break-after: avoid; border-bottom: 2px solid transparent; border-image: linear-gradient(to left, var(--brass), #d8c08a) 1; }
 .doc h2 .en { font-size: 12pt; font-weight: 700; color: var(--primary); font-family: var(--font-naskh), Georgia, serif; }
@@ -170,6 +178,7 @@
 .doc-sigs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 18px; margin-top: 8px; break-inside: avoid; }
 .doc-sig { text-align: center; break-inside: avoid; }
 .doc-sig .role { color: var(--primary); font-weight: 600; font-size: 8.2pt; }
+.doc .doc-sig .sub { text-align: center; }
 .doc-sig > b { display: block; font-size: 9.2pt; font-weight: 600; }
 .doc-sig .line { border-bottom: 1px solid #8f9894; height: 30px; margin: 2px 6px 3px; display: flex; align-items: flex-end; justify-content: center; }
 .doc-sig .signed { font-size: 7.6pt; color: var(--primary); padding-bottom: 2px; }

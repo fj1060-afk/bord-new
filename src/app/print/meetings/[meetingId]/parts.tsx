@@ -1,5 +1,5 @@
 import { Clock, MapPin, PenLine, Timer, User, Users } from "lucide-react";
-import { englishDayParts, englishTime, MEETING_MODES_EN } from "@/lib/doc-labels";
+import { englishDate, englishDayParts, englishTime, MEETING_MODES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
 import type { AttendanceStatus } from "@/lib/live";
 import { MEETING_MODES } from "@/lib/meetings";
@@ -36,8 +36,9 @@ export function H2({ ar, en, bi }: { ar: string; en: string; bi: boolean }) {
 }
 
 /** Letterhead and title of a meeting document. */
-export function MeetingHead({ m, title, titleEn, badges }: { m: Meeting; title: string; titleEn: string; badges: Badge[] }) {
+export function MeetingHead({ m, title, titleEn, badges: given }: { m: Meeting; title: string; titleEn: string; badges: Badge[] }) {
   const { meeting } = m;
+  const badges: Badge[] = meeting.status === "cancelled" ? [...given, { ar: "ملغى", en: "Cancelled", tone: "c" }] : given;
   const year = meeting.starts_at.slice(0, 4);
   return (
     <>
@@ -49,9 +50,30 @@ export function MeetingHead({ m, title, titleEn, badges }: { m: Meeting; title: 
         issuerEn={m.isBoard ? "Board Secretariat" : "Committee Secretariat"}
         badges={badges}
       />
-      <DocTitle bi={m.bi} title={title} titleEn={titleEn} body={m.body} bodyEn={m.isBoard ? "Board of Directors" : "Committee"} number={`${String(meeting.number ?? 0).padStart(2, "0")} / ${year}`} />
+      <DocTitle bi={m.bi} title={title} titleEn={titleEn} body={m.body} bodyEn={m.isBoard ? "Board of Directors" : "Committee"} number={meeting.number ? `${String(meeting.number).padStart(2, "0")} / ${year}` : m.bi ? "مسودة · Draft" : "مسودة"} />
     </>
   );
+}
+
+/** When the invitation was issued, kept apart from the meeting date; drafts say they are not issued yet. */
+export function IssuedLine({ m }: { m: Meeting }) {
+  const at = m.meeting.invited_at ? new Date(m.meeting.invited_at) : null;
+  const ar = at ? <b>{dateParts(at).weekday} {dateParts(at).long}</b> : m.meeting.status === "draft" ? <b>مسودة — لم تُصدر بعد</b> : <b>غير مسجّل</b>;
+  const en = at ? <b>{englishDayParts(at).weekday}, {englishDate(at)}</b> : m.meeting.status === "draft" ? <b>Draft — not yet issued</b> : <b>Not recorded</b>;
+  return (
+    <div className="doc-issued">
+      <span>تاريخ إصدار الدعوة: {ar}</span>
+      {m.bi && <span className="en">Invitation issued: {en}</span>}
+    </div>
+  );
+}
+
+/** Whole days between the invitation and the meeting (Riyadh dates), and whether that meets the required notice. */
+export function noticeOf(m: Meeting) {
+  if (!m.meeting.invited_at) return null;
+  const day = (iso: string) => Date.parse(new Date(Date.parse(iso) + 3 * 3600000).toISOString().slice(0, 10));
+  const days = Math.round((day(m.meeting.starts_at) - day(m.meeting.invited_at)) / 86400000);
+  return { days, ok: days >= m.inviteDays, required: m.inviteDays };
 }
 
 /** The date block for a day: weekday and month in both languages, day, year and Hijri date. */

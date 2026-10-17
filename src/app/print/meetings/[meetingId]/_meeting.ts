@@ -13,7 +13,7 @@ export async function loadMeeting(meetingId: string) {
   const supabase = await createClient();
   const { data: meeting } = await supabase
     .from("meetings")
-    .select("id, title, number, meeting_type, starts_at, duration_minutes, mode, location, location_en, virtual_link, agenda_intro, agenda_intro_en, attendance_intro, attendance_intro_en, status, pack_published_at, started_at, ended_at, board_id, committee_id, quorum_required, board:boards(name), committee:committees(name)")
+    .select("id, title, number, meeting_type, starts_at, duration_minutes, mode, location, location_en, virtual_link, agenda_intro, agenda_intro_en, attendance_intro, attendance_intro_en, status, pack_published_at, invited_at, started_at, ended_at, board_id, committee_id, quorum_required, board:boards(name), committee:committees(name)")
     .eq("id", meetingId)
     .maybeSingle();
   if (!meeting) notFound();
@@ -83,6 +83,7 @@ export async function loadMeeting(meetingId: string) {
     names,
     quorum: { ...q, present, byProxy },
     held: new Date(meeting.started_at ?? meeting.starts_at),
+    inviteDays: profile?.invite_days ?? 5,
     chair: chair?.name ?? "",
     secretary: secretary?.full_name ?? "",
   };

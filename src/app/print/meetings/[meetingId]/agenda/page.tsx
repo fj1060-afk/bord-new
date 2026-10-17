@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { englishDate, englishTime, ITEM_KINDS_EN, MEETING_MODES_EN, MEETING_TYPES_EN } from "@/lib/doc-labels";
+import { englishTime, ITEM_KINDS_EN, MEETING_MODES_EN, MEETING_TYPES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
 import { ITEM_KINDS, MEETING_MODES, MEETING_TYPES } from "@/lib/meetings";
 import { Clock, FileText, Mail, MapPin, Paperclip, User, Users } from "lucide-react";
 import { BiText, DocChrome, InfoCard, L, reference, Signatures } from "../../../doc";
 import { loadMeeting } from "../_meeting";
-import { dayBlock, H2, MeetingHead } from "../parts";
+import { dayBlock, H2, IssuedLine, MeetingHead, noticeOf } from "../parts";
 
 export const metadata: Metadata = { title: "جدول الأعمال" };
 
@@ -25,8 +25,7 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
   ]);
   const start = new Date(meeting.starts_at);
   const end = new Date(start.getTime() + meeting.duration_minutes * 60000);
-  const sent = meeting.pack_published_at ? new Date(meeting.pack_published_at) : null;
-  const notice = sent ? Math.floor((start.getTime() - sent.getTime()) / 86400000) : null;
+  const notice = noticeOf(m);
   const ref = reference(m.isBoard, meeting.number, meeting.starts_at);
   const allDecision = (items ?? []).length > 0 && (items ?? []).every((i) => i.kind === "decision");
   const docCount = (id: string) => (docs ?? []).filter((d) => d.agenda_item_id === id).length;
@@ -36,10 +35,12 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
 
   return (
     <main className="doc">
-      <DocChrome bi={bi} header={`${m.body} · ${ref} · جدول الأعمال`} footer={`${ref} · جدول الأعمال`} fileName={`${ref}-جدول-الأعمال`} note={sent ? null : "لم تُرسل الدعوة بعد."} />
+      <DocChrome bi={bi} header={`${m.body} · ${ref} · جدول الأعمال`} footer={`${ref} · جدول الأعمال`} fileName={`${ref}-جدول-الأعمال`} note={meeting.invited_at ? null : "لم تُصدر الدعوة بعد: يظهر رقم الاجتماع وتاريخ الإصدار عند اعتماد الموعد."} />
       <MeetingHead m={m} title="دعوة وجدول أعمال اجتماع" titleEn="Meeting Invitation and Agenda" badges={[{ ar: "سري", en: "Confidential", tone: "c" }]} />
+      <IssuedLine m={m} />
       <InfoCard
         bi={bi}
+        caption={["موعد الاجتماع", "Meeting date"]}
         day={dayBlock(start)}
         cells={[
           { ar: "الوقت", en: "Time", icon: Clock, single: true, value: <span className="nw">{d.time} – {dateParts(end).time}</span>, valueEn: <span className="nw">{englishTime(start)} – {englishTime(end)}</span> },
@@ -47,7 +48,13 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
           { ar: "طريقة الانعقاد", en: "Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
           { ar: "المكان", en: "Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
           { ar: "الدعوة من", en: "Called by", icon: User, value: m.chair, valueEn: m.chairEn || "—" },
-          { ar: "إرسال الدعوة", en: "Invitation sent", icon: Mail, value: sent ? `${dateParts(sent).long} (قبل ${notice} أيام)` : "—", valueEn: sent ? `${englishDate(sent)} (${notice} days before)` : "—" },
+          {
+            ar: "مهلة الدعوة",
+            en: "Notice period",
+            icon: Mail,
+            value: notice ? <span className={notice.ok ? "ok" : "warn"}>{notice.days} {notice.days === 1 ? "يوم" : "أيام"} {notice.ok ? "✓" : `⚠ (النظامي ${notice.required})`}</span> : "تُحسب عند الإصدار",
+            valueEn: notice ? <span className={notice.ok ? "ok" : "warn"}>{notice.days} {notice.days === 1 ? "day" : "days"} {notice.ok ? "✓" : `⚠ (minimum ${notice.required})`}</span> : "Set when issued",
+          },
         ]}
       />
       {meeting.agenda_intro && <BiText bi={bi} ar={meeting.agenda_intro} en={meeting.agenda_intro_en} />}

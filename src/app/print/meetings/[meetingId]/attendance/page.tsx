@@ -23,7 +23,7 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
     <main className="doc">
       <DocChrome bi={bi} header={`${m.body} · ${ref} · كشف الحضور`} footer={`${ref} · كشف الحضور`} fileName={`${ref}-كشف-الحضور`} />
       <MeetingHead m={m} title="كشف حضور اجتماع" titleEn="Meeting Attendance Sheet" badges={[{ ar: "سري", en: "Confidential", tone: "c" }]} />
-      <InfoCard bi={bi} day={heldDay(m)} cells={heldCells(m)} />
+      <InfoCard bi={bi} day={heldDay(m)} cells={heldCells(m)} caption={meeting.started_at ? ["تاريخ الانعقاد", "Held on"] : ["موعد الاجتماع", "Meeting date"]} />
       {meeting.attendance_intro && <BiText bi={bi} ar={meeting.attendance_intro} en={meeting.attendance_intro_en} />}
 
       <H2 ar={m.isBoard ? "أعضاء المجلس" : "أعضاء اللجنة"} en={m.isBoard ? "Board Members" : "Committee Members"} bi={bi} />
