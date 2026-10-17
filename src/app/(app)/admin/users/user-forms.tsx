@@ -36,7 +36,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 export type Option = { id: string; name: string };
 
 /** A new user; inside a department the user joins it automatically (no department field is shown). */
-export function CreateUserForm({ roles, departments, people, departmentId }: { roles: RoleOption[]; departments: Option[]; people: Option[]; departmentId?: string }) {
+export function CreateUserForm({ roles, departments, departmentId }: { roles: RoleOption[]; departments: Option[]; departmentId?: string }) {
   const [state, action] = useActionState(createUser, null);
   const [method, setMethod] = useState<"password" | "invite">("password");
   const [who, setWho] = useState({ name: "", email: "" });
@@ -64,10 +64,10 @@ export function CreateUserForm({ roles, departments, people, departmentId }: { r
           </Field>
         </Section>
 
-        <Section title={departmentId !== undefined ? "الربط" : "الجهة التابع لها"}>
-          {departmentId !== undefined ? (
-            <input type="hidden" name="department_id" value={departmentId} />
-          ) : (
+        {departmentId !== undefined ? (
+          <input type="hidden" name="department_id" value={departmentId} />
+        ) : (
+          <Section title="الجهة التابع لها">
             <Field label="الإدارة" hint="يصبح مندوبها: تصله طلبات المستندات والمتطلبات الموجهة لها.">
               <select name="department_id" defaultValue="" className={inputClass}>
                 <option value="">بلا إدارة</option>
@@ -78,18 +78,8 @@ export function CreateUserForm({ roles, departments, people, departmentId }: { r
                 ))}
               </select>
             </Field>
-          )}
-          <Field label="ربط بعضو مجلس أو لجنة" hint="لعضو مسجّل في الأشخاص وليس له حساب بعد.">
-            <select name="person_id" defaultValue="" className={inputClass}>
-              <option value="">بلا ربط</option>
-              {people.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </Section>
+          </Section>
+        )}
 
         <div className="sm:col-span-2">
           <RoleChecklist roles={roles} onChange={setPicked} />

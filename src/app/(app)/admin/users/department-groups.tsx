@@ -4,16 +4,16 @@ import { deleteDepartment, removeDelegate, setDepartmentStatus } from "../depart
 import { AddDelegateForm } from "../departments/department-forms";
 import type { RoleOption, UserItem } from "./page";
 import { GroupActions } from "./group-actions";
-import { CreateUserForm, UserRow, type Option } from "./user-forms";
+import { CreateUserForm, UserRow } from "./user-forms";
 
 export type DepartmentGroup = { id: string; name: string; code: string | null; status: "active" | "archived"; userIds: string[] };
 
 type Rights = { viewerId: string; canEdit: boolean; canManage: boolean; canDelete: boolean; canEditDepartments: boolean };
 
 /** The users grouped under the departments they act for, each department a fold; users with none come last. */
-export function DepartmentGroups({ groups, users, roles, rights, open, activeUsers, people }: { groups: DepartmentGroup[]; users: UserItem[]; roles: RoleOption[]; rights: Rights; open: boolean; activeUsers: { id: string; full_name: string; email: string }[]; people: Option[] }) {
+export function DepartmentGroups({ groups, users, roles, rights, open, activeUsers }: { groups: DepartmentGroup[]; users: UserItem[]; roles: RoleOption[]; rights: Rights; open: boolean; activeUsers: { id: string; full_name: string; email: string }[] }) {
   // A new user created inside a group joins that department ("" = none).
-  const newUser = (departmentId: string) => (rights.canManage ? <CreateUserForm roles={roles} departments={[]} people={people} departmentId={departmentId} /> : undefined);
+  const newUser = (departmentId: string) => (rights.canManage ? <CreateUserForm roles={roles} departments={[]} departmentId={departmentId} /> : undefined);
   const byId = new Map(users.map((u) => [u.id, u]));
   // Every row keeps the same end space, so the chevrons line up whether or not a delete icon sits there.
   const pad = rights.canDelete ? "pe-16" : "pe-4";

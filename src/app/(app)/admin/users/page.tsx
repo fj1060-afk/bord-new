@@ -38,11 +38,10 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
   if (term) query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%`);
 
   const canEditDepartments = can(viewer.permissions, "/admin/departments", LEVELS.edit);
-  const [{ data: rows }, { data: roles }, { data: deptRows }, { data: people }, { data: activeUsers }] = await Promise.all([
+  const [{ data: rows }, { data: roles }, { data: deptRows }, { data: activeUsers }] = await Promise.all([
     query,
     supabase.from("roles").select("id, name").order("created_at"),
     supabase.from("departments").select("id, name, code, status, department_delegates(user_id)").order("status").order("name"),
-    supabase.from("people").select("id, full_name").is("user_id", null).order("full_name"),
     canEditDepartments ? supabase.rpc("list_active_users") : Promise.resolve({ data: [] }),
   ]);
   const groups: DepartmentGroup[] = (deptRows ?? []).map((d) => ({ id: d.id, name: d.name, code: d.code, status: d.status as DepartmentGroup["status"], userIds: (d.department_delegates as { user_id: string }[]).map((x) => x.user_id) }));
@@ -92,7 +91,6 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
           rights={{ viewerId: viewer.id, canEdit, canManage, canDelete: can(viewer.permissions, "/admin/roles", LEVELS.manage), canEditDepartments }}
           open={!!term || !!status}
           activeUsers={(activeUsers ?? []) as { id: string; full_name: string; email: string }[]}
-          people={(people ?? []).map((p) => ({ id: p.id, name: p.full_name }))}
         />
       )}
     </>
