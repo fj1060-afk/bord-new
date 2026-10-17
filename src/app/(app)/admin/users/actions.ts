@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
 import { LEVELS } from "@/lib/permissions";
+import { contactFields } from "@/lib/contact-rules";
 import { passwordProblem } from "@/lib/password";
 import { siteUrl } from "@/lib/site-url";
 import { adminConfigured, createAdminClient } from "@/lib/supabase/admin";
@@ -32,7 +33,8 @@ async function emailInvitation(userId: string, email: string): Promise<boolean> 
  */
 export async function createUser(_prev: ActionState, form: FormData): Promise<ActionState> {
   await requirePage(PAGE, LEVELS.manage);
-  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  const contact = contactFields(form);
+  const email = contact.email ?? "";
   const fullName = String(form.get("full_name") ?? "").trim();
   const password = String(form.get("password") ?? "");
   const departmentId = String(form.get("department_id") ?? "");
@@ -40,7 +42,7 @@ export async function createUser(_prev: ActionState, form: FormData): Promise<Ac
   const roleIds = form.getAll("role").map(String);
   const sendNow = form.get("intent") === "invite" && !password;
   if (!email || !fullName) return fail("الاسم والبريد الإلكتروني مطلوبان.");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail("صيغة البريد الإلكتروني غير صحيحة.");
+  if (contact.problem) return fail(contact.problem);
   if (roleIds.length === 0) return fail("اختر دوراً واحداً على الأقل.");
   if (password) {
     const problem = passwordProblem(password, { name: fullName, email });
@@ -63,7 +65,7 @@ export async function createUser(_prev: ActionState, form: FormData): Promise<Ac
   const supabase = await createClient();
   await supabase
     .from("profiles")
-    .update({ phone: String(form.get("phone") ?? "").trim() || null, job_title: String(form.get("job_title") ?? "").trim() || null })
+    .update({ phone: contact.phone, job_title: String(form.get("job_title") ?? "").trim() || null })
     .eq("id", userId);
   const { error: rolesError } = await supabase.from("user_roles").insert(roleIds.map((role_id) => ({ user_id: userId, role_id })));
   if (rolesError) return fail("أُنشئ المستخدم، لكن تعذّر حفظ الأدوار. عدّلها من القائمة.");

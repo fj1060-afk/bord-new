@@ -1,5 +1,6 @@
 "use server";
 
+import { contactFields } from "@/lib/contact-rules";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/components/ui/form";
@@ -21,7 +22,9 @@ type PositionInput = { organization: string; role: string; title?: string; liste
 export async function registerBoardMember(boardId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   await requirePage("/board", LEVELS.edit);
   const fullName = text(form, "full_name", 200);
-  const email = text(form, "email", 200)?.toLowerCase() ?? null;
+  const contact = contactFields(form);
+  if (contact.problem) return { ok: false, message: contact.problem };
+  const email = contact.email;
   const position = form.get("position");
   const category = form.get("category");
   const basis = form.get("appointment_basis");
@@ -45,7 +48,7 @@ export async function registerBoardMember(boardId: string, _prev: ActionState, f
       full_name: fullName,
       full_name_en: text(form, "full_name_en", 200),
       email,
-      phone: text(form, "phone", 40),
+      phone: contact.phone,
       nationality: text(form, "nationality", 80),
       national_id: text(form, "national_id", 40),
       address: text(form, "address"),

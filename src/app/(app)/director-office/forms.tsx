@@ -3,6 +3,7 @@
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { EmailField, PhoneField } from "@/components/ui/contact-fields";
 import { saveContact, saveCorrespondence } from "./actions";
 
 export type Letter = { id: string; subject: string; body: string | null; reference: string | null; contact_id: string | null; dated_on: string | null; due_date: string | null };
@@ -72,7 +73,7 @@ export function ContactForm() {
           ["phone", "الجوال", "tel"],
         ].map(([name, label, type]) => (
           <Field key={name} label={label}>
-            <input name={name} type={type} required={name === "name"} dir={type === "text" ? undefined : "ltr"} className={inputClass} />
+            {type === "email" ? <EmailField name={name} /> : type === "tel" ? <PhoneField name={name} /> : <input name={name} required={name === "name"} className={inputClass} />}
           </Field>
         ))}
         <Field label="ملاحظات">

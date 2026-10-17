@@ -1,6 +1,7 @@
 "use client";
 
 import { Collapse } from "@/components/ui/collapse";
+import { EmailField, PhoneField } from "@/components/ui/contact-fields";
 import { useActionState, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { ActionForm } from "@/components/ui/action-form";
@@ -42,10 +43,10 @@ export function RegisterMemberForm({ boardId, accountsReady }: { boardId: string
           <EnglishField name="full_name_en" />
         </Field>
         <Field label="البريد الإلكتروني">
-          <input name="email" type="email" dir="ltr" required={account} className={inputClass} />
+          <EmailField name="email" required={account} />
         </Field>
         <Field label="الجوال">
-          <input name="phone" type="tel" dir="ltr" className={inputClass} />
+          <PhoneField name="phone" />
         </Field>
         <Field label="الجنسية">
           <input name="nationality" className={inputClass} />

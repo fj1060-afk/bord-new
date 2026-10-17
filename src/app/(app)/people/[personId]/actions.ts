@@ -1,5 +1,6 @@
 "use server";
 
+import { contactFields } from "@/lib/contact-rules";
 import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { getViewer } from "@/lib/auth";
@@ -25,11 +26,13 @@ export async function savePerson(personId: string, _prev: ActionState, form: For
   const fullName = text(form, "full_name");
   if (!fullName) return { ok: false, message: "الاسم مطلوب." };
 
+  const contact = contactFields(form);
+  if (contact.problem) return { ok: false, message: contact.problem };
   const update: Record<string, string | null> = {
     full_name: fullName,
     full_name_en: text(form, "full_name_en"),
-    email: text(form, "email"),
-    phone: text(form, "phone"),
+    email: contact.email,
+    phone: contact.phone,
     job_title: text(form, "job_title"),
     organization: text(form, "organization"),
     qualifications: text(form, "qualifications"),

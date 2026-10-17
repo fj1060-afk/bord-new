@@ -1,6 +1,7 @@
 "use client";
 
 import { Collapse } from "@/components/ui/collapse";
+import { EmailField, PhoneField } from "@/components/ui/contact-fields";
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useState } from "react";
 import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
@@ -42,10 +43,10 @@ export function PersonForm({
         <input name="job_title" defaultValue={person.job_title ?? ""} className={inputClass} />
       </Field>
       <Field label="البريد الإلكتروني">
-        <input name="email" type="email" dir="ltr" defaultValue={person.email ?? ""} className={inputClass} />
+        <EmailField name="email" defaultValue={person.email ?? ""} />
       </Field>
       <Field label="الجوال">
-        <input name="phone" type="tel" dir="ltr" defaultValue={person.phone ?? ""} className={inputClass} />
+        <PhoneField name="phone" defaultValue={person.phone ?? ""} />
       </Field>
       <Field label="جهة العمل">
         <input name="organization" defaultValue={person.organization ?? ""} className={inputClass} />

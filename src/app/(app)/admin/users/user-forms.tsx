@@ -8,6 +8,7 @@ import { formatDateTime } from "@/lib/format";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { Collapse } from "@/components/ui/collapse";
 import { PasswordField } from "@/components/ui/password-field";
+import { EmailField, PhoneField } from "@/components/ui/contact-fields";
 import { createUser, deleteUser, sendInvitation, setUserPassword, setUserStatus, updateUserRoles } from "./actions";
 import type { RoleOption, UserItem } from "./page";
 
@@ -53,10 +54,10 @@ export function CreateUserForm({ roles, departments, people, departmentId }: { r
             <input name="full_name" required className={inputClass} />
           </Field>
           <Field label="البريد الإلكتروني" hint="يدخل به المستخدم إلى المنصة.">
-            <input name="email" type="email" dir="ltr" required className={inputClass} />
+            <EmailField name="email" required />
           </Field>
           <Field label="الجوال">
-            <input name="phone" type="tel" dir="ltr" inputMode="tel" pattern="[+0-9 ]{7,16}" title="أرقام فقط، ويمكن أن يبدأ بـ +" placeholder="+9665XXXXXXXX" className={inputClass} />
+            <PhoneField name="phone" />
           </Field>
           <Field label="المسمى الوظيفي">
             <input name="job_title" className={inputClass} />

@@ -1,5 +1,6 @@
 "use server";
 
+import { contactFields } from "@/lib/contact-rules";
 import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
@@ -56,13 +57,15 @@ export async function saveContact(_: ActionState, fd: FormData): Promise<ActionS
   await requirePage("/director-office", LEVELS.edit);
   const name = text(fd, "name");
   if (!name) return { ok: false, message: "اكتب الاسم." };
+  const contact = contactFields(fd);
+  if (contact.problem) return { ok: false, message: contact.problem };
   const supabase = await createClient();
   const { error } = await supabase.from("contacts").insert({
     name,
     organization: text(fd, "organization"),
     title: text(fd, "title"),
-    email: text(fd, "email"),
-    phone: text(fd, "phone", 40),
+    email: contact.email,
+    phone: contact.phone,
     notes: text(fd, "notes", 2000),
   });
   if (error) return { ok: false, message: "تعذّر حفظ جهة الاتصال." };
