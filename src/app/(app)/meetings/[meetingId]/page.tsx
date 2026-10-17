@@ -5,7 +5,7 @@ import { TabBar } from "@/components/ui/tab-bar";
 import { notFound } from "next/navigation";
 import clsx from "clsx";
 import { ConfirmButton } from "@/components/org/confirm-button";
-import { CalendarCheck, Files, FileText, Layers, MapPin, Settings, Trash2, TriangleAlert, Undo2, Users, UsersRound } from "lucide-react";
+import { CalendarCheck, Files, FileText, Info, Layers, MapPin, Settings, Trash2, TriangleAlert, Undo2, Users, UsersRound } from "lucide-react";
 import { requirePage } from "@/lib/auth";
 import { dateParts, formatDateTime } from "@/lib/format";
 import { MEETING_MODES, MEETING_STATUS, rsvpSummary, totalMinutes } from "@/lib/meetings";
@@ -44,7 +44,8 @@ import { serviceSettings } from "@/lib/ai-server";
 
 export const metadata: Metadata = { title: "الاجتماع" };
 
-const TABS = { overview: "نظرة عامة", agenda: "الأجندة والمستندات", invitees: "المدعوون", live: "الانعقاد", minutes: "المحضر والقرارات" } as const;
+const TABS = { overview: "بيانات عامة", agenda: "الأجندة والمستندات", invitees: "المدعوون", live: "الانعقاد", minutes: "المحضر والقرارات" } as const;
+const TAB_ICONS = { overview: Info, agenda: FileText, invitees: Users, live: CalendarCheck, minutes: Files } as const;
 
 export default async function MeetingPage({ params, searchParams }: PageProps<"/meetings/[meetingId]">) {
   const viewer = await requirePage("/meetings");
@@ -138,15 +139,15 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
 
       {checks && <JourneyBar meetingId={meetingId} checks={checks} current={current} view={view} />}
 
-      <TabBar id="meeting-tabs" label="أقسام الاجتماع" className="mb-6 flex overflow-x-auto border-b border-rule text-sm">
-        {visible.map((key) => [key, TABS[key]] as const).map(([key, label]) => (
+      <TabBar id="meeting-tabs" label="أقسام الاجتماع" tone="primary" className="mb-6 flex overflow-x-auto border-b border-rule text-sm">
+        {visible.map((key) => [key, TABS[key], TAB_ICONS[key]] as const).map(([key, label, Icon]) => (
           <Link
             key={key}
             href={`/meetings/${meetingId}?${checks ? `stage=${view}&` : ""}tab=${key}`}
             aria-current={tab === key ? "page" : undefined}
-            className={clsx("motion-colors flex-1 whitespace-nowrap px-4 py-3 text-center sm:flex-none", tab === key ? "font-bold text-brass" : "text-ink-muted hover:text-ink")}
+            className={clsx("motion-colors inline-flex min-h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-t-md px-4 sm:flex-none", tab === key ? "bg-primary-soft font-bold text-primary" : "text-ink-muted hover:text-ink")}
           >
-            {label}
+            <Icon size={16} aria-hidden="true" className="shrink-0" /> {label}
           </Link>
         ))}
       </TabBar>

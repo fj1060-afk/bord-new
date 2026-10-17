@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Paperclip, Upload, X } from "lucide-react";
+import { Upload, UploadCloud, X } from "lucide-react";
 import { FormMessage, inputClass, type ActionState } from "@/components/ui/form";
 import { buttonClass } from "@/components/ui/styles";
 import { MAX_UPLOAD_BYTES, storagePath } from "@/lib/meetings";
@@ -25,6 +25,7 @@ export function UploadDocument({
   const fileRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const [picked, setPicked] = useState<File | null>(null);
+  const [over, setOver] = useState(false);
 
   async function upload() {
     const file = fileRef.current?.files?.[0];
@@ -59,8 +60,26 @@ export function UploadDocument({
 
   return (
     <div className="flex flex-col gap-2 rounded-md border border-dashed border-rule p-3">
-      <label className="flex cursor-pointer items-center gap-3 rounded-md bg-paper px-3 py-2.5 text-sm transition-colors hover:bg-primary-soft">
-        <Paperclip size={16} aria-hidden="true" className="shrink-0 text-primary" />
+      {/* Click to pick a file, or drop one here. */}
+      <label
+        onDragOver={(e) => {
+          e.preventDefault();
+          setOver(true);
+        }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setOver(false);
+          const file = e.dataTransfer.files[0];
+          if (!file || !fileRef.current) return;
+          const list = new DataTransfer();
+          list.items.add(file);
+          fileRef.current.files = list.files;
+          setPicked(file);
+        }}
+        className={`motion-colors flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-sm hover:bg-primary-soft ${over ? "bg-primary-soft" : "bg-paper"}`}
+      >
+        <UploadCloud size={18} aria-hidden="true" className="shrink-0 text-primary" />
         <span className="min-w-0 flex-1">
           {picked ? (
             <>
@@ -68,7 +87,7 @@ export function UploadDocument({
               <span className="block font-mono text-[11px] text-ink-muted">{size}</span>
             </>
           ) : (
-            <span className="text-ink-muted">اختر ملفاً (حتى 25 م.ب)</span>
+            <span className="text-ink-muted">اسحب الملف هنا أو اضغط للاختيار (حتى 25 م.ب)</span>
           )}
         </span>
         {picked && (
@@ -89,7 +108,7 @@ export function UploadDocument({
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input ref={titleRef} placeholder="عنوان المستند (اختياري)" className={`${inputClass} min-w-0 flex-1`} />
-        <button type="button" onClick={upload} disabled={busy || !picked} className={buttonClass("secondary", "shrink-0 justify-center disabled:opacity-50")}>
+        <button type="button" onClick={upload} disabled={busy || !picked} className={buttonClass("secondary", "min-h-11 shrink-0")}>
           <Upload size={16} aria-hidden="true" />
           {busy ? "جارٍ الرفع…" : label}
         </button>

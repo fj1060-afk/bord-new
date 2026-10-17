@@ -158,7 +158,8 @@ await step("طلب مستند من الإدارة", async () => {
 });
 
 await step("اعتماد الموعد ونشر الحزمة", async () => {
-  await page.goto(meetingUrl, { waitUntil: "networkidle" });
+  // The preparation stage opens on the agenda; the approval button is under «بيانات عامة».
+  await page.goto(meetingUrl + "?tab=overview", { waitUntil: "networkidle" });
   await passWarnings();
   await page.click("button:has-text('اعتماد الموعد')");
   await page.getByText("مُجدول").first().waitFor({ timeout: 20000 });

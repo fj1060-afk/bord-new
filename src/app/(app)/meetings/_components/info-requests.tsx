@@ -1,3 +1,4 @@
+import { MessageSquareText } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { AnswerInfoForm, RequestInfoForm } from "./info-forms";
@@ -17,10 +18,17 @@ export async function InfoRequests({ meetingId, items, organizer, invitee }: { m
   const label = Object.fromEntries(items.map((i) => [i.id, `${i.position}. ${i.title}`]));
 
   return (
-    <section className="mt-6 flex flex-col gap-3 rounded-lg border border-rule bg-surface p-5 text-sm">
-      <h2 className="font-display text-lg font-bold">طلبات المعلومات</h2>
-      <ul className="flex flex-col divide-y divide-rule">
-        {rows.length === 0 && <li className="py-2 text-ink-muted">لا توجد طلبات.</li>}
+    <section className="mt-6 flex flex-col gap-3 rounded-lg border border-rule bg-surface p-4 text-sm sm:p-5">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="min-w-0 flex-1 basis-40">
+          <h2 className="inline-flex items-center gap-2 font-display text-lg font-bold">
+            <MessageSquareText size={18} aria-hidden="true" className="text-ink-muted" /> طلبات المعلومات
+          </h2>
+          {rows.length === 0 && <p className="text-xs text-ink-muted">لا توجد طلبات معلومات حالياً.</p>}
+        </div>
+        {invitee && items.length > 0 && <RequestInfoForm meetingId={meetingId} items={items.map((i) => ({ id: i.id, label: label[i.id] }))} />}
+      </div>
+      <ul className={rows.length ? "flex flex-col divide-y divide-rule" : "hidden"}>
         {rows.map((r) => (
           <li key={r.id} className="py-3">
             <p className="text-xs text-ink-muted">
@@ -37,7 +45,6 @@ export async function InfoRequests({ meetingId, items, organizer, invitee }: { m
           </li>
         ))}
       </ul>
-      {invitee && items.length > 0 && <RequestInfoForm meetingId={meetingId} items={items.map((i) => ({ id: i.id, label: label[i.id] }))} />}
     </section>
   );
 }

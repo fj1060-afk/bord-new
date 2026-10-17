@@ -12,7 +12,7 @@ const last = new Map<string, { x: number; w: number }>();
  * A row of tab links (the current one marked aria-current) with one indicator
  * that slides to the current tab: an underline, or a filled pill.
  */
-export function TabBar({ id, label, variant = "underline", className, children }: { id: string; label: string; variant?: "underline" | "pill"; className?: string; children: ReactNode }) {
+export function TabBar({ id, label, variant = "underline", tone = "brass", className, children }: { id: string; label: string; variant?: "underline" | "pill"; /** The underline colour; the meeting page uses the primary colour. */ tone?: "brass" | "primary"; className?: string; children: ReactNode }) {
   const nav = useRef<HTMLElement>(null);
   const bar = useRef<HTMLSpanElement>(null);
 
@@ -65,7 +65,7 @@ export function TabBar({ id, label, variant = "underline", className, children }
         style={{ opacity: 0 }}
         className={clsx(
           "pointer-events-none absolute left-0 transition-[transform,width,opacity] duration-(--motion-menu) ease-(--ease-out)",
-          variant === "underline" ? "bottom-0 h-0.5 rounded-full bg-brass" : "inset-y-0.5 z-0 rounded bg-primary",
+          variant === "underline" ? clsx("bottom-0 h-0.5 rounded-full", tone === "primary" ? "bg-primary" : "bg-brass") : "inset-y-0.5 z-0 rounded bg-primary",
         )}
       />
     </nav>

@@ -1,4 +1,6 @@
-import { ArrowDown, ArrowUp, ChevronDown, FileText, ListChecks, Paperclip, Printer, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Clock, FileText, FolderOpen, ListChecks, Paperclip, Plus, Trash2, UserRound } from "lucide-react";
+import clsx from "clsx";
+import { menuItem, RowMenu } from "@/components/ui/row-menu";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { buttonClass } from "@/components/ui/styles";
 import { DOC_REQUEST_STATUS, ITEM_KINDS } from "@/lib/meetings";
@@ -95,23 +97,34 @@ export function AgendaTab({
 
   return (
     <div className="flex flex-col gap-6">
-      {items.length > 0 && (
-        <a href={`/print/meetings/${meetingId}/agenda`} target="_blank" className={buttonClass("secondary", "w-fit")}>
-          <Printer size={16} aria-hidden="true" /> طباعة الدعوة وجدول الأعمال
-        </a>
-      )}
       {!editable && !packPublished && documents.length === 0 && (
         <p className="rounded-md bg-brass-soft px-4 py-3 text-sm text-brass">تظهر مستندات الاجتماع هنا بعد نشر حزمة المجلس.</p>
       )}
 
-      {items.length > 0 && (
-        <div className="flex items-center gap-3">
-          <h2 className="font-display text-lg font-bold">
-            البنود <span className="font-mono text-sm text-ink-muted">({items.length})</span>
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="min-w-0 flex-1 basis-40">
+          <h2 className="inline-flex items-center gap-2 font-display text-lg font-bold">
+            <FileText size={18} aria-hidden="true" className="text-ink-muted" /> جدول الأعمال
           </h2>
-          <ExpandAll listId="agenda-items" />
+          {items.length > 0 && (
+            <p className="text-xs text-ink-muted">
+              إجمالي {items.length === 1 ? "بند واحد" : items.length === 2 ? "بندين" : `${items.length} بنود`}
+              {items.every((i) => i.kind === "decision") && " · جميع البنود للقرار"}
+            </p>
+          )}
         </div>
-      )}
+        {items.length > 1 && <ExpandAll listId="agenda-items" />}
+        {editable && (
+          <details id="add-item" className="scroll-mt-24 open:basis-full">
+            <summary className={buttonClass("primary", "min-h-11 cursor-pointer list-none [&::-webkit-details-marker]:hidden")}>
+              <Plus size={16} aria-hidden="true" /> إضافة بند جديد
+            </summary>
+            <div className="mt-3 rounded-lg border border-rule bg-surface p-5">
+              <AgendaItemForm meetingId={meetingId} targets={targets} library={library} body={body} />
+            </div>
+          </details>
+        )}
+      </div>
       {/* One send box for the whole meeting, above the items it covers. */}
       {editable && requirements && requirements.length > 0 && <SendByParty meetingId={meetingId} rows={requirements} targets={targets} items={items} sentAt={requirementsSentAt ?? null} mails={requestMails} />}
       <FlipList as="ol" id="agenda-items" className="flex flex-col gap-3">
@@ -131,11 +144,9 @@ export function AgendaTab({
           const sendPreview = [...reach].map(([who, n]) => `${who} (${n})`).join(" · ");
           const content = (
             <>
-              {(ownerLabel(item) || item.presenter) && (
+              {ownerLabel(item) && (
                 <p className="text-sm text-ink-muted">
-                  {ownerLabel(item) && <>المسؤول: <strong className="text-ink">{ownerLabel(item)}</strong></>}
-                  {ownerLabel(item) && item.presenter && item.presenter !== ownerLabel(item) && " · "}
-                  {item.presenter && item.presenter !== ownerLabel(item) && <>يقدّمه: {item.presenter}</>}
+                  المسؤول: <strong className="text-ink">{ownerLabel(item)}</strong>
                 </p>
               )}
               {(description || descriptionEn) && (
@@ -160,27 +171,46 @@ export function AgendaTab({
 
           return (
             <ItemFrame key={item.id} level={needs.level} count={needs.count} id={`item-${item.id}`} data-flip-key={item.id} data-flip-state={`${notes.length}:${waiting}`} className="scroll-mt-24 rounded-lg border bg-surface">
-              <div className="flex">
-                <details className="group min-w-0 flex-1">
-                  <summary className="flex cursor-pointer list-none items-start gap-3 p-4 hover:bg-paper [&::-webkit-details-marker]:hidden">
-                    <span className="mt-0.5 font-mono text-brass">{item.position}.</span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-display text-base font-bold leading-7">{item.title}</span>
-                      <span className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                        <span className="rounded-full bg-primary-soft px-2 py-0.5 text-primary">{ITEM_KINDS[item.kind]}</span>
-                        <AuthorityBadge authority={matchTemplate(item.title, library, body)?.authority} />
-                        {item.duration_minutes && <span className="text-ink-muted">{item.duration_minutes} دقيقة</span>}
-                        {itemDocs.length > 0 && (
-                          <span className="inline-flex items-center gap-1 text-ink-muted">
-                            <Paperclip size={13} aria-hidden="true" />
-                            <span className="font-mono">{itemDocs.length}</span>
-                          </span>
-                        )}
-                        {waiting > 0 && <span className="text-brass">{waiting} مستند مطلوب</span>}
+              {/* The «⋮» menu sits in the card's corner, so the title keeps the full width on a phone. */}
+              <div className="relative">
+                <details className="group">
+                  <summary className={clsx("flex cursor-pointer list-none flex-wrap items-start gap-3 p-3 hover:bg-paper sm:p-4 [&::-webkit-details-marker]:hidden", editable && "md:pe-14")}>
+                    <span className="grid size-9 shrink-0 place-items-center rounded-md border border-primary/40 bg-primary-soft font-mono text-base font-bold text-primary">{item.position}</span>
+                    {/* On a phone: number and controls on top, the title full width beneath; side by side from md. */}
+                    <span className="order-last grid min-w-0 basis-full gap-1.5 md:order-none md:flex-1 md:basis-0 md:grid-cols-2 md:gap-5">
+                      <span className="min-w-0">
+                        <span className="block font-display text-base font-bold leading-7">{item.title}</span>
+                        <span className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                          <span className="rounded-full bg-primary-soft px-2 py-0.5 text-primary">{ITEM_KINDS[item.kind]}</span>
+                          <AuthorityBadge authority={matchTemplate(item.title, library, body)?.authority} />
+                          {waiting > 0 && <span className="text-brass">{waiting} مستند مطلوب</span>}
+                        </span>
                       </span>
+                      {item.title_en && (
+                        <span dir="ltr" lang="en" className="min-w-0 text-start text-sm leading-6 text-ink-muted md:border-e md:border-rule md:pe-5">
+                          {item.title_en}
+                        </span>
+                      )}
                     </span>
-                    {issues && <IssueBadge level={needs.level} count={needs.count} />}
-                    <ChevronDown size={18} aria-hidden="true" className="mt-1 shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open:rotate-180" />
+                    <span className={clsx("ms-auto flex items-center gap-2 md:ms-0", editable && "me-10 md:me-0")}>
+                      {issues && <IssueBadge level={needs.level} count={needs.count} />}
+                      <ChevronDown size={18} aria-hidden="true" className="mt-1 shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open:rotate-180" />
+                    </span>
+                    <span className="order-last grid basis-full overflow-hidden rounded-md border border-rule bg-paper text-xs sm:grid-cols-3">
+                      {(
+                        [
+                          [UserRound, "العرض", item.presenter || ownerLabel(item) || "غير محدد"],
+                          [Clock, "المدة", item.duration_minutes ? `${item.duration_minutes} دقيقة` : "غير محددة"],
+                          [Paperclip, "المرفقات", itemDocs.length ? `${itemDocs.length}` : "لا توجد مرفقات"],
+                        ] as const
+                      ).map(([Icon, label, value]) => (
+                        <span key={label} className="flex items-center gap-2 border-rule px-3 py-2 not-last:border-b sm:not-last:border-b-0 sm:not-last:border-e">
+                          <Icon size={14} aria-hidden="true" className="shrink-0 text-brass" />
+                          <span className="text-ink-muted">{label}</span>
+                          <span className="ms-auto truncate text-ink sm:ms-0">{value}</span>
+                        </span>
+                      ))}
+                    </span>
                   </summary>
 
                   <div className="border-t border-rule p-4">
@@ -231,9 +261,6 @@ export function AgendaTab({
                             <UploadDocument meetingId={meetingId} agendaItemId={item.id} />
                             <DocumentRequestForm meetingId={meetingId} itemId={item.id} targets={targets} owner={ownerOf(item)} dueDate={dueDefault} />
                           </div>
-                          <div className="flex justify-end border-t border-rule pt-3">
-                            <ConfirmButton action={removeAgendaItem.bind(null, meetingId, item.id)} label="حذف البند" icon={<span className="inline-flex items-center gap-1.5 px-1 text-xs"><Trash2 size={14} aria-hidden="true" /> حذف البند</span>} confirm={`حذف البند "${item.title}"؟`} />
-                          </div>
                         </>
                       )}
                     </div>
@@ -241,18 +268,23 @@ export function AgendaTab({
                   </div>
                 </details>
                 {editable && (
-                  <div className="flex shrink-0 flex-col gap-1 p-2">
-                    <EditItemButton itemId={item.id} title={item.title} />
-                    <form action={moveAgendaItem.bind(null, meetingId, item.id, "up")}>
-                      <button disabled={index === 0} aria-label="نقل للأعلى" className="rounded p-1.5 text-ink-muted hover:bg-primary-soft disabled:opacity-30">
-                        <ArrowUp size={16} />
-                      </button>
-                    </form>
-                    <form action={moveAgendaItem.bind(null, meetingId, item.id, "down")}>
-                      <button disabled={index === items.length - 1} aria-label="نقل للأسفل" className="rounded p-1.5 text-ink-muted hover:bg-primary-soft disabled:opacity-30">
-                        <ArrowDown size={16} />
-                      </button>
-                    </form>
+                  <div className="absolute end-2 top-2.5 sm:end-3 sm:top-3.5">
+                    <RowMenu label={`إجراءات البند ${item.position}`}>
+                      <EditItemButton itemId={item.id} title={item.title} />
+                      <form action={moveAgendaItem.bind(null, meetingId, item.id, "up")}>
+                        <button disabled={index === 0} className={clsx(menuItem, "disabled:opacity-40")}>
+                          <ArrowUp size={15} aria-hidden="true" /> نقل للأعلى
+                        </button>
+                      </form>
+                      <form action={moveAgendaItem.bind(null, meetingId, item.id, "down")}>
+                        <button disabled={index === items.length - 1} className={clsx(menuItem, "disabled:opacity-40")}>
+                          <ArrowDown size={15} aria-hidden="true" /> نقل للأسفل
+                        </button>
+                      </form>
+                      <span className="mt-1 block border-t border-rule pt-1">
+                        <ConfirmButton action={removeAgendaItem.bind(null, meetingId, item.id)} label={`حذف البند ${item.position}`} variant="menu-danger" className="gap-2" icon={<><Trash2 size={15} aria-hidden="true" /> حذف البند</>} confirm={`حذف البند "${item.title}"؟`} />
+                      </span>
+                    </RowMenu>
                   </div>
                 )}
               </div>
@@ -261,29 +293,25 @@ export function AgendaTab({
         })}
       </FlipList>
 
-      {editable && (
-        <details id="add-item" className="scroll-mt-24 rounded-lg border border-rule bg-surface">
-          <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة بند</summary>
-          <div className="border-t border-rule p-5">
-            <AgendaItemForm meetingId={meetingId} targets={targets} library={library} body={body} />
-          </div>
-        </details>
-      )}
-
       {(general.length > 0 || editable) && (
-        <section className="rounded-lg border border-rule bg-surface p-5">
-          <h2 className="mb-3 font-display text-lg font-bold">مستندات عامة للاجتماع</h2>
-          <div className="flex flex-col gap-2">
-            {general.map((doc) => (
-              <DocumentLink key={doc.id} meetingId={meetingId} doc={doc} />
-            ))}
-            {general.length === 0 && <p className="text-sm text-ink-muted">لا توجد مستندات عامة.</p>}
+        <section className="flex flex-col gap-3 rounded-lg border border-rule bg-surface p-4 sm:p-5">
+          <div>
+            <h2 className="inline-flex items-center gap-2 font-display text-lg font-bold">
+              <FolderOpen size={18} aria-hidden="true" className="text-ink-muted" /> مستندات الاجتماع العامة
+            </h2>
+            <p className="text-xs text-ink-muted">مستندات غير مرتبطة ببند محدد في جدول الأعمال</p>
           </div>
-          {editable && (
-            <div className="mt-4">
-              <UploadDocument meetingId={meetingId} />
-            </div>
+          {general.length > 0 && (
+            <ul className="flex flex-col divide-y divide-rule rounded-md border border-rule">
+              {general.map((doc) => (
+                <li key={doc.id} className="px-3 py-2.5">
+                  <DocumentLink meetingId={meetingId} doc={doc} />
+                </li>
+              ))}
+            </ul>
           )}
+          {general.length === 0 && !editable && <p className="text-sm text-ink-muted">لا توجد مستندات عامة.</p>}
+          {editable && <UploadDocument meetingId={meetingId} />}
         </section>
       )}
     </div>

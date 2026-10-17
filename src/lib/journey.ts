@@ -8,7 +8,7 @@ import { dateProblems, periodNotEnded, yearsAhead } from "./item-period";
 import { hamzaSlips } from "./spelling";
 
 export const STAGES = [
-  { n: 1, title: "التحضير", tabs: ["overview", "agenda", "invitees"] },
+  { n: 1, title: "التحضير", tabs: ["agenda", "invitees", "overview"] },
   { n: 2, title: "الدعوة", tabs: ["overview", "agenda"] },
   { n: 3, title: "الانعقاد", tabs: ["live"] },
   { n: 4, title: "المحضر والمتابعة", tabs: ["minutes"] },
@@ -95,7 +95,7 @@ export function journeyChecks(j: JourneyInput): Check[] {
       ok: notice !== null && notice >= j.inviteDays,
       detail: notice === null ? "لم تُنشر الحزمة بعد" : `نُشرت قبل ${notice} أيام${m.meeting_type === "extraordinary" ? " (اجتماع استثنائي)" : ""}`,
     },
-    { id: "pack-email", stage: 2, tab: "overview", label: `إرسال الحزمة للأعضاء بالبريد قبل الاجتماع بـ ${j.inviteDays} أيام`, level: "info", ref: "لائحة الحوكمة م30", ok: !!m.pack_emailed_at, detail: m.pack_emailed_at ? undefined : "من «المراسلات عبر Outlook» في نظرة عامة" },
+    { id: "pack-email", stage: 2, tab: "overview", label: `إرسال الحزمة للأعضاء بالبريد قبل الاجتماع بـ ${j.inviteDays} أيام`, level: "info", ref: "لائحة الحوكمة م30", ok: !!m.pack_emailed_at, detail: m.pack_emailed_at ? undefined : "من «المراسلات عبر Outlook» في بيانات عامة" },
     { id: "held", stage: 3, tab: "live", label: "عقد الاجتماع بنصاب مكتمل وإنهاؤه", level: "block", ref: "نظام الشركات م80/2", ok: m.live_status === "ended", detail: m.live_status === "ended" ? undefined : day(m.starts_at) > j.today ? "يُفتح يوم الاجتماع" : "سجّل الحضور وابدأ الاجتماع" },
     { id: "minutes", stage: 4, tab: "minutes", label: "إعداد المحضر", level: "block", ok: !!j.minutes },
     { id: "minutes-complete", stage: 4, tab: "minutes", label: "المحضر مكتمل (الحد الأدنى، والأصوات، والتوقيع)", level: "block", ref: "دليل أمين السر؛ نظام الشركات م83", ok: !!j.minutes && j.minutes.gaps.length === 0, detail: j.minutes?.gaps.join(" ") || undefined },
