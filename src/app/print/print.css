@@ -74,7 +74,8 @@
 .doc-date .dl { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 9pt; }
 .doc-date .dl .en { font-size: 8.5pt; }
 .doc-date .d { font-size: 26pt; font-weight: 700; line-height: 1.1; font-family: var(--font-mono-latin), monospace; }
-.doc-date .y { font-size: 11pt; font-family: var(--font-mono-latin), monospace; }
+.doc-date .my { font-size: 8pt; white-space: nowrap; gap: 4px; }
+.doc-date .my .en { font-size: 7.6pt; }
 .doc-date small { font-size: 7pt; opacity: .75; margin-top: 2px; }
 .doc .bar { display: inline-block; width: 1px; height: .95em; background: var(--brass); vertical-align: middle; flex: none; }
 .doc-date .bar { background: rgb(255 255 255 / .55); }

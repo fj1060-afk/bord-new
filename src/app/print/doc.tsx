@@ -132,8 +132,7 @@ export function InfoCard({ day, cells, bi }: { day: Day; cells: Cell[]; bi: bool
       <div className="doc-date">
         <span className="dl">{both(day.weekday, day.weekdayEn)}</span>
         <span className="d">{day.day}</span>
-        <span className="dl">{both(day.month, day.monthEn)}</span>
-        <span className="y">{day.year}</span>
+        <span className="dl my">{bi ? both(day.month, `${day.monthEn} ${day.year}`) : `${day.month} ${day.year}`}</span>
         <small>{day.hijri}</small>
       </div>
       <div className="doc-grid">

@@ -13,8 +13,9 @@ The approved design, top to bottom:
 - **Title band**: green band split Arabic | English with a brass rule under it;
   a light row beneath with the body (Arabic), «الاجتماع / Meeting» and the
   number as `01 / 2026`, and the body in English.
-- **Meeting card**: green date block on the right (weekday and month in both
-  languages split by a bar, large day, year, Hijri date); cells with a brass
+- **Meeting card**: green date block on the right (weekday in both languages
+  split by a bar, large day, then month and year on one smaller row —
+  «أكتوبر | October 2026» — and the Hijri date); cells with a brass
   icon, Arabic and English labels split by a brass bar, Arabic value bold on
   the right and English lighter on the left; a time range shows once, centred.
 - **Section headings**: Arabic on the right, English on the left, brass rule
