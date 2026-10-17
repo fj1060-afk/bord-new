@@ -1,6 +1,6 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { ArrowLeft, CalendarClock, Check as CheckIcon, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, Info, Landmark, ListChecks, PenLine, Send, TriangleAlert, UserCog, UserPlus, type LucideIcon } from "lucide-react";
+import { ArrowLeft, CalendarClock, Check as CheckIcon, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, Info, Landmark, ListChecks, PenLine, Send, UserCog, UserPlus, type LucideIcon } from "lucide-react";
 import { buttonClass } from "@/components/ui/styles";
 import { blocking, stageDone, STAGES, type Check } from "@/lib/journey";
 import { fixMeetingTitleSpelling } from "../_actions/quick-fixes";
@@ -8,52 +8,13 @@ import { AutoFix } from "./auto-fix";
 import { FixLink } from "./fix-link";
 import { itemIssues, needsAction, tone } from "./item-issue-data";
 import { OverrideForm } from "./override-form";
+import { PROBLEM, STAGE_NOTES, summaryOf, TILE, tileCount } from "./journey-text";
 import { ResolvedChecks } from "./resolved-checks";
 
 const DOT = { block: "bg-danger", warn: "bg-brass", info: "bg-ink-muted" } as const;
 
 /** The icon on a meeting-wide check's fix button. */
 const FIX_ICON: Record<string, LucideIcon> = { details: CalendarClock, "notice-time": CalendarClock, term: Landmark, secretary: UserCog, items: ListChecks, "quorum-possible": UserPlus, "title-year": PenLine };
-
-/**
- * The summary names what is wrong and what to do, since a check's label reads as the
- * condition to meet («المستندات مسلّمة»), which sounds done when listed as a warning.
- */
-const PROBLEM: Record<string, [string, string]> = {
-  details: ["بيانات الاجتماع ناقصة", "أكمل التاريخ والوقت والمكان أو الرابط في «بيانات الاجتماع»"],
-  term: ["دورة المجلس لا تغطي تاريخ الاجتماع", "حدّث دورة المجلس أو غيّر الموعد"],
-  secretary: ["لم يُعيَّن أمين سر للمجلس", "عيّنه من ملف الشركة"],
-  items: ["جدول الأعمال فارغ", "أضف بنداً واحداً على الأقل"],
-  definite: ["عنوان بند فيه خيارات «/» أو فراغ «(…)»", "اختر صيغة واحدة وأكمل الفراغ في العنوان"],
-  owners: ["بند قرار بلا مسؤول، أو متطلب بلا جهة", "حدّد المسؤول أو جهة كل متطلب داخل البند"],
-  "requirements-sent": ["متطلبات محفوظة ولم تُرسل لأحد", "راجعها وأرسلها لجهاتها"],
-  "requirements-checks": ["تحققات مطلوبة لم تُؤكَّد بعد", "أكّدها في متطلبات البند"],
-  docs: ["مستندات مطلوبة لم تُسلَّم أو لم تُعتمد بعد", "تابعها مع الجهات، أو تجاوز التنبيه بذكر السبب"],
-  periods: ["البند يعتمد فترة لم تنتهِ قبل موعد الاجتماع", "صحّح السنة أو الفترة في عنوان البند"],
-  "item-dates": ["تاريخ في عنوان البند لا يتسق مع موعد الاجتماع", "صحّح التاريخ في عنوان البند"],
-  "requirements-due": ["مواعيد تسليم فاتت أو تقع بعد الاجتماع", "اضبطها على موعد قبل الاجتماع"],
-  "notice-time": ["الوقت المتبقي أقل من مهلة الدعوة النظامية", "أخّر الموعد أو تجاوز بذكر السبب"],
-  "title-year": ["سنة في عنوان الاجتماع لا تطابق تاريخه", "صحّح السنة في العنوان"],
-  "quorum-possible": ["المدعوون أقل من النصاب المطلوب", "ادعُ بقية الأعضاء من تبويب «المدعوون»"],
-  scheduled: ["موعد الاجتماع لم يُعتمد بعد", "اعتمد الموعد"],
-  pack: ["حزمة المجلس لم تُنشر للأعضاء", "انشر الحزمة"],
-  notice: ["الحزمة نُشرت متأخرة عن المهلة النظامية", "تجاوز بذكر السبب إن كان مبرراً"],
-  held: ["الاجتماع لم يُعقد أو لم يُنهَ بعد", "افتح تبويب «الانعقاد»"],
-  minutes: ["المحضر لم يُعدّ بعد", "ابدأ المحضر"],
-  "minutes-complete": ["المحضر ناقص", "أكمل الحد الأدنى والأصوات والتوقيع"],
-  approved: ["المحضر لم يُوقَّع ولم يُعتمد", "أرسله للتوقيع"],
-  circulars: ["قرارات بالتمرير لم تُثبت في محضر", "أثبتها في هذا الاجتماع"],
-};
-
-/** A short "where" for a check in the summary: the items it touches (in order), or its detail when brief. */
-function summaryOf(c: Check): string | null {
-  const n = c.fix?.targets?.length ?? 0;
-  if (n) {
-    const nums = c.fix!.targets!.flatMap((t) => (t.n ? [t.n] : [])).sort((a, b) => a - b);
-    return nums.length === n ? `${n === 1 ? "البند" : "البنود"} ${nums.join("، ")}` : n === 1 ? "في بند واحد" : n === 2 ? "في بندين" : `في ${n} بنود`;
-  }
-  return c.detail && c.detail.length <= 60 ? c.detail : null;
-}
 
 const notesText = (n: number) => (n === 1 ? "ملاحظة واحدة" : n === 2 ? "ملاحظتان" : n <= 10 ? `${n} ملاحظات` : `${n} ملاحظة`);
 const blockersText = (n: number) => (n === 1 ? "يمنعك شرط واحد" : n === 2 ? "يمنعك شرطان" : `يمنعك ${n} شروط`);
@@ -69,7 +30,7 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
   // A warning holds the stage until it is fixed or passed with a reason, but it is not a hard stop: count each kind once.
   const hard = open.filter((c) => c.level === "block");
   const warns = open.filter((c) => c.level === "warn");
-  const warnings = warns.length;
+  const pending = [...hard, ...warns];
   const onItems = open.filter((c) => c.fix?.targets?.length);
   const titleYear = open.find((c) => c.id === "title-year");
   const spelling = open.find((c) => c.id === "title-spelling");
@@ -84,33 +45,39 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
 
   return (
     <section className="mb-6 rounded-xl border border-rule bg-surface">
-      <ol className="flex items-start justify-between gap-1 border-b border-rule px-3 sm:px-5" aria-label="مراحل الاجتماع">
+      <ol className="grid grid-cols-4 border-b border-rule px-1 pb-3 pt-4 sm:px-4" aria-label="مراحل الاجتماع">
         {STAGES.map((s, i) => {
           const complete = stageDone(checks, s.n) && s.n < current + (stageDone(checks, current) ? 1 : 0);
+          const isCurrent = s.n === current && !complete;
           const reachable = s.n <= current;
           const body = (
             <>
-              <span className={clsx("motion-colors grid size-8 shrink-0 place-items-center rounded-full border-2 text-sm font-bold", complete ? "border-primary bg-primary text-on-primary" : s.n === view ? "border-brass bg-brass-soft text-brass" : "border-rule text-ink-muted")}>
+              <span
+                className={clsx(
+                  "motion-colors relative z-10 grid size-8 shrink-0 place-items-center rounded-full border-2 text-sm font-bold",
+                  isCurrent ? "border-primary bg-primary text-on-primary" : complete ? "border-primary bg-surface text-primary" : "border-rule bg-surface text-ink-muted",
+                )}
+              >
                 {complete ? <CheckIcon size={15} aria-hidden="true" /> : s.n}
               </span>
-              {/* On a phone only the viewed stage keeps its name, so the four steps fit the width. */}
-              <span className={clsx("text-sm leading-tight", s.n === view ? "font-bold" : "hidden text-ink-muted sm:inline")}>{s.title}</span>
+              <span className={clsx("mt-1.5 text-xs leading-tight sm:text-sm", s.n === view ? "font-bold" : "font-medium", isCurrent ? "text-primary" : reachable ? "text-ink" : "text-ink-muted")}>{s.title}</span>
+              <span className={clsx("mt-0.5 text-[10px] leading-snug max-[359px]:hidden sm:text-xs", isCurrent ? "text-primary" : "text-ink-muted")}>{STAGE_NOTES[s.n]}</span>
+              <span aria-hidden="true" className={clsx("mt-2 h-0.5 w-10 rounded-full", s.n === view ? "bg-primary" : "bg-transparent")} />
             </>
           );
           return (
-            <li key={s.n} className="contents">
-              {i > 0 && <span aria-hidden="true" className={clsx("mt-[1.6rem] h-px min-w-3 flex-1", complete || s.n <= current ? "bg-primary/50" : "bg-rule")} />}
-              <span className={clsx("motion-colors shrink-0 border-b-2", s.n === view ? "border-brass" : "border-transparent")}>
-                {reachable ? (
-                  <Link href={stageHref(s.n)} aria-current={s.n === view ? "step" : undefined} className="motion-colors flex items-center gap-2 px-1 py-3 hover:opacity-80">
-                    {body}
-                  </Link>
-                ) : (
-                  <span className="flex items-center gap-2 px-1 py-3 opacity-60" aria-disabled="true">
-                    {body}
-                  </span>
-                )}
-              </span>
+            <li key={s.n} className="relative flex min-w-0 flex-col items-center px-0.5 text-center">
+              {/* The line to the next stage, from this circle's centre to the next one's. */}
+              {i < STAGES.length - 1 && <span aria-hidden="true" className={clsx("absolute start-1/2 top-4 h-0.5 w-full", s.n < current || complete ? "bg-primary/70" : "bg-rule")} />}
+              {reachable ? (
+                <Link href={stageHref(s.n)} aria-current={s.n === view ? "step" : undefined} className="motion-colors flex flex-col items-center hover:opacity-80">
+                  {body}
+                </Link>
+              ) : (
+                <span className="flex flex-col items-center opacity-70" aria-disabled="true">
+                  {body}
+                </span>
+              )}
             </li>
           );
         })}
@@ -118,136 +85,143 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
 
       {/* The viewed stage's checks enter afresh when the stage changes. */}
       <div key={view} className="page-in flex flex-col gap-3 p-3 sm:p-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className={clsx("grid size-9 shrink-0 place-items-center rounded-full", done ? "bg-primary text-on-primary" : "bg-brass text-white")}>
-            {done ? <CheckIcon size={18} aria-hidden="true" /> : <span className="text-lg font-bold" aria-hidden="true">!</span>}
-          </span>
-          <span className="min-w-0 flex-1 basis-48">
-            <strong className="block">{done ? (view === 4 ? "اكتملت رحلة الاجتماع" : "المرحلة مكتملة") : "استكمل المتطلبات للانتقال"}</strong>
-            <span className="text-xs text-ink-muted">{done ? (view === 4 ? "لا شيء متبقٍّ." : "جاهز للانتقال إلى المرحلة التالية.") : hard.length ? `لا يمكن الانتقال بعد: ${blockersText(blockers)}` : "لا موانع؛ عالج التنبيهات أو تجاوزها بذكر السبب للانتقال"}</span>
-          </span>
-          <span className="flex flex-wrap gap-2">
-            {hard.length > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-danger/50 bg-danger/10 px-3 py-1.5 text-xs font-medium text-danger">
-                <CircleAlert size={14} aria-hidden="true" /> {hard.length} {hard.length === 1 ? "مانع" : "موانع"}
+        <div className={clsx("flex flex-col gap-3 rounded-lg border p-3 sm:p-4", done ? "border-rule" : hard.length ? "border-danger/60" : "border-brass/60")}>
+          <div className="flex items-start gap-3">
+            <span className={clsx("grid size-9 shrink-0 place-items-center rounded-full", done ? "bg-primary text-on-primary" : hard.length ? "bg-danger text-white" : "bg-brass text-white")}>
+              {done ? <CheckIcon size={18} aria-hidden="true" /> : <span className="text-lg font-bold" aria-hidden="true">!</span>}
+            </span>
+            <span className="min-w-0 flex-1">
+              <strong className="block">{done ? (view === 4 ? "اكتملت رحلة الاجتماع" : "المرحلة مكتملة") : "ما يلزم قبل الانتقال"}</strong>
+              <span className="text-xs text-ink-muted">
+                {done ? (view === 4 ? "لا شيء متبقٍّ." : "جاهز للانتقال إلى المرحلة التالية.") : hard.length ? `لا يمكن الانتقال بعد: ${blockersText(blockers)}` : "لا موانع؛ عالج التنبيهات أو تجاوزها بذكر السبب للانتقال"}
               </span>
-            )}
-            {warnings > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-brass/50 bg-brass-soft px-3 py-1.5 text-xs font-medium text-brass">
-                <TriangleAlert size={14} aria-hidden="true" /> {warnings} {warnings === 1 ? "تنبيه" : "تنبيهات"}
-              </span>
-            )}
-          </span>
-        </div>
-
-        {(hard.length > 0 || warns.length > 0) && (
-          <ul className="flex flex-col gap-1 rounded-lg bg-paper px-3 py-2 text-xs leading-5" aria-label="ملخص الموانع والتنبيهات">
-            {[...hard, ...warns].map((c) => (
-              <li key={c.id}>
-                <FixLink href={stageHref(view, c.tab)} anchor={c.fix?.targets?.[0]?.anchor ?? c.fix?.anchor} className="flex items-start gap-2 rounded-md py-1 hover:bg-surface">
-                  <span className={clsx("mt-1.5 size-2 shrink-0 rounded-full", c.level === "block" ? "bg-danger" : "bg-brass")} aria-hidden="true" />
-                  <span className="min-w-0 flex-1">
-                    <span className={c.level === "block" ? "font-medium text-danger" : "font-medium text-brass"}>{c.level === "block" ? "مانع" : "تنبيه"}:</span> {PROBLEM[c.id]?.[0] ?? c.label}
-                    {summaryOf(c) && <span className="text-ink-muted"> — {summaryOf(c)}</span>}
-                    {PROBLEM[c.id] && <span className="block text-ink-muted">الحل: {PROBLEM[c.id][1]}</span>}
-                  </span>
-                </FixLink>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {onMeeting.length > 0 && (
-          <div>
-            <p className="mb-1.5 text-xs font-medium text-ink-muted">على الاجتماع</p>
-            <ul className={clsx(card, "divide-y divide-rule text-sm")}>
-              {onMeeting.map((c) => {
-                const Icon = FIX_ICON[c.id] ?? ArrowLeft;
+            </span>
+          </div>
+          {pending.length > 0 && (
+            <ul className="grid gap-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]" aria-label="ملخص ما يلزم">
+              {pending.map((c) => {
+                const [name, Icon] = TILE[c.id] ?? [c.label, CircleAlert];
                 return (
                   <li key={c.id}>
-                    <details className="group/row">
-                      <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 hover:bg-paper [&::-webkit-details-marker]:hidden">
-                        <span className={clsx("size-2 shrink-0 rounded-full", DOT[tone(c)])} aria-hidden="true" />
-                        <span className="min-w-0 flex-1 basis-44">
-                          <span className="block font-medium">{c.label}</span>
-                          {c.ref && <span className="text-xs text-ink-muted">{c.ref}</span>}
-                        </span>
-                        {c.id === "title-spelling" ? (
-                          <AutoFix action={fixMeetingTitleSpelling.bind(null, meetingId)} />
-                        ) : c.fix?.href ? (
-                          <Link href={c.fix.href} className={action}>
-                            <Icon size={14} aria-hidden="true" /> {c.fix.label}
-                          </Link>
-                        ) : (
-                          <FixLink href={stageHref(view, c.tab)} anchor={c.fix?.anchor} className={action}>
-                            <Icon size={14} aria-hidden="true" /> {c.fix?.label ?? "أكمِل"}
-                          </FixLink>
-                        )}
-                      </summary>
-                      <div className="flex flex-col gap-1 pb-3 pe-4 ps-9 text-xs leading-6 text-ink-muted">
-                        {c.detail && <p>{c.detail}</p>}
-                        {c === titleYear && spelling?.detail && (
-                          <p className="flex flex-wrap items-center gap-2">
-                            {spelling.detail}
-                            <AutoFix action={fixMeetingTitleSpelling.bind(null, meetingId)} label="صحّح الإملاء تلقائياً" />
-                          </p>
-                        )}
-                        {c.level === "warn" && <OverrideForm meetingId={meetingId} rule={c.id} />}
-                      </div>
-                    </details>
+                    <FixLink href={stageHref(view, c.tab)} anchor={c.fix?.targets?.[0]?.anchor ?? c.fix?.anchor} title={PROBLEM[c.id] ? `${PROBLEM[c.id][0]}. الحل: ${PROBLEM[c.id][1]}` : c.label} className="motion-colors flex h-full items-center gap-3 rounded-lg border border-rule bg-paper px-3 py-2.5 hover:border-primary">
+                      <span className={clsx("font-mono text-xl font-bold", c.level === "block" ? "text-danger" : "text-brass")}>{tileCount(c)}</span>
+                      <span className="min-w-0 flex-1 text-xs leading-5">
+                        <span className="block font-medium text-ink">{name}</span>
+                        {summaryOf(c) && <span className="block text-ink-muted">{summaryOf(c)}</span>}
+                      </span>
+                      <Icon size={20} aria-hidden="true" className={clsx("shrink-0", c.level === "block" ? "text-danger" : "text-brass")} />
+                    </FixLink>
                   </li>
                 );
               })}
             </ul>
-          </div>
-        )}
+          )}
 
-        <ResolvedChecks open={onMeeting.map((c) => ({ id: c.id, label: c.label }))} />
-
-        {items.length > 0 && (
-          <div>
-            <p className="mb-1.5 text-xs font-medium text-ink-muted">على البنود</p>
-            {/* The notes live inside each item; this lists the items that have them, each one a link to it. */}
-            <details className={clsx(card, "group/items text-sm")}>
-              <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 px-4 py-3 hover:bg-paper [&::-webkit-details-marker]:hidden">
-                <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/items:rotate-180" />
-                <span className="min-w-0 flex-1 basis-48">
-                  <strong>{notesText(notes)}</strong> في {items.length === 1 ? "بند واحد" : items.length === 2 ? "بندين" : `${items.length} بنود`}
-                  <span className="block text-xs text-ink-muted">اضغط لعرض البنود</span>
-                </span>
-                <FixLink href={agendaHref} anchor={items[0].anchor} className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs text-on-primary hover:opacity-90">
-                  <ListChecks size={14} aria-hidden="true" /> انتقل للبند {items[0].n ?? "الأول"}
-                </FixLink>
+          {pending.length > 0 && (
+            <details id="requirements" className="group/req" open={hard.length > 0}>
+              <summary className="motion-press inline-flex min-h-11 w-full cursor-pointer list-none items-center justify-center gap-2 rounded-md border border-brass/60 px-4 text-sm font-medium text-brass hover:bg-brass-soft sm:w-fit [&::-webkit-details-marker]:hidden">
+                <span className="group-open/req:hidden">عرض المتطلبات</span>
+                <span className="hidden group-open/req:inline">إخفاء المتطلبات</span>
+                <ChevronDown size={16} aria-hidden="true" className="transition-transform duration-(--motion-menu) group-open/req:rotate-180" />
               </summary>
-              <ul className="divide-y divide-rule border-t border-rule">
-                {items.map((i) => {
-                  const need = needsAction(i.issues);
+              <div className="mt-3 flex flex-col gap-3">
+          {onMeeting.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-xs font-medium text-ink-muted">على الاجتماع</p>
+              <ul className={clsx(card, "divide-y divide-rule text-sm")}>
+                {onMeeting.map((c) => {
+                  const Icon = FIX_ICON[c.id] ?? ArrowLeft;
                   return (
-                    <li key={i.anchor}>
-                      <FixLink href={agendaHref} anchor={i.anchor} className="flex items-start gap-3 px-4 py-2.5 hover:bg-paper">
-                        <span className={clsx("mt-1.5 size-2 shrink-0 rounded-full", need.level === "block" ? "bg-danger" : "bg-brass")} aria-hidden="true" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block font-medium">
-                            {i.n ? `البند ${i.n}: ` : ""}
-                            {i.label}
+                    <li key={c.id}>
+                      <details className="group/row">
+                        <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 hover:bg-paper [&::-webkit-details-marker]:hidden">
+                          <span className={clsx("size-2 shrink-0 rounded-full", DOT[tone(c)])} aria-hidden="true" />
+                          <span className="min-w-0 flex-1 basis-44">
+                            <span className="block font-medium">{PROBLEM[c.id]?.[0] ?? c.label}</span>
+                            {c.ref && <span className="text-xs text-ink-muted">{c.ref}</span>}
                           </span>
-                          <span className="text-xs text-ink-muted">{i.issues.filter((x) => x.level !== "info").map((x) => x.chip).join(" · ")}</span>
-                        </span>
-                        <span className="shrink-0 text-xs text-primary">{notesText(need.count)}</span>
-                      </FixLink>
+                          {c.id === "title-spelling" ? (
+                            <AutoFix action={fixMeetingTitleSpelling.bind(null, meetingId)} />
+                          ) : c.fix?.href ? (
+                            <Link href={c.fix.href} className={action}>
+                              <Icon size={14} aria-hidden="true" /> {c.fix.label}
+                            </Link>
+                          ) : (
+                            <FixLink href={stageHref(view, c.tab)} anchor={c.fix?.anchor} className={action}>
+                              <Icon size={14} aria-hidden="true" /> {c.fix?.label ?? "أكمِل"}
+                            </FixLink>
+                          )}
+                        </summary>
+                        <div className="flex flex-col gap-1 pb-3 pe-4 ps-9 text-xs leading-6 text-ink-muted">
+                          {c.detail && <p>{c.detail}</p>}
+                          {PROBLEM[c.id] && <p>الحل: {PROBLEM[c.id][1]}</p>}
+                          {c === titleYear && spelling?.detail && (
+                            <p className="flex flex-wrap items-center gap-2">
+                              {spelling.detail}
+                              <AutoFix action={fixMeetingTitleSpelling.bind(null, meetingId)} label="صحّح الإملاء تلقائياً" />
+                            </p>
+                          )}
+                          {c.level === "warn" && <OverrideForm meetingId={meetingId} rule={c.id} />}
+                        </div>
+                      </details>
                     </li>
                   );
                 })}
               </ul>
-            </details>
-          </div>
-        )}
+            </div>
+          )}
 
-        {unsent && (
-          <FixLink href={agendaHref} anchor="send-requirements" className={buttonClass("primary", "min-h-11 w-full")}>
-            <Send size={16} aria-hidden="true" /> راجع وأرسل طلبات المتطلبات{unsent.detail ? ` (${unsent.detail.match(/\d+/)?.[0] ?? ""})` : ""}
-          </FixLink>
-        )}
+          <ResolvedChecks open={onMeeting.map((c) => ({ id: c.id, label: c.label }))} />
+
+          {items.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-xs font-medium text-ink-muted">على البنود</p>
+              {/* The notes live inside each item; this lists the items that have them, each one a link to it. */}
+              <details className={clsx(card, "group/items text-sm")}>
+                <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 px-4 py-3 hover:bg-paper [&::-webkit-details-marker]:hidden">
+                  <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/items:rotate-180" />
+                  <span className="min-w-0 flex-1 basis-48">
+                    <strong>{notesText(notes)}</strong> في {items.length === 1 ? "بند واحد" : items.length === 2 ? "بندين" : `${items.length} بنود`}
+                    <span className="block text-xs text-ink-muted">اضغط لعرض البنود</span>
+                  </span>
+                  <FixLink href={agendaHref} anchor={items[0].anchor} className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs text-on-primary hover:opacity-90">
+                    <ListChecks size={14} aria-hidden="true" /> انتقل للبند {items[0].n ?? "الأول"}
+                  </FixLink>
+                </summary>
+                <ul className="divide-y divide-rule border-t border-rule">
+                  {items.map((i) => {
+                    const need = needsAction(i.issues);
+                    return (
+                      <li key={i.anchor}>
+                        <FixLink href={agendaHref} anchor={i.anchor} className="flex items-start gap-3 px-4 py-2.5 hover:bg-paper">
+                          <span className={clsx("mt-1.5 size-2 shrink-0 rounded-full", need.level === "block" ? "bg-danger" : "bg-brass")} aria-hidden="true" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-medium">
+                              {i.n ? `البند ${i.n}: ` : ""}
+                              {i.label}
+                            </span>
+                            <span className="text-xs text-ink-muted">{i.issues.filter((x) => x.level !== "info").map((x) => x.chip).join(" · ")}</span>
+                          </span>
+                          <span className="shrink-0 text-xs text-primary">{notesText(need.count)}</span>
+                        </FixLink>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            </div>
+          )}
+
+          {unsent && (
+            <FixLink href={agendaHref} anchor="send-requirements" className={buttonClass("primary", "min-h-11 w-full")}>
+              <Send size={16} aria-hidden="true" /> راجع وأرسل طلبات المتطلبات{unsent.detail ? ` (${unsent.detail.match(/\d+/)?.[0] ?? ""})` : ""}
+            </FixLink>
+          )}
+
+              </div>
+            </details>
+          )}
+        </div>
 
         {settled.length > 0 && (
           <details className={clsx(card, "group/done text-sm")} open={open.length === 0}>
@@ -277,28 +251,30 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
 export function StageNav({ meetingId, checks, view }: { meetingId: string; checks: Check[]; view: number }) {
   const href = (n: number) => `/meetings/${meetingId}?stage=${n}`;
   const done = stageDone(checks, view);
+  const pending = checks.filter((c) => c.stage === view && !c.ok && !c.overridden && c.level !== "info").length;
+  // Previous on the start side, the stage's open count in the middle, next on the end side; touch-sized on a phone.
   return (
-    <nav aria-label="التنقل بين المراحل" className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4">
+    <nav aria-label="التنقل بين المراحل" className="mt-8 flex items-center justify-between gap-3 border-t border-rule pt-4">
       {view > 1 ? (
-        <Link href={href(view - 1)} className={buttonClass("secondary")}>
+        <Link href={href(view - 1)} className={buttonClass("secondary", "min-h-11")}>
           <ChevronRight size={16} aria-hidden="true" /> السابق
         </Link>
       ) : (
         <span />
       )}
+      {!done && pending > 0 && (
+        <FixLink href={href(view)} anchor="requirements" className="inline-flex min-w-0 items-center gap-1.5 text-center text-xs text-brass hover:underline">
+          <Info size={14} aria-hidden="true" className="shrink-0" /> متطلبات معلقة: {pending}
+        </FixLink>
+      )}
       {view < 4 &&
         (done ? (
-          <Link href={href(view + 1)} className={buttonClass()}>
+          <Link href={href(view + 1)} className={buttonClass("primary", "min-h-11")}>
             التالي <ChevronLeft size={16} aria-hidden="true" />
           </Link>
         ) : (
-          <span className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted">
-              <Info size={14} aria-hidden="true" /> متاح بعد استكمال المتطلبات
-            </span>
-            <span className={buttonClass("primary", "pointer-events-none opacity-40")} aria-disabled="true">
-              التالي <ChevronLeft size={16} aria-hidden="true" />
-            </span>
+          <span className={buttonClass("primary", "min-h-11 pointer-events-none opacity-40")} aria-disabled="true" title="متاح بعد استكمال المتطلبات">
+            التالي <ChevronLeft size={16} aria-hidden="true" />
           </span>
         ))}
     </nav>

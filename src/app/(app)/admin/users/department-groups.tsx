@@ -9,7 +9,7 @@ import { buttonClass } from "@/components/ui/styles";
 import { deleteDepartment, setDepartmentStatus } from "../departments/actions";
 import { AddDelegateForm } from "../departments/department-forms";
 import type { RoleOption, UserItem } from "./page";
-import { menuItem, RowMenu } from "./row-menu";
+import { menuItem, RowMenu } from "@/components/ui/row-menu";
 import { CreateUserForm } from "./user-forms";
 import { UserRow } from "./user-row";
 

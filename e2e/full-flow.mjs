@@ -35,6 +35,9 @@ const status = async (text) => page.getByRole("status").filter({ hasText: text }
 
 /** Passes the journey's warning-level checks with a reason, as a secretary would. */
 async function passWarnings() {
+  // The stage's checks sit in the «عرض المتطلبات» fold, closed when only warnings remain.
+  const fold = page.locator("details#requirements:not([open]) > summary");
+  if (await fold.count()) await fold.click();
   for (let i = 0; i < 6 && (await page.locator("summary:has-text('تجاوز بسبب')").count()); i++) {
     const s = page.locator("summary:has-text('تجاوز بسبب')").first();
     await s.click();

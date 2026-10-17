@@ -247,7 +247,7 @@ export function EditableAgendaItem({ meetingId, item, targets, library, body, ch
   return (
     <div className="flex flex-col gap-2">
       {children}
-      <button type="button" onClick={() => setEditing(true)} className={buttonClass("secondary", "w-fit gap-1.5 px-3 py-1.5 text-xs")}>
+      <button type="button" onClick={() => setEditing(true)} className={buttonClass("secondary", "w-fit")}>
         <Pencil size={14} aria-hidden="true" /> تعديل البند
       </button>
     </div>

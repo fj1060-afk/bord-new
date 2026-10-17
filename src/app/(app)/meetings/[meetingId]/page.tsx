@@ -8,7 +8,7 @@ import { ConfirmButton } from "@/components/org/confirm-button";
 import { CalendarCheck, Files, FileText, Layers, MapPin, Settings, Trash2, TriangleAlert, Undo2, Users, UsersRound } from "lucide-react";
 import { requirePage } from "@/lib/auth";
 import { dateParts, formatDateTime } from "@/lib/format";
-import { MEETING_MODES, MEETING_STATUS, MEETING_TYPES, meetingReference, rsvpSummary, totalMinutes } from "@/lib/meetings";
+import { MEETING_MODES, MEETING_STATUS, rsvpSummary, totalMinutes } from "@/lib/meetings";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { setMeetingStatus, setPackPublished } from "../_actions/meeting";
@@ -119,14 +119,21 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   return (
     <>
       <MeetingHeader
-        section={`${body?.name ?? ""} · اجتماع ${meetingReference(meeting.code)}`}
+        crumbs={
+          meeting.board_id
+            ? [{ label: body?.name ?? "المجلس", href: "/board" }, { label: "اجتماعات المجلس", href: "/board/meetings" }]
+            : [{ label: body?.name ?? "اللجنة", href: `/committees/${meeting.committee_id}` }, { label: "اجتماعات اللجنة", href: `/committees/${meeting.committee_id}/meetings` }]
+        }
         title={meeting.title}
-        when={dateParts(new Date(meeting.starts_at)).long}
+        date={`${dateParts(new Date(meeting.starts_at)).weekday} ${dateParts(new Date(meeting.starts_at)).long}`}
         time={dateParts(new Date(meeting.starts_at)).time}
+        mode={MEETING_MODES[meeting.mode as keyof typeof MEETING_MODES]}
         minutes={meeting.duration_minutes}
-        type={MEETING_TYPES[meeting.meeting_type as keyof typeof MEETING_TYPES]}
+        code={meeting.code}
         status={status}
         statusLabel={MEETING_STATUS[status]}
+        extraordinary={meeting.meeting_type === "extraordinary"}
+        previewHref={`/print/meetings/${meetingId}/agenda`}
       />
 
       {checks && <JourneyBar meetingId={meetingId} checks={checks} current={current} view={view} />}

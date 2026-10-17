@@ -7,7 +7,7 @@ import { formatGregorianDate } from "@/lib/format";
 import { removeDelegate } from "../departments/actions";
 import { deleteUser } from "./actions";
 import type { RoleOption, UserItem } from "./page";
-import { RowMenu } from "./row-menu";
+import { RowMenu } from "@/components/ui/row-menu";
 
 export const initials = (name: string) =>
   name
