@@ -15,6 +15,16 @@ const DOT = { block: "bg-danger", warn: "bg-brass", info: "bg-ink-muted" } as co
 /** The icon on a meeting-wide check's fix button. */
 const FIX_ICON: Record<string, LucideIcon> = { details: CalendarClock, "notice-time": CalendarClock, term: Landmark, secretary: UserCog, items: ListChecks, "quorum-possible": UserPlus, "title-year": PenLine };
 
+/** A short "where" for a check in the summary: how many items it touches, or its detail when brief. */
+function summaryOf(c: Check): string | null {
+  const n = c.fix?.targets?.length ?? 0;
+  if (n) {
+    const nums = c.fix!.targets!.flatMap((t) => (t.n ? [t.n] : []));
+    return nums.length === n ? `${n === 1 ? "البند" : "البنود"} ${nums.join("، ")}` : n === 1 ? "في بند واحد" : n === 2 ? "في بندين" : `في ${n} بنود`;
+  }
+  return c.detail && c.detail.length <= 60 ? c.detail : null;
+}
+
 const notesText = (n: number) => (n === 1 ? "ملاحظة واحدة" : n === 2 ? "ملاحظتان" : n <= 10 ? `${n} ملاحظات` : `${n} ملاحظة`);
 const blockersText = (n: number) => (n === 1 ? "يمنعك شرط واحد" : n === 2 ? "يمنعك شرطان" : `يمنعك ${n} شروط`);
 
@@ -26,7 +36,10 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
   const blockers = list.filter(blocking).length;
   const open = list.filter((c) => !c.ok && !c.overridden);
   const settled = list.filter((c) => c.ok || c.overridden);
-  const warnings = open.filter((c) => c.level === "warn").length;
+  // A warning holds the stage until it is fixed or passed with a reason, but it is not a hard stop: count each kind once.
+  const hard = open.filter((c) => c.level === "block");
+  const warns = open.filter((c) => c.level === "warn");
+  const warnings = warns.length;
   const onItems = open.filter((c) => c.fix?.targets?.length);
   const titleYear = open.find((c) => c.id === "title-year");
   const spelling = open.find((c) => c.id === "title-spelling");
@@ -81,12 +94,12 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
           </span>
           <span className="min-w-0 flex-1 basis-48">
             <strong className="block">{done ? (view === 4 ? "اكتملت رحلة الاجتماع" : "المرحلة مكتملة") : "استكمل المتطلبات للانتقال"}</strong>
-            <span className="text-xs text-ink-muted">{done ? (view === 4 ? "لا شيء متبقٍّ." : "جاهز للانتقال إلى المرحلة التالية.") : `لا يمكن الانتقال بعد: ${blockersText(blockers)}`}</span>
+            <span className="text-xs text-ink-muted">{done ? (view === 4 ? "لا شيء متبقٍّ." : "جاهز للانتقال إلى المرحلة التالية.") : hard.length ? `لا يمكن الانتقال بعد: ${blockersText(blockers)}` : "لا موانع؛ عالج التنبيهات أو تجاوزها بذكر السبب للانتقال"}</span>
           </span>
           <span className="flex flex-wrap gap-2">
-            {blockers > 0 && (
+            {hard.length > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-danger/50 bg-danger/10 px-3 py-1.5 text-xs font-medium text-danger">
-                <CircleAlert size={14} aria-hidden="true" /> {blockers} {blockers === 1 ? "مانع" : "موانع"}
+                <CircleAlert size={14} aria-hidden="true" /> {hard.length} {hard.length === 1 ? "مانع" : "موانع"}
               </span>
             )}
             {warnings > 0 && (
@@ -96,6 +109,20 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
             )}
           </span>
         </div>
+
+        {(hard.length > 0 || warns.length > 0) && (
+          <ul className="flex flex-col gap-1 rounded-lg bg-paper px-4 py-3 text-xs leading-5" aria-label="ملخص الموانع والتنبيهات">
+            {[...hard, ...warns].map((c) => (
+              <li key={c.id} className="flex items-start gap-2">
+                <span className={clsx("mt-1.5 size-2 shrink-0 rounded-full", c.level === "block" ? "bg-danger" : "bg-brass")} aria-hidden="true" />
+                <span>
+                  <span className={c.level === "block" ? "font-medium text-danger" : "font-medium text-brass"}>{c.level === "block" ? "مانع" : "تنبيه"}:</span> {c.label}
+                  {summaryOf(c) && <span className="text-ink-muted"> — {summaryOf(c)}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
 
         {onMeeting.length > 0 && (
           <div>
