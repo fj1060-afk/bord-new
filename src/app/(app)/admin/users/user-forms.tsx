@@ -12,6 +12,7 @@ import { EmailField, PhoneField } from "@/components/ui/contact-fields";
 import { checkNewUser, createUser, deleteUser, sendInvitation, setUserPassword, setUserStatus, updateUserRoles } from "./actions";
 import type { RoleOption, UserItem } from "./page";
 import type { Duplicate } from "@/lib/user-duplicates";
+import { EditUserForm } from "./edit-user-form";
 
 function RoleChecklist({ roles, selected, onChange }: { roles: RoleOption[]; selected?: string[]; onChange?: (ids: string[]) => void }) {
   return (
@@ -179,6 +180,7 @@ export function UserRow({
   canManage,
   canDelete,
   extra,
+  departments = [],
 }: {
   user: UserItem;
   roles: RoleOption[];
@@ -189,6 +191,8 @@ export function UserRow({
   canDelete?: boolean;
   /** An action beside the row, e.g. removing the user from a department. */
   extra?: React.ReactNode;
+  /** Active departments, for «تعديل البيانات». */
+  departments?: { id: string; name: string }[];
 }) {
   const [state, action] = useActionState(updateUserRoles.bind(null, user.id), null);
   const [pending, startTransition] = useTransition();
@@ -223,6 +227,7 @@ export function UserRow({
 
         <div className="flex flex-col gap-4 border-t border-rule bg-paper px-5 py-4">
           {user.job_title && <p className="text-sm text-ink-muted">المسمى الوظيفي: {user.job_title}</p>}
+          {canManage && <EditUserForm user={user} departments={departments} />}
           {canManage && !isSelf && !disabled && (
             <ActionForm action={inviteAction} state={inviteState} className="flex flex-col gap-2">
               <p className="text-sm text-ink-muted">

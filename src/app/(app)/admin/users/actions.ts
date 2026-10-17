@@ -215,3 +215,49 @@ export async function purgeTestData(): Promise<ActionState> {
   revalidatePath("/", "layout");
   return { ok: true, message: `حُذف ${ids.length} شخص اختبار و${deptIds.length - deptFailed} إدارة اختبار.${deptFailed ? ` بقيت ${deptFailed} إدارة مرتبطة بطلبات.` : ""}` };
 }
+
+/**
+ * Edits a user's details: name, email, mobile, job title and department. The
+ * same rules as creating apply (valid contact details, no repeated name,
+ * email or mobile); the linked person record follows so lists stay in step.
+ */
+export async function updateUserDetails(userId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  await requirePage(PAGE, LEVELS.manage);
+  const contact = contactFields(form);
+  const email = contact.email ?? "";
+  const fullName = String(form.get("full_name") ?? "").trim();
+  const jobTitle = String(form.get("job_title") ?? "").trim() || null;
+  const departmentId = String(form.get("department_id") ?? "");
+  if (!email || !fullName) return fail("الاسم والبريد الإلكتروني مطلوبان.");
+  if (contact.problem) return fail(contact.problem);
+  if (!adminConfigured()) return fail(NOT_CONFIGURED);
+
+  const admin = createAdminClient();
+  const { data: everyone } = await admin.from("profiles").select("id, full_name, email, phone");
+  const clashes = duplicateFields({ name: fullName, email, phone: contact.phone ?? "" }, (everyone ?? []) as ExistingUser[], userId);
+  if (clashes.length) return fail(`لا يمكن الحفظ: ${clashes.map((c) => c.message).join(" ")}`);
+
+  const before = (everyone ?? []).find((u) => u.id === userId);
+  if (before && before.email !== email) {
+    const { error } = await admin.auth.admin.updateUserById(userId, { email, email_confirm: true });
+    if (error) return fail(error.code === "email_exists" ? "يوجد مستخدم بهذا البريد." : "تعذّر تغيير البريد الإلكتروني.");
+  }
+
+  // Written with the admin's own session, so RLS and the audit log apply.
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ full_name: fullName, email, phone: contact.phone, job_title: jobTitle }).eq("id", userId);
+  if (error) return fail(error.code === "23505" ? error.message : "تعذّر حفظ البيانات.");
+  await supabase.from("people").update({ full_name: fullName, email, phone: contact.phone, job_title: jobTitle }).eq("user_id", userId);
+
+  const { data: current } = await supabase.from("department_delegates").select("department_id").eq("user_id", userId);
+  const now = (current ?? []).map((d) => d.department_id);
+  if (!(now.length === 1 && now[0] === departmentId) && !(now.length === 0 && !departmentId)) {
+    if (now.length) await supabase.from("department_delegates").delete().eq("user_id", userId);
+    if (departmentId) {
+      const { error: e } = await supabase.from("department_delegates").insert({ department_id: departmentId, user_id: userId });
+      if (e) return fail("حُفظت البيانات، لكن تعذّر نقل المستخدم إلى الإدارة.");
+    }
+  }
+  revalidatePath(PAGE);
+  return { ok: true, message: "حُفظت بيانات المستخدم." };
+}

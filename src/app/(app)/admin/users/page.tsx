@@ -20,6 +20,9 @@ export type UserItem = {
   full_name: string;
   email: string;
   job_title: string | null;
+  phone: string | null;
+  /** The department the user acts for, if any. */
+  departmentId: string | null;
   status: "active" | "disabled";
   invited_at: string | null;
   roleIds: string[];
@@ -32,7 +35,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
 
   let query = supabase
     .from("profiles")
-    .select("id, full_name, email, job_title, status, invited_at, user_roles(role_id)")
+    .select("id, full_name, email, job_title, phone, status, invited_at, user_roles(role_id)")
     .order("full_name");
   if (status === "active" || status === "disabled") query = query.eq("status", status);
   // Strip characters that have meaning in PostgREST filter syntax.
@@ -52,6 +55,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
   const users: UserItem[] = (rows ?? []).map(({ user_roles, ...u }) => ({
     ...u,
     roleIds: (user_roles as { role_id: string }[]).map((r) => r.role_id),
+    departmentId: groups.find((g) => g.status === "active" && g.userIds.includes(u.id))?.id ?? null,
   }));
   const canManage = can(viewer.permissions, "/admin/users", LEVELS.manage);
   const canEdit = can(viewer.permissions, "/admin/users", LEVELS.edit);

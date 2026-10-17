@@ -15,6 +15,7 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
   // A new user created inside a group joins that department ("" = none).
   const newUser = (departmentId: string) => (rights.canManage ? <CreateUserForm roles={roles} departments={[]} departmentId={departmentId} /> : undefined);
   const byId = new Map(users.map((u) => [u.id, u]));
+  const departments = groups.filter((g) => g.status === "active").map((g) => ({ id: g.id, name: g.name }));
   // Every row keeps the same end space, so the chevrons line up whether or not a delete icon sits there.
   const pad = rights.canDelete ? "pe-16" : "pe-4";
   const placed = new Set(groups.flatMap((g) => g.userIds));
@@ -29,6 +30,7 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
       canEdit={rights.canEdit}
       canManage={rights.canManage}
       canDelete={rights.canDelete}
+      departments={departments}
       extra={
         group && rights.canEditDepartments ? (
           <ConfirmButton action={removeDelegate.bind(null, group.id, user.id)} label={`إزالة ${user.full_name || user.email} من ${group.name}`} variant="secondary" icon={<UserMinus size={16} aria-hidden="true" />} confirm={`إزالة ${user.full_name || user.email} من ${group.name}؟ يبقى حسابه كما هو.`} />
