@@ -9,7 +9,6 @@ import { buttonClass, compactInputClass, iconInputClass } from "@/components/ui/
 import { AddPanels } from "./add-panels";
 import { CreateDepartmentForm } from "../departments/department-forms";
 import { DepartmentGroups, type DepartmentGroup } from "./department-groups";
-import { CreateUserForm } from "./user-forms";
 
 export const metadata: Metadata = { title: "المستخدمون والإدارات" };
 
@@ -47,7 +46,6 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
     canEditDepartments ? supabase.rpc("list_active_users") : Promise.resolve({ data: [] }),
   ]);
   const groups: DepartmentGroup[] = (deptRows ?? []).map((d) => ({ id: d.id, name: d.name, code: d.code, status: d.status as DepartmentGroup["status"], userIds: (d.department_delegates as { user_id: string }[]).map((x) => x.user_id) }));
-  const departments = groups.filter((g) => g.status === "active").map((g) => ({ id: g.id, name: g.name }));
   const users: UserItem[] = (rows ?? []).map(({ user_roles, ...u }) => ({
     ...u,
     roleIds: (user_roles as { role_id: string }[]).map((r) => r.role_id),
@@ -80,12 +78,11 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
             <button className={buttonClass("secondary")}>بحث</button>
           </form>
         }
-        userForm={canManage ? <CreateUserForm roles={roles ?? []} departments={departments} people={(people ?? []).map((p) => ({ id: p.id, name: p.full_name }))} /> : undefined}
         departmentForm={canEditDepartments ? <CreateDepartmentForm /> : undefined}
       />
 
 
-      {users.length === 0 ? (
+      {(term || status) && users.length === 0 ? (
         <p className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">لا يوجد مستخدمون مطابقون.</p>
       ) : (
         <DepartmentGroups
@@ -95,6 +92,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
           rights={{ viewerId: viewer.id, canEdit, canManage, canDelete: can(viewer.permissions, "/admin/roles", LEVELS.manage), canEditDepartments }}
           open={!!term || !!status}
           activeUsers={(activeUsers ?? []) as { id: string; full_name: string; email: string }[]}
+          people={(people ?? []).map((p) => ({ id: p.id, name: p.full_name }))}
         />
       )}
     </>

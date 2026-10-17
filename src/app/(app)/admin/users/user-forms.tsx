@@ -34,7 +34,8 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 export type Option = { id: string; name: string };
 
-export function CreateUserForm({ roles, departments, people }: { roles: RoleOption[]; departments: Option[]; people: Option[] }) {
+/** A new user; inside a department the user joins it automatically (no department field is shown). */
+export function CreateUserForm({ roles, departments, people, departmentId }: { roles: RoleOption[]; departments: Option[]; people: Option[]; departmentId?: string }) {
   const [state, action] = useActionState(createUser, null);
   const [method, setMethod] = useState<"password" | "invite">("password");
   const [who, setWho] = useState({ name: "", email: "" });
@@ -62,17 +63,21 @@ export function CreateUserForm({ roles, departments, people }: { roles: RoleOpti
           </Field>
         </Section>
 
-        <Section title="الجهة التابع لها">
-          <Field label="الإدارة" hint="يصبح مندوبها: تصله طلبات المستندات والمتطلبات الموجهة لها.">
-            <select name="department_id" defaultValue="" className={inputClass}>
-              <option value="">بلا إدارة</option>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+        <Section title={departmentId !== undefined ? "الربط" : "الجهة التابع لها"}>
+          {departmentId !== undefined ? (
+            <input type="hidden" name="department_id" value={departmentId} />
+          ) : (
+            <Field label="الإدارة" hint="يصبح مندوبها: تصله طلبات المستندات والمتطلبات الموجهة لها.">
+              <select name="department_id" defaultValue="" className={inputClass}>
+                <option value="">بلا إدارة</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           <Field label="ربط بعضو مجلس أو لجنة" hint="لعضو مسجّل في الأشخاص وليس له حساب بعد.">
             <select name="person_id" defaultValue="" className={inputClass}>
               <option value="">بلا ربط</option>

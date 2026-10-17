@@ -3,14 +3,17 @@ import { ConfirmButton } from "@/components/org/confirm-button";
 import { deleteDepartment, removeDelegate, setDepartmentStatus } from "../departments/actions";
 import { AddDelegateForm } from "../departments/department-forms";
 import type { RoleOption, UserItem } from "./page";
-import { UserRow } from "./user-forms";
+import { GroupActions } from "./group-actions";
+import { CreateUserForm, UserRow, type Option } from "./user-forms";
 
 export type DepartmentGroup = { id: string; name: string; code: string | null; status: "active" | "archived"; userIds: string[] };
 
 type Rights = { viewerId: string; canEdit: boolean; canManage: boolean; canDelete: boolean; canEditDepartments: boolean };
 
 /** The users grouped under the departments they act for, each department a fold; users with none come last. */
-export function DepartmentGroups({ groups, users, roles, rights, open, activeUsers }: { groups: DepartmentGroup[]; users: UserItem[]; roles: RoleOption[]; rights: Rights; open: boolean; activeUsers: { id: string; full_name: string; email: string }[] }) {
+export function DepartmentGroups({ groups, users, roles, rights, open, activeUsers, people }: { groups: DepartmentGroup[]; users: UserItem[]; roles: RoleOption[]; rights: Rights; open: boolean; activeUsers: { id: string; full_name: string; email: string }[]; people: Option[] }) {
+  // A new user created inside a group joins that department ("" = none).
+  const newUser = (departmentId: string) => (rights.canManage ? <CreateUserForm roles={roles} departments={[]} people={people} departmentId={departmentId} /> : undefined);
   const byId = new Map(users.map((u) => [u.id, u]));
   // Every row keeps the same end space, so the chevrons line up whether or not a delete icon sits there.
   const pad = rights.canDelete ? "pe-16" : "pe-4";
@@ -58,17 +61,19 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
             </summary>
             <div className="border-t border-rule">
               {members.length === 0 ? <p className="px-5 py-4 text-sm text-ink-muted">لا مستخدمين في هذه الإدارة بعد.</p> : <ul className="divide-y divide-rule">{members.map((u) => row(u, g))}</ul>}
-              {rights.canEditDepartments && (
-                <div className="flex flex-wrap items-start gap-3 border-t border-rule bg-paper px-5 py-3">
-                  <div className="min-w-0 flex-1">{!archived && <AddDelegateForm departmentId={g.id} users={activeUsers.filter((u) => !g.userIds.includes(u.id))} />}</div>
-                  <ConfirmButton
-                    action={setDepartmentStatus.bind(null, g.id, archived ? "active" : "archived")}
-                    label={archived ? `إعادة تفعيل ${g.name}` : `أرشفة ${g.name}`}
-                    variant="secondary"
-                    icon={archived ? <ArchiveRestore size={16} aria-hidden="true" /> : <Archive size={16} aria-hidden="true" />}
-                    confirm={archived ? `إعادة تفعيل ${g.name}؟` : `أرشفة ${g.name}؟ تختفي من قوائم الاختيار وتبقى سجلاتها.`}
-                  />
-                </div>
+              {!archived && (rights.canManage || rights.canEditDepartments) ? (
+                <GroupActions
+                  name={g.name}
+                  newUser={newUser(g.id)}
+                  existing={rights.canEditDepartments ? <AddDelegateForm departmentId={g.id} users={activeUsers.filter((u) => !g.userIds.includes(u.id))} /> : undefined}
+                  extra={rights.canEditDepartments && <ArchiveButton g={g} />}
+                />
+              ) : (
+                rights.canEditDepartments && (
+                  <div className="flex justify-end border-t border-rule bg-paper px-5 py-3">
+                    <ArchiveButton g={g} />
+                  </div>
+                )
               )}
             </div>
           </details>
@@ -82,7 +87,7 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
         );
       })}
 
-      {loose.length > 0 && (
+      {(loose.length > 0 || rights.canManage) && (
         <details open={open || groups.length === 0} className="group/dept overflow-hidden rounded-lg border border-dashed border-rule bg-surface">
           <summary className={`flex cursor-pointer list-none items-center gap-3 py-3 ps-4 hover:bg-paper [&::-webkit-details-marker]:hidden ${pad}`}>
             <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-paper text-ink-muted">
@@ -90,13 +95,29 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
             </span>
             <span className="min-w-0 flex-1">
               <span className="block font-medium">بلا إدارة</span>
-              <span className="block text-xs text-ink-muted">{loose.length === 1 ? "مستخدم واحد" : `${loose.length} مستخدمين`}</span>
+              <span className="block text-xs text-ink-muted">{loose.length === 0 ? "لا مستخدمين" : loose.length === 1 ? "مستخدم واحد" : `${loose.length} مستخدمين`}</span>
             </span>
             <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/dept:rotate-180" />
           </summary>
-          <ul className="divide-y divide-rule border-t border-rule">{loose.map((u) => row(u))}</ul>
+          <div className="border-t border-rule">
+            {loose.length > 0 && <ul className="divide-y divide-rule">{loose.map((u) => row(u))}</ul>}
+            {rights.canManage && <GroupActions name="بلا إدارة" newUser={newUser("")} />}
+          </div>
         </details>
       )}
     </div>
+  );
+}
+
+function ArchiveButton({ g }: { g: DepartmentGroup }) {
+  const archived = g.status === "archived";
+  return (
+    <ConfirmButton
+      action={setDepartmentStatus.bind(null, g.id, archived ? "active" : "archived")}
+      label={archived ? `إعادة تفعيل ${g.name}` : `أرشفة ${g.name}`}
+      variant="secondary"
+      icon={archived ? <ArchiveRestore size={16} aria-hidden="true" /> : <Archive size={16} aria-hidden="true" />}
+      confirm={archived ? `إعادة تفعيل ${g.name}؟` : `أرشفة ${g.name}؟ تختفي من قوائم الاختيار وتبقى سجلاتها.`}
+    />
   );
 }
