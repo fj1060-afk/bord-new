@@ -4,9 +4,10 @@ import { buttonClass } from "@/components/ui/styles";
 import { DOC_REQUEST_STATUS, ITEM_KINDS } from "@/lib/meetings";
 import { moveAgendaItem, removeAgendaItem } from "../_actions/agenda";
 import { AgendaItemForm, DocumentRequestForm, EditableAgendaItem, ReviewDocumentButtons, type AgendaItem } from "./agenda-forms";
-import { ownerOf, type Target } from "./agenda-targets";
+import { ownerOf, partyName, type Target } from "./agenda-targets";
 import { UploadDocument } from "./upload-document";
-import { RequirementsPanel, SendRequirementsBar, type RequestMail, type RequirementRow } from "./requirements-panel";
+import { RequirementsPanel, type RequestMail, type RequirementRow } from "./requirements-panel";
+import { SendByParty } from "./send-by-party";
 import { ItemFindings } from "./item-review-panel";
 import { AuthorityBadge } from "./authority-badge";
 import { ExpandAll } from "./expand-all";
@@ -16,7 +17,7 @@ import { ItemNeeds } from "./item-issues";
 import { FlipList } from "@/components/ui/flip-list";
 import { reviewItem, type ReviewContext } from "@/lib/item-review";
 import { bodyMismatch, duplicateOf } from "@/lib/item-body";
-import { withoutBeforeMeeting } from "@/lib/requirements";
+import { partyOf, withoutBeforeMeeting } from "@/lib/requirements";
 import { matchTemplate, type Body, type Template } from "@/lib/item-templates";
 
 type Doc = { id: string; title: string; file_name: string; size_bytes: number | null; agenda_item_id: string | null; document_request_id: string | null };
@@ -111,7 +112,7 @@ export function AgendaTab({
         </div>
       )}
       {/* One send box for the whole meeting, above the items it covers. */}
-      {editable && requirements && requirements.length > 0 && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} mails={requestMails} />}
+      {editable && requirements && requirements.length > 0 && <SendByParty meetingId={meetingId} rows={requirements} targets={targets} items={items} sentAt={requirementsSentAt ?? null} mails={requestMails} />}
       <FlipList as="ol" id="agenda-items" className="flex flex-col gap-3">
         {items.length === 0 && <li className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">لا توجد بنود بعد.</li>}
         {items.map((item, index) => {
@@ -123,6 +124,10 @@ export function AgendaTab({
           const descriptionEn = withoutBeforeMeeting(item.description_en ?? "");
           const itemIssues = issues?.find((i) => i.anchor === `item-${item.id}`)?.issues ?? [];
           const needs = needsAction(itemIssues);
+          // Who this item's unsent requests will reach, e.g. "الإدارة المالية (3) · الشؤون القانونية (1)".
+          const reach = new Map<string, number>();
+          for (const r of requirements ?? []) if (r.agenda_item_id === item.id && r.status === "draft") reach.set(partyName(partyOf(r), targets), (reach.get(partyName(partyOf(r), targets)) ?? 0) + 1);
+          const sendPreview = [...reach].map(([who, n]) => `${who} (${n})`).join(" · ");
           const content = (
             <>
               {(ownerLabel(item) || item.presenter) && (
@@ -178,7 +183,7 @@ export function AgendaTab({
                   </summary>
 
                   <div className="border-t border-rule p-4">
-                    {(issues || review) && <ItemNeeds meetingId={meetingId} itemId={item.id} issues={itemIssues} notes={<ItemFindings findings={notes} />} notesCount={notes.length} />}
+                    {(issues || review) && <ItemNeeds meetingId={meetingId} itemId={item.id} issues={itemIssues} sendPreview={sendPreview} notes={<ItemFindings findings={notes} />} notesCount={notes.length} />}
                     {editable ? (
                       <EditableAgendaItem meetingId={meetingId} item={item} targets={targets} library={library} body={body}>
                         {content}

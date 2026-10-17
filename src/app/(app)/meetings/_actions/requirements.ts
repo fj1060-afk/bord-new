@@ -5,7 +5,7 @@ import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
 import { LEVELS } from "@/lib/permissions";
 import { wantedRequirements } from "@/lib/requirements-server";
-import { unassigned, type ReqRow } from "@/lib/requirements";
+import { partyOf, unassigned, type ReqRow } from "@/lib/requirements";
 import { createClient } from "@/lib/supabase/server";
 
 const done = (meetingId: string) => revalidatePath(`/meetings/${meetingId}`);
@@ -65,14 +65,18 @@ export async function addRequirement(meetingId: string, itemId: string, _prev: A
   return { ok: true, message: "أُضيف المتطلب (مسودة)." };
 }
 
+export type SendScope = { item: string } | { party: string };
+
 /**
- * Sends the meeting's drafted requirements: documents and recommendations
- * become document requests (each person sees theirs together under "مهامي"),
+ * Sends drafted requirements for one item or to one party, never the whole
+ * meeting at once: documents and recommendations become document requests
+ * that reach only the department or person they name (under "مهامي"),
  * checks become active; requirements no longer needed are withdrawn when
  * nothing was delivered for them yet.
  */
-export async function sendRequirements(meetingId: string): Promise<ActionState> {
+export async function sendRequirements(meetingId: string, scope: SendScope): Promise<ActionState> {
   const viewer = await requirePage("/meetings", LEVELS.edit);
+  if (!scope || !("item" in scope ? scope.item : scope.party)) return { ok: false, message: "حدّد البند أو الجهة." };
   const supabase = await createClient();
   const [{ data: rows }, { data: items }] = await Promise.all([
     supabase
@@ -82,13 +86,15 @@ export async function sendRequirements(meetingId: string): Promise<ActionState> 
     supabase.from("agenda_items").select("id, title").eq("meeting_id", meetingId),
   ]);
   type Row = ReqRow & { agenda_item_id: string; source: string | null; due_date: string | null; document_request_id: string | null; request: { status: string } | null };
-  const all = (rows ?? []) as unknown as Row[];
+  const inScope = (r: Row) => ("item" in scope ? r.agenda_item_id === scope.item : partyOf(r) === scope.party);
+  const all = ((rows ?? []) as unknown as Row[]).filter(inScope);
   // Documents the secretary prepares are assigned to whoever sends.
-  for (const r of all) if (r.status === "draft" && r.kind === "doc" && r.source === "secretary" && !r.department_id && !r.assignee_user_id) r.assignee_user_id = viewer.id;
+  for (const r of all) if (r.status === "draft" && partyOf(r) === "self") r.assignee_user_id = viewer.id;
   const missing = unassigned(all);
-  if (missing.length) return { ok: false, message: `حدّد المطلوب منه قبل الإرسال: ${missing.map((r) => r.label).join("، ")}` };
+  if (missing.length) return { ok: false, message: `حدّد الجهة المطلوب منها قبل الإرسال: ${missing.map((r) => r.label).join("، ")}` };
 
-  for (const r of all.filter((r) => r.status === "draft")) {
+  const drafts = all.filter((r) => r.status === "draft");
+  for (const r of drafts) {
     let requestId: string | null = null;
     if (r.kind !== "check") {
       const { data, error } = await supabase
@@ -102,17 +108,20 @@ export async function sendRequirements(meetingId: string): Promise<ActionState> 
     await supabase.from("agenda_item_requirements").update({ status: "sent", document_request_id: requestId, assignee_user_id: r.assignee_user_id }).eq("id", r.id);
   }
 
-  // Withdraw sent requirements an item no longer calls for, if nothing was delivered.
-  for (const item of items ?? []) {
+  // Withdraw sent requirements in scope that an item no longer calls for, if nothing was delivered.
+  let withdrawn = 0;
+  for (const item of (items ?? []).filter((i) => all.some((r) => r.agenda_item_id === i.id))) {
     const wanted = new Set((await wantedRequirements(supabase, item.title)).map((r) => r.ar));
     for (const r of all.filter((r) => r.agenda_item_id === item.id && r.status === "sent" && !r.custom && !wanted.has(r.label))) {
       if (r.request && r.request.status !== "requested") continue;
       if (r.document_request_id) await supabase.from("document_requests").delete().eq("id", r.document_request_id);
       await supabase.from("agenda_item_requirements").delete().eq("id", r.id);
+      withdrawn++;
     }
   }
 
+  if (!drafts.length && !withdrawn) return { ok: true, message: "لا شيء جديد للإرسال." };
   await supabase.from("meetings").update({ requirements_sent_at: new Date().toISOString() }).eq("id", meetingId);
   done(meetingId);
-  return { ok: true, message: "أُرسلت طلبات المتطلبات." };
+  return { ok: true, message: drafts.length ? `أُرسل ${drafts.length} ${drafts.length === 1 ? "طلب" : "طلبات"}، كلٌّ إلى جهته.` : "سُحبت الطلبات التي لم تعد مطلوبة." };
 }

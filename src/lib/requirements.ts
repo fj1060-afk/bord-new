@@ -135,3 +135,27 @@ export function defaultDue(startsAt: string, inviteDays: number, today: string):
   const due = new Date(Date.parse(startsAt) - (inviteDays + 2) * 86400000).toISOString().slice(0, 10);
   return due < today ? today : due;
 }
+
+type Routed = { kind: string; status?: string; department_id: string | null; assignee_user_id: string | null; source?: string | null };
+
+/**
+ * Who a requirement goes to: "department:<id>", "user:<id>", "check" (the
+ * secretary confirms it), "self" (a document the secretary prepares), or ""
+ * when nobody is set yet.
+ */
+export function partyOf(r: Routed): string {
+  if (r.department_id) return `department:${r.department_id}`;
+  if (r.assignee_user_id) return `user:${r.assignee_user_id}`;
+  if (r.kind === "check") return "check";
+  return r.source === "secretary" ? "self" : "";
+}
+
+/**
+ * Whether an item's requirements name who answers each of them, which makes a
+ * single item owner unnecessary; `missing` lists the ones with nobody set.
+ */
+export function requirementsCovered(rows: (Routed & { label: string })[]): { covered: boolean; missing: string[] } {
+  const asked = rows.filter((r) => r.status !== "dismissed" && r.kind !== "check");
+  const missing = asked.filter((r) => !partyOf(r)).map((r) => r.label);
+  return { covered: asked.length > 0 && missing.length === 0, missing };
+}

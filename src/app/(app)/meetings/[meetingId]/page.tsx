@@ -78,7 +78,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
           supabase
             .from("agenda_item_requirements")
-            .select("id, agenda_item_id, kind, label, status, custom, department_id, assignee_user_id, due_date, checked_at, note")
+            .select("id, agenda_item_id, kind, label, status, custom, department_id, assignee_user_id, due_date, checked_at, note, source")
             .eq("meeting_id", meetingId)
             .order("position"),
           loadPowers(supabase),

@@ -15,7 +15,7 @@ const NUM = { block: "bg-danger text-white", warn: "bg-brass text-white", info: 
  * One box at the top of an item: «مطلوب منك» lists numbered issues with their fixes
  * (a fixed one shows ✓ and folds away), and the item's regulatory notes fold below it.
  */
-export function ItemNeeds({ meetingId, itemId, issues, notes, notesCount = 0 }: { meetingId: string; itemId: string; issues: Issue[]; notes?: ReactNode; notesCount?: number }) {
+export function ItemNeeds({ meetingId, itemId, issues, notes, notesCount = 0, sendPreview }: { meetingId: string; itemId: string; issues: Issue[]; notes?: ReactNode; notesCount?: number; sendPreview?: string }) {
   const { gone, fading } = useResolved(issues, (i) => i.id);
   const rows = [...issues.map((issue) => ({ issue, solved: false })), ...gone.map((issue) => ({ issue, solved: true }))];
   if (!rows.length && !notesCount) return null;
@@ -54,7 +54,7 @@ export function ItemNeeds({ meetingId, itemId, issues, notes, notesCount = 0 }: 
                       {!solved && (
                         <>
                           <p className="text-xs leading-6 text-ink-muted">{issue.explain}</p>
-                          {issue.fix && <QuickFix meetingId={meetingId} itemId={itemId} fix={issue.fix} />}
+                          {issue.fix && <QuickFix meetingId={meetingId} itemId={itemId} fix={issue.fix} sendPreview={sendPreview} />}
                           {issue.overridable && <OverrideForm meetingId={meetingId} rule={issue.id} />}
                         </>
                       )}

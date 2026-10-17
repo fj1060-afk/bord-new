@@ -13,7 +13,7 @@ const solid = "motion-press inline-flex items-center gap-1.5 rounded-md bg-prima
 const plain = "motion-press inline-flex items-center gap-1.5 rounded-md border border-rule px-3 py-1 text-xs hover:border-primary disabled:opacity-50";
 
 /** The one-click fix an issue offers: the suggested owner or deadline, sending, or the item's edit form. */
-export function QuickFix({ meetingId, itemId, fix }: { meetingId: string; itemId: string; fix: QuickFixKind }) {
+export function QuickFix({ meetingId, itemId, fix, sendPreview }: { meetingId: string; itemId: string; fix: QuickFixKind; sendPreview?: string }) {
   const [pending, start] = useTransition();
   const [state, setState] = useState<ActionState>(null);
   const [date, setDate] = useState(fix.suggest?.value ?? "");
@@ -50,9 +50,12 @@ export function QuickFix({ meetingId, itemId, fix }: { meetingId: string; itemId
         </>
       )}
       {fix.kind === "send" && (
-        <button type="button" disabled={pending} onClick={() => run(() => sendRequirements(meetingId))} title="يرسل كل طلبات متطلبات الاجتماع" className={solid}>
-          <Send size={13} aria-hidden="true" /> أرسل الطلبات
-        </button>
+        <>
+          {sendPreview && <span className="w-full text-ink-muted">سيصل: {sendPreview}</span>}
+          <button type="button" disabled={pending} onClick={() => run(() => sendRequirements(meetingId, { item: itemId }))} className={solid}>
+            <Send size={13} aria-hidden="true" /> أرسل طلبات هذا البند
+          </button>
+        </>
       )}
       {fix.kind === "edit" && open("عدّل البند")}
       {fix.kind === "below" && (

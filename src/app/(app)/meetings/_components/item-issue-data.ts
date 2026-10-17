@@ -12,7 +12,7 @@ export const tone = (c: Check) => (c.overridden || c.level === "info" ? "info" :
 function chipFor(c: Check, t: Target): string {
   const n = t.count ?? 0;
   switch (c.id) {
-    case "owners": return "بلا مسؤول";
+    case "owners": return t.note ? (t.note.includes("،") ? "متطلبات بلا جهة" : "متطلب بلا جهة") : "بلا مسؤول";
     case "definite": return "عنوان غير محدد";
     case "requirements-sent": return n ? `${n} متطلبات لم تُرسل` : "متطلبات لم تُرسل";
     case "requirements-checks": return n > 1 ? `${n} تحقق معلّق` : "تحقق معلّق";
@@ -27,7 +27,7 @@ function chipFor(c: Check, t: Target): string {
 /** The one-click fix offered; checks fixed in the item's form open it, ones fixed further down point there. */
 function fixFor(c: Check, t: Target): QuickFixKind {
   switch (c.id) {
-    case "owners": return { kind: "owner", suggest: t.suggest };
+    case "owners": return t.note ? { kind: "below" } : { kind: "owner", suggest: t.suggest };
     case "requirements-due": return { kind: "due", suggest: t.suggest };
     case "requirements-sent": return { kind: "send" };
     case "docs":
@@ -40,7 +40,10 @@ function fixFor(c: Check, t: Target): QuickFixKind {
 function explainFor(c: Check, t: Target): string {
   const n = t.count ?? 0;
   switch (c.id) {
-    case "owners": return "لا توجد جهة مسؤولة عن البند. حدّدها لتتابعه وتعرضه في الاجتماع.";
+    case "owners":
+      return t.note
+        ? `لم تُحدَّد الجهة المطلوب منها: ${t.note}. حدّدها في «متطلبات البند» أدناه؛ تحديد جهة لكل متطلب يغني عن مسؤول عام للبند.`
+        : "البند ليس له متطلبات بجهات محددة ولا مسؤول عام. حدّد مسؤولاً يتابعه ويعرضه في الاجتماع.";
     case "requirements-sent": return `${n || "بعض"} متطلبات محفوظة مسودةً ولم تصل إلى أحد بعد. أرسلها لتصل إلى الإدارات المطلوبة منها.`;
     case "requirements-due": return `مواعيد ${n > 1 ? `${n} متطلبات` : "متطلب"} فاتت أو تقع بعد الاجتماع. اضبطها على موعد قبل الاجتماع.`;
     case "definite": return "العنوان فيه خيارات «/» أو فراغ «(…)». اختر صيغة واحدة وأكمل الفراغ.";

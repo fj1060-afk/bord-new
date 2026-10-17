@@ -5,7 +5,7 @@ import { useActionState, useState, useTransition } from "react";
 import { ActionForm } from "@/components/ui/action-form";
 import { FormMessage, inputClass, SubmitButton, inputWith } from "@/components/ui/form";
 import { REQ_KINDS } from "@/lib/requirements";
-import { addRequirement, confirmCheck, sendRequirements, setRequirementStatus, setRequirementTarget } from "../_actions/requirements";
+import { addRequirement, confirmCheck, setRequirementStatus, setRequirementTarget } from "../_actions/requirements";
 import { TargetSelect } from "./agenda-forms";
 import { MailButton } from "./outlook-buttons";
 import type { Target } from "./agenda-targets";
@@ -22,6 +22,7 @@ export type RequirementRow = {
   due_date: string | null;
   checked_at: string | null;
   note: string | null;
+  source: string | null;
   obsolete: boolean;
 };
 
@@ -64,7 +65,7 @@ export function RequirementsPanel({ meetingId, itemId, rows, targets, dueDefault
       ))}
       {obsolete.map((r) => (
         <p key={r.id} className="rounded bg-brass-soft px-2 py-1 text-xs text-brass">
-          «{r.label}» لم يعد مطلوباً بعد تغيير البند؛ يُسحب طلبه عند إرسال التحديثات ما لم يُسلَّم.
+          «{r.label}» لم يعد مطلوباً بعد تغيير البند؛ يُسحب طلبه عند الإرسال لجهته أو لهذا البند ما لم يُسلَّم.
         </p>
       ))}
       {dismissed.length > 0 && (
@@ -173,7 +174,7 @@ function AddRequirement({ meetingId, itemId, targets, dueDefault }: { meetingId:
 export type RequestMail = { name: string; to: string[]; subject: string; body: string };
 
 /** After sending: one ready email per recipient, opened in Outlook. */
-function RequestMails({ mails }: { mails: RequestMail[] }) {
+export function RequestMails({ mails }: { mails: RequestMail[] }) {
   if (!mails.length) return null;
   return (
     <details className="text-sm">
@@ -192,64 +193,5 @@ function RequestMails({ mails }: { mails: RequestMail[] }) {
         ))}
       </ul>
     </details>
-  );
-}
-
-/** The meeting-wide review and send step: one action sends every drafted requirement. */
-export function SendRequirementsBar({ meetingId, rows, targets, sentAt, mails = [] }: { meetingId: string; rows: RequirementRow[]; targets: Target[]; sentAt: string | null; mails?: RequestMail[] }) {
-  const [state, action] = useActionState(sendRequirements.bind(null, meetingId), null);
-  const drafts = rows.filter((r) => r.status === "draft");
-  const obsolete = rows.filter((r) => r.obsolete);
-  if (!rows.length) return null;
-  const pendingChanges = drafts.length + obsolete.length;
-  const name = (r: RequirementRow) => targets.find((t) => t.value === targetOf(r))?.label ?? (r.kind === "check" ? "أمين السر (تحقق)" : "غير محدد");
-  const groups = Object.entries(
-    drafts.reduce<Record<string, RequirementRow[]>>((acc, r) => {
-      (acc[name(r)] ??= []).push(r);
-      return acc;
-    }, {}),
-  );
-
-  if (!pendingChanges)
-    return (
-      <div className="flex flex-col gap-2">
-        <p className="text-xs text-primary">✓ أُرسلت طلبات المتطلبات{sentAt ? ` في ${sentAt.slice(0, 10)}` : ""}، ولا تغييرات جديدة.</p>
-        <RequestMails mails={mails} />
-      </div>
-    );
-
-  return (
-    <div id="send-requirements" className="flex scroll-mt-24 flex-col gap-3 rounded-lg border border-brass bg-surface p-3 text-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <strong>
-          {sentAt ? "تحديثات لم تُرسل" : "طلبات المتطلبات لم تُرسل بعد"}: {drafts.length} جديد{obsolete.length ? ` · ${obsolete.length} للسحب` : ""}
-        </strong>
-        <span className="text-xs text-ink-muted">للاجتماع كاملاً؛ لا يُرسل شيء عند حفظ البنود.</span>
-      </div>
-      <details>
-        <summary className="w-fit cursor-pointer text-primary">مراجعة حسب المطلوب منه</summary>
-        <ul className="mt-2 flex flex-col gap-2">
-          {groups.map(([who, list]) => (
-            <li key={who} className="rounded bg-paper p-2">
-              <strong className={who === "غير محدد" ? "text-danger" : ""}>{who}</strong> ({list.length})
-              <ul className="ms-4 list-disc text-ink-muted">
-                {list.map((r) => (
-                  <li key={r.id}>
-                    {r.label}
-                    {r.due_date && ` · حتى ${r.due_date}`}
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
-      </details>
-      <ActionForm action={action} state={state} className="flex flex-col gap-2">
-        <FormMessage state={state} />
-        <SubmitButton pendingLabel="جارٍ الإرسال…" className="w-fit">
-          {sentAt ? "إرسال التحديثات" : "إرسال طلبات المتطلبات"}
-        </SubmitButton>
-      </ActionForm>
-    </div>
   );
 }

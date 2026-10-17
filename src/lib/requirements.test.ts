@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultDue, departmentFor, isRequirementsOnly, withoutBeforeMeeting, needsText, planSync, requirementsText, unassigned, withoutRequirements, type Req, type ReqRow } from "./requirements";
+import { defaultDue, partyOf, requirementsCovered, departmentFor, isRequirementsOnly, withoutBeforeMeeting, needsText, planSync, requirementsText, unassigned, withoutRequirements, type Req, type ReqRow } from "./requirements";
 
 const reqs: Req[] = [
   { k: "doc", ar: "مسودة العقد", en: "Draft contract", from: "owner" },
@@ -66,5 +66,22 @@ describe("defaultDue", () => {
   it("keeps the deadline ahead of the meeting but never in the past", () => {
     expect(defaultDue("2026-11-20T07:00:00Z", 5, "2026-10-17")).toBe("2026-11-13");
     expect(defaultDue("2026-10-18T07:00:00Z", 5, "2026-10-17")).toBe("2026-10-17");
+  });
+});
+
+describe("routing", () => {
+  const row = (over: Partial<Parameters<typeof partyOf>[0]> & { label?: string }) => ({ label: "x", kind: "doc", status: "draft", department_id: null, assignee_user_id: null, source: null, ...over });
+  it("sends each requirement to its own party", () => {
+    expect(partyOf(row({ department_id: "d1" }))).toBe("department:d1");
+    expect(partyOf(row({ assignee_user_id: "u1" }))).toBe("user:u1");
+    expect(partyOf(row({ kind: "check" }))).toBe("check");
+    expect(partyOf(row({ source: "secretary" }))).toBe("self");
+    expect(partyOf(row({}))).toBe("");
+  });
+  it("treats an item as owned when every requirement names who answers it", () => {
+    expect(requirementsCovered([row({ department_id: "d1" }), row({ assignee_user_id: "u1" }), row({ kind: "check" })]).covered).toBe(true);
+    expect(requirementsCovered([row({ department_id: "d1" }), row({ label: "تقرير المراجع" })])).toEqual({ covered: false, missing: ["تقرير المراجع"] });
+    expect(requirementsCovered([row({ kind: "check" })]).covered).toBe(false);
+    expect(requirementsCovered([row({ status: "dismissed" })]).covered).toBe(false);
   });
 });

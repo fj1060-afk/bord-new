@@ -6,7 +6,7 @@ import { libraryTemplates, matchTemplate } from "@/lib/item-templates";
 import { meetingBody } from "@/lib/item-review-server";
 import { companyProfile } from "@/lib/live-server";
 import { riyadhToday } from "@/lib/minutes";
-import { defaultDue } from "@/lib/requirements";
+import { defaultDue, requirementsCovered } from "@/lib/requirements";
 import { loadMinutesGaps } from "./minutes-check";
 
 /** Everything the journey checks need for one meeting (RLS applies). */
@@ -34,7 +34,7 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
   ]);
   const gaps = minutes ? await loadMinutesGaps(supabase, meetingId, minutes.id) : [];
   const [{ data: reqRows }, { data: own }] = await Promise.all([
-    supabase.from("agenda_item_requirements").select("agenda_item_id, kind, label, status, custom, checked_at, due_date, department_id").eq("meeting_id", meetingId),
+    supabase.from("agenda_item_requirements").select("agenda_item_id, kind, label, status, custom, checked_at, due_date, department_id, assignee_user_id, source").eq("meeting_id", meetingId),
     supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
   ]);
   const library = libraryTemplates(own ?? []);
@@ -60,7 +60,10 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
     boardTermEnd: board?.term_end ?? null,
     secretary: !!profile?.secretary_person_id,
     meeting: m,
-    items: (items ?? []).map((i) => ({ id: i.id, position: i.position, title: i.title, kind: i.kind, owned: !!(i.owner_user_id || i.department_id) })),
+    items: (items ?? []).map((i) => {
+      const reqs = requirementsCovered((reqRows ?? []).filter((r) => r.agenda_item_id === i.id));
+      return { id: i.id, position: i.position, title: i.title, kind: i.kind, owned: !!(i.owner_user_id || i.department_id) || reqs.covered, missing: reqs.missing };
+    }),
     requests: (requests ?? []).map((r) => ({ title: r.title, status: r.status, itemId: r.agenda_item_id })),
     requirements: {
       unsent: unsent.length,

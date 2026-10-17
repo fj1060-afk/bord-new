@@ -11,3 +11,10 @@ export function byDepartment(targets: Target[]) {
 }
 
 export const ownerOf = (i: { owner_user_id?: string | null; department_id: string | null }) => (i.owner_user_id ? `user:${i.owner_user_id}` : i.department_id ? `department:${i.department_id}` : "");
+
+/** Display name for a party key from partyOf() in lib/requirements. */
+export function partyName(party: string, targets: Target[]) {
+  if (party === "check") return "أمين السر (تحقق)";
+  if (party === "self") return "أمين السر (يجهّزه بنفسه)";
+  return targets.find((t) => t.value === party)?.label ?? "بلا جهة";
+}
