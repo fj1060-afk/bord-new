@@ -3,7 +3,7 @@
 
 export type MotionToken = "fast" | "menu" | "page" | "stagger" | "stagger-max" | "shift";
 
-const FALLBACK: Record<MotionToken, number> = { fast: 200, menu: 340, page: 480, stagger: 60, "stagger-max": 420, shift: 14 };
+const FALLBACK: Record<MotionToken, number> = { fast: 260, menu: 480, page: 700, stagger: 90, "stagger-max": 600, shift: 20 };
 
 /** A duration (ms) or distance (px) token as a number; falls back when read on the server. */
 export function motion(token: MotionToken): number {
@@ -20,7 +20,7 @@ export function parseMotionValue(raw: string, fallback: number): number {
   return m[2] === "s" ? n * 1000 : n;
 }
 
-export const EASE_OUT = "cubic-bezier(0.22, 1, 0.36, 1)";
+export const EASE_OUT = "cubic-bezier(0.33, 1, 0.68, 1)";
 export const EASE_IN = "cubic-bezier(0.4, 0, 1, 1)";
 export const EASE_IN_OUT = "cubic-bezier(0.65, 0, 0.35, 1)";
 
@@ -37,7 +37,7 @@ export function tween(from: number, to: number, ms: number, step: (value: number
   let frame = 0;
   const tick = (now: number) => {
     const t = Math.min(1, (now - start) / ms);
-    const eased = 1 - Math.pow(1 - t, 4); // close to --ease-out
+    const eased = 1 - Math.pow(1 - t, 3); // close to --ease-out
     step(from + (to - from) * eased);
     if (t < 1) frame = requestAnimationFrame(tick);
   };
