@@ -70,6 +70,9 @@ export async function createUser(_prev: ActionState, form: FormData): Promise<Ac
   const { error: rolesError } = await supabase.from("user_roles").insert(roleIds.map((role_id) => ({ user_id: userId, role_id })));
   if (rolesError) return fail("أُنشئ المستخدم، لكن تعذّر حفظ الأدوار. عدّلها من القائمة.");
   const linkProblems: string[] = [];
+  // Every user is also a person, so they can be chosen as secretary, member or invitee.
+  const { error: personError } = await supabase.from("people").insert({ full_name: fullName, email, phone: contact.phone, user_id: userId, job_title: String(form.get("job_title") ?? "").trim() || null });
+  if (personError) linkProblems.push("سجل الشخص");
   if (departmentId) {
     const { error: e } = await supabase.from("department_delegates").insert({ department_id: departmentId, user_id: userId });
     if (e) linkProblems.push("الإدارة");
@@ -162,6 +165,8 @@ export async function deleteUser(userId: string) {
   const viewer = await requirePage("/admin/roles", LEVELS.manage);
   if (userId === viewer.id) throw new Error("Cannot delete yourself");
   if (!adminConfigured()) throw new Error("SUPABASE_SECRET_KEY is not set");
+  // Their person goes too unless a seat, invitation or signature still refers to it (the database refuses then).
+  await (await createClient()).from("people").delete().eq("user_id", userId);
   const { error } = await createAdminClient().auth.admin.deleteUser(userId);
   if (error) throw new Error("Could not delete user");
   revalidatePath(PAGE);
