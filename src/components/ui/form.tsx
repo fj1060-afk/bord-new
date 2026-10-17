@@ -8,7 +8,7 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { Collapse } from "./collapse";
 import { buttonClass, inputClass, type ButtonVariant } from "./styles";
 
-export { buttonClass, inputClass } from "./styles";
+export { buttonClass, compactInputClass, iconInputClass, inputClass, inputWith } from "./styles";
 
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (

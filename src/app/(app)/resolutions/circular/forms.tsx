@@ -6,7 +6,7 @@ import {
   buttonClass,
   Field,
   FormMessage,
-  inputClass,
+  compactInputClass, inputClass,
   SubmitButton,
 } from "@/components/ui/form";
 import { createCircular, ratifyCircular } from "./actions";
@@ -108,7 +108,7 @@ export function RatifyForm({
         name="meeting_id"
         required
         defaultValue=""
-        className={inputClass + " w-auto"}
+        className={compactInputClass}
       >
         <option value="" disabled>
           الاجتماع الذي أُثبت فيه

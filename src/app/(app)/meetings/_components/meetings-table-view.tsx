@@ -9,7 +9,7 @@ import { Building2, CalendarDays, ChevronLeft, ChevronRight, Clock, FileText, Fo
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { TabBar } from "@/components/ui/tab-bar";
 import { FlipList } from "@/components/ui/flip-list";
-import { buttonClass, inputClass } from "@/components/ui/styles";
+import { buttonClass, compactInputClass, iconInputClass } from "@/components/ui/styles";
 import { MEETING_STATES, PAGE_SIZES, PERIODS, pageWindow, tableHref, type MeetingState, type Period, type TableQuery } from "@/lib/meeting-table";
 import { MEETING_MODES } from "@/lib/meetings";
 import { deleteMeeting, deleteMeetings } from "../_actions/meeting";
@@ -158,10 +158,10 @@ export function MeetingsTableView({
         <label className="relative min-w-52 flex-1 sm:max-w-72">
           <span className="sr-only">بحث</span>
           <Search size={16} aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 my-auto text-ink-muted" />
-          <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ابحث بعنوان الاجتماع" className={clsx(inputClass, "ps-9")} />
+          <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ابحث بعنوان الاجتماع" className={iconInputClass} />
         </label>
         {showBody && (
-          <select aria-label="الجهة" value={query.body} onChange={(e) => go({ body: e.target.value })} className={clsx(inputClass, "w-auto")}>
+          <select aria-label="الجهة" value={query.body} onChange={(e) => go({ body: e.target.value })} className={compactInputClass}>
             <option value="">كل الجهات</option>
             {bodies.map((b) => (
               <option key={b.value} value={b.value}>
@@ -170,7 +170,7 @@ export function MeetingsTableView({
             ))}
           </select>
         )}
-        <select aria-label="الحالة" value={query.state} onChange={(e) => go({ state: e.target.value as MeetingState | "" })} className={clsx(inputClass, "w-auto")}>
+        <select aria-label="الحالة" value={query.state} onChange={(e) => go({ state: e.target.value as MeetingState | "" })} className={compactInputClass}>
           <option value="">كل الحالات</option>
           {Object.entries(MEETING_STATES).map(([value, label]) => (
             <option key={value} value={value}>
@@ -329,7 +329,7 @@ export function MeetingsTableView({
         <span className="ms-auto text-xs text-ink-muted">
           عرض <span className="font-mono">{from}</span>–<span className="font-mono">{to}</span> من <span className="font-mono">{total}</span>
         </span>
-        <select aria-label="عدد الصفوف" value={query.size} onChange={(e) => go({ size: Number(e.target.value) })} className={clsx(inputClass, "w-auto py-1 text-xs")}>
+        <select aria-label="عدد الصفوف" value={query.size} onChange={(e) => go({ size: Number(e.target.value) })} className={clsx(compactInputClass, "py-1 text-xs")}>
           {PAGE_SIZES.map((s) => (
             <option key={s} value={s}>
               {s} في الصفحة

@@ -2,7 +2,7 @@
 
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { FormMessage, inputClass, SubmitButton, type ActionState } from "@/components/ui/form";
+import { FormMessage, inputClass, SubmitButton, type ActionState, inputWith } from "@/components/ui/form";
 import { buttonClass } from "@/components/ui/styles";
 import { ATTENDANCE, elapsedSeconds, formatDuration } from "@/lib/live";
 import { closeItem, setAttendance, setProxy, setQuorumRequired, startMeeting } from "../_actions/live";
@@ -118,7 +118,7 @@ export function QuorumOverrideForm({ meetingId, value }: { meetingId: string; va
     <ActionForm action={action} state={state} className="flex flex-col gap-2 text-sm">
       <label className="flex items-center gap-2">
         النصاب المطلوب
-        <input name="quorum_required" type="number" min={1} defaultValue={value ?? ""} placeholder="تلقائي" className={`${inputClass} w-24`} />
+        <input name="quorum_required" type="number" min={1} defaultValue={value ?? ""} placeholder="تلقائي" className={inputWith("w-24")} />
       </label>
       <button className={buttonClass("secondary", "w-fit px-3 py-1 text-xs")}>حفظ</button>
       <FormMessage state={state} />

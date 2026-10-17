@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { Check, Eye, EyeOff, X } from "lucide-react";
 import { passwordRules } from "@/lib/password";
-import { inputClass } from "./styles";
+import { inputWith } from "./styles";
 
 /** A new-password input with show/hide and the site's rules ticked off as you type. */
 export function PasswordField({ name = "password", required, who, placeholder }: { name?: string; required?: boolean; who?: { name?: string; email?: string }; placeholder?: string }) {
@@ -32,7 +32,7 @@ export function PasswordField({ name = "password", required, who, placeholder }:
           value={value}
           placeholder={placeholder}
           onChange={(e) => setValue(e.target.value)}
-          className={clsx(inputClass, "pe-10")}
+          className={inputWith("pe-10")}
         />
         <button type="button" onClick={() => setVisible((v) => !v)} aria-label={visible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} className="motion-press absolute inset-y-0 end-1 my-auto grid size-8 place-items-center rounded text-ink-muted hover:text-ink">
           {visible ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}

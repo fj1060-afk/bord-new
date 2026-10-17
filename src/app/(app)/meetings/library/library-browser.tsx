@@ -3,7 +3,7 @@
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useRef, useState } from "react";
 import { ConfirmButton } from "@/components/org/confirm-button";
-import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { buttonClass, Field, FormMessage, inputClass, SubmitButton, inputWith } from "@/components/ui/form";
 import { scanItem, type ScanResult } from "@/lib/item-scan";
 import { BODIES, CATEGORIES, searchTemplates, type Body, type Template } from "@/lib/item-templates";
 import { ITEM_KINDS } from "@/lib/meetings";
@@ -24,7 +24,7 @@ export function LibraryBrowser({ items, organizer, listed }: { items: Item[]; or
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
         <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث في البنود… مثل: تعي، قرض، عقد" className={`${inputClass} max-w-md`} />
-        <select value={body} onChange={(e) => setBody(e.target.value as Body | "")} aria-label="الاجتماع" className={`${inputClass} w-fit`}>
+        <select value={body} onChange={(e) => setBody(e.target.value as Body | "")} aria-label="الاجتماع" className={inputWith("w-fit")}>
           <option value="">كل الاجتماعات</option>
           {(Object.keys(BODIES) as Body[])
             .filter((b) => b !== "any")

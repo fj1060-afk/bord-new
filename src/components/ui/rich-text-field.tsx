@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import clsx from "clsx";
 import { Bold, Italic, List, ListOrdered, Underline } from "lucide-react";
-import { inputClass } from "./styles";
+import { inputWith } from "./styles";
 
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 /** Stored values are sanitised HTML; older plain text becomes paragraphs. */
@@ -32,7 +31,7 @@ export function RichTextField({ name, defaultValue, dir = "rtl", lang = "ar", mi
   };
 
   return (
-    <div className={clsx(inputClass, "p-0")}>
+    <div className={inputWith("p-0")}>
       <div className="flex gap-0.5 border-b border-rule px-1 py-1" role="toolbar" aria-label={label ? `تنسيق ${label}` : "تنسيق النص"}>
         {TOOLS.map(({ cmd, icon: Icon, label: l }) => (
           <button

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { FileText, Search } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
-import { inputClass } from "@/components/ui/form";
+import { inputWith } from "@/components/ui/form";
 import { buttonClass } from "@/components/ui/styles";
 import { APPROVERS, GOVERNANCE_KINDS } from "@/lib/articles";
 import { fold } from "@/lib/item-review";
@@ -107,7 +107,7 @@ export function GovernanceTexts({ texts, articles, canEdit }: { texts: Governanc
           <label className="relative block">
             <span className="sr-only">ابحث في المواد</span>
             <Search size={16} aria-hidden="true" className="absolute start-3 top-1/2 -translate-y-1/2 text-ink-muted" />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث في المواد: النصاب، الإنابة، 17 …" className={`${inputClass} ps-9`} />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث في المواد: النصاب، الإنابة، 17 …" className={inputWith("ps-9")} />
           </label>
           {q.length >= 2 && (
             <div className="rounded-md bg-paper p-4">

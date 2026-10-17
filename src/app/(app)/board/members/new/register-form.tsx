@@ -4,7 +4,7 @@ import { Collapse } from "@/components/ui/collapse";
 import { useActionState, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { ActionForm } from "@/components/ui/action-form";
-import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { EnglishField, Field, FormMessage, inputClass, SubmitButton, inputWith } from "@/components/ui/form";
 import { buttonClass } from "@/components/ui/styles";
 import { POSITION_ROLES, type PositionRole } from "@/lib/affiliations";
 import { BOARD_CATEGORIES, BOARD_POSITIONS } from "@/lib/org";
@@ -89,10 +89,10 @@ export function RegisterMemberForm({ boardId, accountsReady }: { boardId: string
               </button>
               <div className="flex flex-wrap items-center gap-3 text-sm sm:col-span-4">
                 <label className="flex items-center gap-1">
-                  من <input type="number" min={1950} max={2100} value={r.start_year} onChange={(e) => set(i, { start_year: e.target.value })} className={`${inputClass} w-24`} />
+                  من <input type="number" min={1950} max={2100} value={r.start_year} onChange={(e) => set(i, { start_year: e.target.value })} className={inputWith("w-24")} />
                 </label>
                 <label className="flex items-center gap-1">
-                  إلى <input type="number" min={1950} max={2100} value={r.end_year} disabled={r.current} onChange={(e) => set(i, { end_year: e.target.value })} className={`${inputClass} w-24`} />
+                  إلى <input type="number" min={1950} max={2100} value={r.end_year} disabled={r.current} onChange={(e) => set(i, { end_year: e.target.value })} className={inputWith("w-24")} />
                 </label>
                 <label className="flex items-center gap-2">
                   <input type="checkbox" checked={r.current} onChange={(e) => set(i, { current: e.target.checked })} /> حالي

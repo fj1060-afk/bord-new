@@ -5,7 +5,7 @@ import { can, LEVELS } from "@/lib/permissions";
 import { adminConfigured } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { Search } from "lucide-react";
-import { buttonClass, inputClass } from "@/components/ui/styles";
+import { buttonClass, compactInputClass, iconInputClass } from "@/components/ui/styles";
 import { AddPanels } from "./add-panels";
 import { CreateDepartmentForm } from "../departments/department-forms";
 import { DepartmentGroups, type DepartmentGroup } from "./department-groups";
@@ -66,13 +66,13 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
       )}
       <AddPanels
         search={
-          <form className="flex gap-2" role="search">
-            <label className="relative min-w-0 flex-1">
+          <form className="flex flex-wrap gap-2" role="search">
+            <label className="relative min-w-48 flex-1">
               <span className="sr-only">بحث</span>
               <Search size={16} aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 my-auto text-ink-muted" />
-              <input name="q" type="search" defaultValue={q} placeholder="ابحث بالاسم أو البريد" className={`${inputClass} ps-9`} />
+              <input name="q" type="search" defaultValue={q} placeholder="ابحث بالاسم أو البريد" className={iconInputClass} />
             </label>
-            <select name="status" defaultValue={status} aria-label="الحالة" className={`${inputClass} w-auto`}>
+            <select name="status" defaultValue={status} aria-label="الحالة" className={compactInputClass}>
               <option value="">كل الحالات</option>
               <option value="active">نشط</option>
               <option value="disabled">معطّل</option>

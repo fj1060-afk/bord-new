@@ -3,7 +3,7 @@
 import { CalendarDays, CheckSquare, ChevronDown, FileText, Landmark, X } from "lucide-react";
 import { useActionState, useState, useTransition } from "react";
 import { ActionForm } from "@/components/ui/action-form";
-import { FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { FormMessage, inputClass, SubmitButton, inputWith } from "@/components/ui/form";
 import { REQ_KINDS } from "@/lib/requirements";
 import { addRequirement, confirmCheck, sendRequirements, setRequirementStatus, setRequirementTarget } from "../_actions/requirements";
 import { TargetSelect } from "./agenda-forms";
@@ -113,7 +113,7 @@ function DraftRow({ meetingId, row, targets }: { meetingId: string; row: Require
         <label className="relative">
           <span className="sr-only">آخر موعد</span>
           <CalendarDays size={15} aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 my-auto text-ink-muted" />
-          <input type="date" lang="ar" defaultValue={row.due_date ?? ""} onChange={(e) => save(targetOf(row), e.target.value)} className={`${inputClass} ps-9`} />
+          <input type="date" lang="ar" defaultValue={row.due_date ?? ""} onChange={(e) => save(targetOf(row), e.target.value)} className={inputWith("ps-9")} />
         </label>
       </div>
       {missing && <span className="text-xs text-danger">حدّد المطلوب منه قبل الإرسال.</span>}
