@@ -89,9 +89,10 @@ await step("إنشاء إدارة ثم حذفها", async () => {
   await page.click("button:has-text('إضافة الإدارة')");
   await status("أُنشئت الإدارة");
   // Test departments would otherwise pile up in the list.
-  await page.click(`summary:has-text('إدارة اختبار ${stamp}')`);
-  await page.click(`button[aria-label='حذف إدارة اختبار ${stamp}']`);
-  await page.locator(`summary:has-text('إدارة اختبار ${stamp}')`).waitFor({ state: "detached", timeout: 20000 });
+  // Department actions live in its «⋮» menu.
+  await page.click(`summary[aria-label='إجراءات إدارة اختبار ${stamp}']`);
+  await page.click(`details[open]:has(> summary[aria-label='إجراءات إدارة اختبار ${stamp}']) button:has-text('حذف الإدارة')`);
+  await page.locator(`button:has-text('إدارة اختبار ${stamp}')`).waitFor({ state: "detached", timeout: 20000 });
 });
 
 await step("إنشاء لجنة وإضافة عضو", async () => {

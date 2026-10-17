@@ -1,23 +1,19 @@
 "use client";
 
 import { ActionForm } from "@/components/ui/action-form";
-import { useActionState, useState, useTransition } from "react";
-import { Trash2 } from "lucide-react";
-import { ConfirmButton } from "@/components/org/confirm-button";
-import { formatDateTime } from "@/lib/format";
-import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { useActionState, useState } from "react";
+import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { Collapse } from "@/components/ui/collapse";
 import { PasswordField } from "@/components/ui/password-field";
 import { EmailField, PhoneField } from "@/components/ui/contact-fields";
-import { checkNewUser, createUser, deleteUser, sendInvitation, setUserPassword, setUserStatus, updateUserRoles } from "./actions";
+import { checkNewUser, createUser, setUserPassword } from "./actions";
 import type { RoleOption, UserItem } from "./page";
 import type { Duplicate } from "@/lib/user-duplicates";
-import { EditUserForm } from "./edit-user-form";
 
-function RoleChecklist({ roles, selected, onChange }: { roles: RoleOption[]; selected?: string[]; onChange?: (ids: string[]) => void }) {
+export function RoleChecklist({ roles, selected, onChange, grid }: { roles: RoleOption[]; selected?: string[]; onChange?: (ids: string[]) => void; /** Two even columns (the side panel). */ grid?: boolean }) {
   return (
-    <fieldset className="flex flex-wrap gap-2" onChange={(e) => onChange?.([...(e.currentTarget as HTMLFieldSetElement).querySelectorAll<HTMLInputElement>("input:checked")].map((i) => i.value))}>
-      <legend className="mb-2 text-sm font-medium">الأدوار</legend>
+    <fieldset className={grid ? "grid grid-cols-2 gap-2" : "flex flex-wrap gap-2"} onChange={(e) => onChange?.([...(e.currentTarget as HTMLFieldSetElement).querySelectorAll<HTMLInputElement>("input:checked")].map((i) => i.value))}>
+      <legend className={grid ? "col-span-2 mb-2 text-sm font-medium" : "mb-2 text-sm font-medium"}>الأدوار</legend>
       {roles.map((role) => (
         <label key={role.id} className="motion-colors flex cursor-pointer items-center gap-2 rounded-md border border-rule px-3 py-1.5 text-sm hover:border-primary has-[:checked]:border-primary has-[:checked]:bg-primary-soft has-[:checked]:text-primary">
           <input type="checkbox" name="role" value={role.id} defaultChecked={selected?.includes(role.id)} className="accent-primary" />
@@ -156,7 +152,7 @@ export function CreateUserForm({ roles, departments, departmentId }: { roles: Ro
 }
 
 /** Sets a new password for an existing user. */
-function SetPasswordForm({ user }: { user: UserItem }) {
+export function SetPasswordForm({ user }: { user: UserItem }) {
   const [state, action] = useActionState(setUserPassword.bind(null, user.id), null);
   return (
     <details className="text-sm">
@@ -169,105 +165,5 @@ function SetPasswordForm({ user }: { user: UserItem }) {
         </SubmitButton>
       </ActionForm>
     </details>
-  );
-}
-
-export function UserRow({
-  user,
-  roles,
-  isSelf,
-  canEdit,
-  canManage,
-  canDelete,
-  extra,
-  departments = [],
-}: {
-  user: UserItem;
-  roles: RoleOption[];
-  isSelf: boolean;
-  canEdit: boolean;
-  canManage: boolean;
-  /** System administrator, while the data is trial. */
-  canDelete?: boolean;
-  /** An action beside the row, e.g. removing the user from a department. */
-  extra?: React.ReactNode;
-  /** Active departments, for «تعديل البيانات». */
-  departments?: { id: string; name: string }[];
-}) {
-  const [state, action] = useActionState(updateUserRoles.bind(null, user.id), null);
-  const [pending, startTransition] = useTransition();
-  const [inviteState, inviteAction] = useActionState(sendInvitation.bind(null, user.id), null);
-  const roleNames = roles.filter((r) => user.roleIds.includes(r.id)).map((r) => r.name);
-  const disabled = user.status === "disabled";
-
-  return (
-    <li className="flex items-start">
-      <details className="group min-w-0 flex-1">
-        <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 hover:bg-paper">
-          <span className="min-w-0 flex-1">
-            <span className="block font-medium">
-              {user.full_name || "بدون اسم"}
-              {isSelf && <span className="ms-2 text-xs text-ink-muted">(أنت)</span>}
-            </span>
-            <span className="block truncate text-xs text-ink-muted" dir="ltr">
-              {user.email}
-            </span>
-          </span>
-          <span className="text-sm text-ink-muted">{roleNames.join("، ") || "بدون دور"}</span>
-          <span
-            className={
-              disabled
-                ? "rounded-full border border-rule px-2.5 py-0.5 text-xs text-ink-muted"
-                : "rounded-full bg-primary-soft px-2.5 py-0.5 text-xs text-primary"
-            }
-          >
-            {disabled ? "معطّل" : "نشط"}
-          </span>
-        </summary>
-
-        <div className="flex flex-col gap-4 border-t border-rule bg-paper px-5 py-4">
-          {user.job_title && <p className="text-sm text-ink-muted">المسمى الوظيفي: {user.job_title}</p>}
-          {canManage && <EditUserForm user={user} departments={departments} />}
-          {canManage && !isSelf && !disabled && (
-            <ActionForm action={inviteAction} state={inviteState} className="flex flex-col gap-2">
-              <p className="text-sm text-ink-muted">
-                {user.invited_at ? `آخر دعوة: ${formatDateTime(new Date(user.invited_at))}` : "لم تُرسل الدعوة بعد."}
-              </p>
-              <SubmitButton variant="secondary" pendingLabel="جارٍ الإرسال…" className="w-fit">
-                {user.invited_at ? "إعادة إرسال الدعوة" : "إرسال الدعوة"}
-              </SubmitButton>
-              <FormMessage state={inviteState} />
-            </ActionForm>
-          )}
-          {canManage && !isSelf && !disabled && <SetPasswordForm user={user} />}
-          {canManage && !isSelf && (
-            <ActionForm action={action} state={state} className="flex flex-col gap-3">
-              <RoleChecklist roles={roles} selected={user.roleIds} />
-              <FormMessage state={state} />
-              <SubmitButton variant="secondary" pendingLabel="جارٍ الحفظ…" className="w-fit">
-                حفظ الأدوار
-              </SubmitButton>
-            </ActionForm>
-          )}
-          {canEdit && !isSelf && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => startTransition(() => setUserStatus(user.id, disabled ? "active" : "disabled"))}
-              className={buttonClass(disabled ? "secondary" : "danger", "w-fit")}
-            >
-              {disabled ? "إعادة تفعيل المستخدم" : "تعطيل المستخدم"}
-            </button>
-          )}
-          {isSelf && <p className="text-sm text-ink-muted">لا يمكنك تعديل أدوارك أو تعطيل حسابك بنفسك.</p>}
-        </div>
-      </details>
-      {extra && <span className="shrink-0 py-3.5 pe-1">{extra}</span>}
-      {canDelete && !isSelf && (
-        <span className="shrink-0 py-3.5 pe-3">
-          <ConfirmButton action={deleteUser.bind(null, user.id)} label={`حذف ${user.full_name || user.email}`} icon={<Trash2 size={16} aria-hidden="true" />} confirm={`حذف حساب «${user.full_name || user.email}» نهائياً؟ يبقى سجله في الأشخاص والتدقيق، ولا يمكن التراجع.`} />
-        </span>
-      )}
-    </li>
   );
 }

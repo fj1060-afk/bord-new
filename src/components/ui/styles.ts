@@ -25,7 +25,8 @@ export const compactInputClass = inputWith("w-auto");
 /** A field with an icon at its start (e.g. search); leaves room for the icon. */
 export const iconInputClass = inputWith("ps-9");
 
-export type ButtonVariant = "primary" | "secondary" | "danger";
+/** "menu" and "menu-danger" are borderless rows for dropdown menus. */
+export type ButtonVariant = "primary" | "secondary" | "danger" | "menu" | "menu-danger";
 
 export function buttonClass(variant: ButtonVariant = "primary", className?: string) {
   return clsx(
@@ -33,6 +34,8 @@ export function buttonClass(variant: ButtonVariant = "primary", className?: stri
     variant === "primary" && "bg-primary text-on-primary hover:opacity-90",
     variant === "secondary" && "border border-rule bg-surface text-ink hover:bg-primary-soft",
     variant === "danger" && "border border-danger/40 bg-surface text-danger hover:bg-danger/5",
+    variant === "menu" && "w-full justify-start text-ink hover:bg-paper",
+    variant === "menu-danger" && "w-full justify-start text-danger hover:bg-danger/5",
     className,
   );
 }

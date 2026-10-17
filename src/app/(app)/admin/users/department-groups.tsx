@@ -1,125 +1,157 @@
-import { Archive, ArchiveRestore, Building2, ChevronDown, Trash2, UserMinus, Users } from "lucide-react";
+"use client";
+
+import { useState, type ReactNode } from "react";
+import clsx from "clsx";
+import { Archive, ArchiveRestore, Building2, ChevronDown, Trash2, UserPlus, Users, X } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
-import { deleteDepartment, removeDelegate, setDepartmentStatus } from "../departments/actions";
+import { Collapse } from "@/components/ui/collapse";
+import { buttonClass } from "@/components/ui/styles";
+import { deleteDepartment, setDepartmentStatus } from "../departments/actions";
 import { AddDelegateForm } from "../departments/department-forms";
 import type { RoleOption, UserItem } from "./page";
-import { GroupActions } from "./group-actions";
-import { CreateUserForm, UserRow } from "./user-forms";
+import { menuItem, RowMenu } from "./row-menu";
+import { CreateUserForm } from "./user-forms";
+import { UserRow } from "./user-row";
 
 export type DepartmentGroup = { id: string; name: string; code: string | null; status: "active" | "archived"; userIds: string[] };
+export type Rights = { viewerId: string; canEdit: boolean; canManage: boolean; canDelete: boolean; canEditDepartments: boolean };
 
-type Rights = { viewerId: string; canEdit: boolean; canManage: boolean; canDelete: boolean; canEditDepartments: boolean };
+const countText = (n: number) => (n === 0 ? "لا مستخدمين" : n === 1 ? "مستخدم واحد" : n === 2 ? "مستخدمان" : `${n} مستخدمين`);
 
-/** The users grouped under the departments they act for, each department a fold; users with none come last. */
-export function DepartmentGroups({ groups, users, roles, rights, open, activeUsers }: { groups: DepartmentGroup[]; users: UserItem[]; roles: RoleOption[]; rights: Rights; open: boolean; activeUsers: { id: string; full_name: string; email: string }[] }) {
-  // A new user created inside a group joins that department ("" = none).
-  const newUser = (departmentId: string) => (rights.canManage ? <CreateUserForm roles={roles} departments={[]} departmentId={departmentId} /> : undefined);
-  const byId = new Map(users.map((u) => [u.id, u]));
-  const departments = groups.filter((g) => g.status === "active").map((g) => ({ id: g.id, name: g.name }));
-  // Every row keeps the same end space, so the chevrons line up whether or not a delete icon sits there.
-  const pad = rights.canDelete ? "pe-16" : "pe-4";
-  const placed = new Set(groups.flatMap((g) => g.userIds));
-  const loose = users.filter((u) => !placed.has(u.id));
+/**
+ * One department as a fold: its header (name, code, count, «إضافة مستخدم» and a menu of
+ * department actions), then a compact table of its users. "group" is absent for users with no department.
+ */
+export function DepartmentBlock({
+  group,
+  users,
+  roles,
+  rights,
+  initiallyOpen,
+  selectedId,
+  onEdit,
+  activeUsers,
+}: {
+  group?: DepartmentGroup;
+  users: UserItem[];
+  roles: RoleOption[];
+  rights: Rights;
+  initiallyOpen: boolean;
+  selectedId: string | null;
+  onEdit: (id: string) => void;
+  activeUsers: { id: string; full_name: string; email: string }[];
+}) {
+  const [open, setOpen] = useState(initiallyOpen);
+  const [adding, setAdding] = useState<"new" | "existing" | null>(null);
+  const archived = group?.status === "archived";
+  const name = group?.name ?? "بلا إدارة";
+  const canAdd = rights.canManage && !archived;
+  const add = (what: "new" | "existing") => {
+    setOpen(true);
+    setAdding((a) => (a === what ? null : what));
+  };
 
-  const row = (user: UserItem, group?: DepartmentGroup) => (
-    <UserRow
-      key={user.id}
-      user={user}
-      roles={roles}
-      isSelf={user.id === rights.viewerId}
-      canEdit={rights.canEdit}
-      canManage={rights.canManage}
-      canDelete={rights.canDelete}
-      departments={departments}
-      extra={
-        group && rights.canEditDepartments ? (
-          <ConfirmButton action={removeDelegate.bind(null, group.id, user.id)} label={`إزالة ${user.full_name || user.email} من ${group.name}`} variant="secondary" icon={<UserMinus size={16} aria-hidden="true" />} confirm={`إزالة ${user.full_name || user.email} من ${group.name}؟ يبقى حسابه كما هو.`} />
-        ) : undefined
-      }
-    />
-  );
+  const menu: ReactNode[] = [];
+  if (group && rights.canEditDepartments && !archived)
+    menu.push(
+      <button key="existing" type="button" onClick={() => add("existing")} className={menuItem}>
+        <Users size={15} aria-hidden="true" /> ضمّ مستخدم موجود
+      </button>,
+    );
+  if (group && rights.canEditDepartments)
+    menu.push(
+      <ConfirmButton
+        key="archive"
+        action={setDepartmentStatus.bind(null, group.id, archived ? "active" : "archived")}
+        label={archived ? `إعادة تفعيل ${group.name}` : `أرشفة ${group.name}`}
+        variant="menu"
+        className="gap-2"
+        icon={archived ? <><ArchiveRestore size={15} aria-hidden="true" /> إعادة تفعيل الإدارة</> : <><Archive size={15} aria-hidden="true" /> أرشفة الإدارة</>}
+        confirm={archived ? `إعادة تفعيل ${group.name}؟` : `أرشفة ${group.name}؟ تختفي من قوائم الاختيار وتبقى سجلاتها.`}
+      />,
+    );
+  if (group && rights.canDelete)
+    menu.push(
+      <span key="delete" className="mt-1 block border-t border-rule pt-1">
+        <ConfirmButton
+          action={deleteDepartment.bind(null, group.id)}
+          label={`حذف ${group.name}`}
+          variant="menu-danger"
+          className="gap-2"
+          icon={<><Trash2 size={15} aria-hidden="true" /> حذف الإدارة</>}
+          confirm={users.length ? `حذف «${group.name}» نهائياً؟ فيها ${countText(users.length)}؛ يُزال ربطهم بها وتبقى حساباتهم. لا يمكن التراجع.` : `حذف «${group.name}» نهائياً؟ لا يمكن التراجع.`}
+        />
+      </span>,
+    );
 
   return (
-    <div className="motion-stagger flex flex-col gap-2">
-      {groups.map((g) => {
-        const members = g.userIds.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
-        const archived = g.status === "archived";
-        return (
-          <div key={g.id} className="relative">
-          <details open={open && members.length > 0} className="group/dept overflow-hidden rounded-lg border border-rule bg-surface">
-            <summary className={`flex cursor-pointer list-none items-center gap-3 py-3 ps-4 hover:bg-paper [&::-webkit-details-marker]:hidden ${pad}`}>
-              <span className={`grid size-10 shrink-0 place-items-center rounded-lg ${archived ? "bg-paper text-ink-muted" : "bg-primary-soft text-primary"}`}>
-                <Building2 size={18} aria-hidden="true" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{g.name}</span>
-                  {g.code && <span className="rounded border border-rule px-1.5 font-mono text-[11px] text-ink-muted">{g.code}</span>}
-                  {archived && <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] text-ink-muted">مؤرشفة</span>}
-                </span>
-                <span className="block text-xs text-ink-muted">{members.length === 0 ? "لا مستخدمين" : members.length === 1 ? "مستخدم واحد" : `${members.length} مستخدمين`}</span>
-              </span>
-              <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/dept:rotate-180" />
-            </summary>
-            <div className="border-t border-rule">
-              {members.length === 0 ? <p className="px-5 py-4 text-sm text-ink-muted">لا مستخدمين في هذه الإدارة بعد.</p> : <ul className="divide-y divide-rule">{members.map((u) => row(u, g))}</ul>}
-              {!archived && (rights.canManage || rights.canEditDepartments) ? (
-                <GroupActions
-                  name={g.name}
-                  newUser={newUser(g.id)}
-                  existing={rights.canEditDepartments ? <AddDelegateForm departmentId={g.id} users={activeUsers.filter((u) => !g.userIds.includes(u.id))} /> : undefined}
-                  extra={rights.canEditDepartments && <ArchiveButton g={g} />}
-                />
-              ) : (
-                rights.canEditDepartments && (
-                  <div className="flex justify-end border-t border-rule bg-paper px-5 py-3">
-                    <ArchiveButton g={g} />
-                  </div>
-                )
-              )}
-            </div>
-          </details>
-          {/* In front of the department, outside its fold so it never opens or closes it. */}
-          {rights.canDelete && (
-            <span className="absolute end-3 top-3.5">
-              <ConfirmButton action={deleteDepartment.bind(null, g.id)} label={`حذف ${g.name}`} icon={<Trash2 size={16} aria-hidden="true" />} confirm={`حذف «${g.name}» نهائياً؟ يُزال ربط مستخدميها بها، ولا يمكن التراجع.`} />
+    <section className={clsx("rounded-xl border bg-surface", group ? "border-rule" : "border-dashed border-rule")}>
+      <div className="flex flex-wrap items-center gap-3 p-3 ps-4">
+        <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex min-w-0 flex-1 items-center gap-3 text-start">
+          <span className={clsx("grid size-10 shrink-0 place-items-center rounded-lg", group && !archived ? "bg-primary-soft text-primary" : "bg-paper text-ink-muted")}>
+            {group ? <Building2 size={18} aria-hidden="true" /> : <Users size={18} aria-hidden="true" />}
+          </span>
+          <span className="min-w-0">
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="font-bold">{name}</span>
+              {group?.code && <span className="rounded border border-rule px-1.5 font-mono text-[11px] text-ink-muted">{group.code}</span>}
+              {archived && <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] text-ink-muted">مؤرشفة</span>}
             </span>
+            <span className="text-xs text-ink-muted">{countText(users.length)}</span>
+          </span>
+          <ChevronDown size={18} aria-hidden="true" className={clsx("ms-auto shrink-0 text-ink-muted transition-transform duration-(--motion-menu)", open && "rotate-180")} />
+        </button>
+        {canAdd && (
+          <button type="button" onClick={() => add("new")} aria-expanded={adding === "new"} className={buttonClass("secondary", "px-3 py-1.5 text-xs")}>
+            {adding === "new" ? <X size={14} aria-hidden="true" /> : <UserPlus size={14} aria-hidden="true" />} إضافة مستخدم
+          </button>
+        )}
+        {menu.length > 0 && <RowMenu label={`إجراءات ${name}`}>{menu}</RowMenu>}
+      </div>
+
+      <Collapse show={open}>
+        <div className="border-t border-rule">
+          <Collapse show={adding === "new"}>
+            {canAdd && (
+              <div className="border-b border-rule bg-paper p-5">
+                <h3 className="mb-4 font-display text-base font-bold">مستخدم جديد في {name}</h3>
+                <CreateUserForm roles={roles} departments={[]} departmentId={group?.id ?? ""} />
+              </div>
+            )}
+          </Collapse>
+          <Collapse show={adding === "existing"}>
+            {group && rights.canEditDepartments && (
+              <div className="border-b border-rule bg-paper p-5">
+                <AddDelegateForm departmentId={group.id} users={activeUsers.filter((u) => !group.userIds.includes(u.id))} />
+              </div>
+            )}
+          </Collapse>
+          {users.length === 0 ? (
+            <p className="px-5 py-4 text-sm text-ink-muted">لا مستخدمين في {group ? "هذه الإدارة" : "هذا القسم"} بعد.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-paper text-xs text-ink-muted">
+                <tr>
+                  <th className="px-4 py-2.5 text-start font-medium">المستخدم</th>
+                  <th className="hidden px-4 py-2.5 text-start font-medium lg:table-cell">المسمى الوظيفي</th>
+                  <th className="hidden px-4 py-2.5 text-start font-medium md:table-cell">البريد الإلكتروني</th>
+                  <th className="hidden px-4 py-2.5 text-start font-medium md:table-cell">الأدوار</th>
+                  <th className="px-4 py-2.5 text-start font-medium">الحالة</th>
+                  <th className="hidden px-4 py-2.5 text-start font-medium xl:table-cell">تاريخ الانضمام</th>
+                  <th className="px-4 py-2.5">
+                    <span className="sr-only">الإجراءات</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-rule">
+                {users.map((u) => (
+                  <UserRow key={u.id} user={u} roles={roles} group={group} selected={u.id === selectedId} isSelf={u.id === rights.viewerId} canDelete={rights.canDelete} canEditDepartments={rights.canEditDepartments} onEdit={() => onEdit(u.id)} />
+                ))}
+              </tbody>
+            </table>
           )}
-          </div>
-        );
-      })}
-
-      {(loose.length > 0 || rights.canManage) && (
-        <details open={open || groups.length === 0} className="group/dept overflow-hidden rounded-lg border border-dashed border-rule bg-surface">
-          <summary className={`flex cursor-pointer list-none items-center gap-3 py-3 ps-4 hover:bg-paper [&::-webkit-details-marker]:hidden ${pad}`}>
-            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-paper text-ink-muted">
-              <Users size={18} aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-medium">بلا إدارة</span>
-              <span className="block text-xs text-ink-muted">{loose.length === 0 ? "لا مستخدمين" : loose.length === 1 ? "مستخدم واحد" : `${loose.length} مستخدمين`}</span>
-            </span>
-            <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/dept:rotate-180" />
-          </summary>
-          <div className="border-t border-rule">
-            {loose.length > 0 && <ul className="divide-y divide-rule">{loose.map((u) => row(u))}</ul>}
-            {rights.canManage && <GroupActions name="بلا إدارة" newUser={newUser("")} />}
-          </div>
-        </details>
-      )}
-    </div>
-  );
-}
-
-function ArchiveButton({ g }: { g: DepartmentGroup }) {
-  const archived = g.status === "archived";
-  return (
-    <ConfirmButton
-      action={setDepartmentStatus.bind(null, g.id, archived ? "active" : "archived")}
-      label={archived ? `إعادة تفعيل ${g.name}` : `أرشفة ${g.name}`}
-      variant="secondary"
-      icon={archived ? <ArchiveRestore size={16} aria-hidden="true" /> : <Archive size={16} aria-hidden="true" />}
-      confirm={archived ? `إعادة تفعيل ${g.name}؟` : `أرشفة ${g.name}؟ تختفي من قوائم الاختيار وتبقى سجلاتها.`}
-    />
+        </div>
+      </Collapse>
+    </section>
   );
 }

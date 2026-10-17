@@ -2,18 +2,16 @@
 
 import { useActionState } from "react";
 import { ActionForm } from "@/components/ui/action-form";
-import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { EmailField, PhoneField } from "@/components/ui/contact-fields";
 import { updateUserDetails } from "./actions";
 import type { UserItem } from "./page";
 
-/** «تعديل البيانات»: name, email, mobile, job title and department of an existing user. */
-export function EditUserForm({ user, departments }: { user: UserItem; departments: { id: string; name: string }[] }) {
+/** The panel's «البيانات الأساسية»: name, email, mobile, job title and department of an existing user. */
+export function EditUserForm({ user, departments, onCancel }: { user: UserItem; departments: { id: string; name: string }[]; onCancel: () => void }) {
   const [state, action] = useActionState(updateUserDetails.bind(null, user.id), null);
   return (
-    <details className="group/edit rounded-md border border-rule bg-surface">
-      <summary className="cursor-pointer px-4 py-2.5 text-sm font-medium">تعديل البيانات</summary>
-      <ActionForm action={action} state={state} className="grid gap-4 border-t border-rule p-4 sm:grid-cols-2">
+      <ActionForm action={action} state={state} className="flex flex-col gap-4">
         <Field label="الاسم الكامل">
           <input name="full_name" required defaultValue={user.full_name} className={inputClass} />
         </Field>
@@ -36,13 +34,13 @@ export function EditUserForm({ user, departments }: { user: UserItem; department
             ))}
           </select>
         </Field>
-        <div className="flex flex-col gap-2 sm:col-span-2">
-          <FormMessage state={state} />
-          <SubmitButton pendingLabel="جارٍ الحفظ…" className="w-fit">
-            حفظ البيانات
-          </SubmitButton>
+        <FormMessage state={state} />
+        <div className="grid grid-cols-[2fr_1fr] gap-2">
+          <SubmitButton pendingLabel="جارٍ الحفظ…">حفظ التغييرات</SubmitButton>
+          <button type="button" onClick={onCancel} className={buttonClass("secondary")}>
+            إلغاء
+          </button>
         </div>
       </ActionForm>
-    </details>
   );
 }

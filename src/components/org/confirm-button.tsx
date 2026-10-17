@@ -2,7 +2,7 @@
 
 import { useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
-import { buttonClass } from "@/components/ui/form";
+import { buttonClass, type ButtonVariant } from "@/components/ui/styles";
 
 /** Runs a server action after the user confirms, e.g. ending a membership. */
 export function ConfirmButton({
@@ -16,7 +16,7 @@ export function ConfirmButton({
   action: () => Promise<void>;
   label: string;
   confirm: string;
-  variant?: "danger" | "secondary";
+  variant?: ButtonVariant;
   /** Shown instead of the label, which then names the button for screen readers. */
   icon?: ReactNode;
   /** Replaces the default sizing, e.g. a full-width button showing an icon with its label. */
