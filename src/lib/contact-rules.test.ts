@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contactFields, emailProblem, formatPhone, normalizeEmail, normalizePhone, phoneProblem } from "./contact-rules";
+import { clampPhone, contactFields, emailProblem, formatPhone, normalizeEmail, normalizePhone, phoneProblem, phoneShortBy } from "./contact-rules";
 
 describe("email rules", () => {
   it("accepts ordinary addresses and normalizes them", () => {
@@ -33,5 +33,20 @@ describe("phone rules", () => {
     f.set("email", "A@B.co");
     f.set("phone", "0501234567");
     expect(contactFields(f)).toEqual({ email: "a@b.co", phone: "+966501234567", problem: null });
+  });
+});
+
+describe("phone length", () => {
+  it("says how many digits are missing", () => {
+    expect(phoneShortBy("05012345")).toBe(2);
+    expect(phoneProblem("05012345")).toContain("رقمين");
+    expect(phoneShortBy("+96650123")).toBe(4);
+    expect(phoneShortBy("0501234567")).toBe(0);
+  });
+  it("stops typing at the limit and drops letters", () => {
+    expect(clampPhone("050123456789")).toBe("0501234567");
+    expect(clampPhone("+966 50 123 45678")).toBe("+966 50 123 4567");
+    expect(clampPhone("05a01-23")).toBe("050123");
+    expect(clampPhone("٠٥٠١٢٣٤٥٦٧٨")).toBe("0501234567");
   });
 });

@@ -45,9 +45,48 @@ export function normalizePhone(raw: string): string | null {
   return null;
 }
 
+/** How many digits a mobile number has in the way it is being typed (05… = 10, 5… = 9, +966… = 12, international up to 15). */
+export function phoneDigitLimit(raw: string): number {
+  const s = latin(raw).replace(/[\s\-().]/g, "");
+  if (s.startsWith("00966")) return 14;
+  if (s.startsWith("+966") || s.startsWith("966")) return 12;
+  if (s.startsWith("05")) return 10;
+  if (s.startsWith("5")) return 9;
+  if (s.startsWith("+") || s.startsWith("00")) return 15;
+  return 10;
+}
+
+const digitCount = (raw: string) => latin(raw).replace(/\D/g, "").length;
+
+/** Keeps only what a phone number can hold (digits, a leading +, spaces) and stops at its digit limit. */
+export function clampPhone(raw: string): string {
+  const cleaned = latin(raw).replace(/[^\d+ ]/g, "").replace(/(?!^)\+/g, "");
+  const limit = phoneDigitLimit(cleaned);
+  let digits = 0;
+  let out = "";
+  for (const ch of cleaned) {
+    if (/\d/.test(ch)) {
+      if (digits === limit) break;
+      digits++;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+/** Digits still missing for a complete Saudi mobile in the typed form, or 0. */
+export function phoneShortBy(raw: string): number {
+  const s = latin(raw).replace(/[\s\-().]/g, "");
+  if (!s || !(s.startsWith("05") || s.startsWith("5") || s.startsWith("966") || s.startsWith("+966") || s.startsWith("00966"))) return 0;
+  return Math.max(0, phoneDigitLimit(s) - digitCount(s));
+}
+
 /** Why a mobile number is not acceptable, or null. Empty is left to `required`. */
 export function phoneProblem(raw: string): string | null {
   if (!latin(raw).trim()) return null;
+  const short = phoneShortBy(raw);
+  if (short) return `رقم الجوال ناقص ${short === 1 ? "رقماً واحداً" : short === 2 ? "رقمين" : `${short} أرقام`}: الجوال السعودي ${phoneDigitLimit(raw)} أرقام بهذه الصيغة.`;
+  if (digitCount(raw) > phoneDigitLimit(raw)) return "رقم الجوال أطول من المسموح.";
   return normalizePhone(raw) ? null : "رقم الجوال غير صحيح: اكتب 05XXXXXXXX، أو الرقم الدولي مع + لغير السعودية.";
 }
 
