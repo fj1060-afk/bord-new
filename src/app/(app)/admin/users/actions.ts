@@ -7,6 +7,7 @@ import { LEVELS } from "@/lib/permissions";
 import { contactFields } from "@/lib/contact-rules";
 import { passwordProblem } from "@/lib/password";
 import { isTestDepartment, isTestPerson } from "@/lib/test-data";
+import { duplicateFields, type Duplicate, type ExistingUser } from "@/lib/user-duplicates";
 import { siteUrl } from "@/lib/site-url";
 import { adminConfigured, createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -50,6 +51,8 @@ export async function createUser(_prev: ActionState, form: FormData): Promise<Ac
     if (problem) return fail(problem);
   }
   if (!adminConfigured()) return fail(NOT_CONFIGURED);
+  const clashes = await userClashes({ name: fullName, email, phone: contact.phone ?? "" });
+  if (clashes.length) return fail(`لا يمكن إضافة المستخدم: ${clashes.map((c) => c.message).join(" ")}`);
 
   const { data, error } = await createAdminClient().auth.admin.createUser({
     email,
@@ -90,6 +93,19 @@ export async function createUser(_prev: ActionState, form: FormData): Promise<Ac
   return (await emailInvitation(userId, email))
     ? { ok: true, message: `أُنشئ المستخدم وأُرسلت الدعوة إلى ${email}.${linkNote}` }
     : fail(`أُنشئ المستخدم، لكن تعذّر إرسال الدعوة. أعد الإرسال من القائمة.${linkNote}`);
+}
+
+/** Existing users a new one would repeat (name, email or mobile). */
+async function userClashes(candidate: { name?: string; email?: string; phone?: string }): Promise<Duplicate[]> {
+  const { data } = await createAdminClient().from("profiles").select("id, full_name, email, phone");
+  return duplicateFields(candidate, (data ?? []) as ExistingUser[]);
+}
+
+/** Checks a new user's fields as they are typed, so the form can warn before submitting. */
+export async function checkNewUser(candidate: { name?: string; email?: string; phone?: string }): Promise<Duplicate[]> {
+  await requirePage(PAGE, LEVELS.manage);
+  if (!adminConfigured()) return [];
+  return userClashes(candidate);
 }
 
 /** Sets a user's password directly (system user management); the policy in lib/password applies. */

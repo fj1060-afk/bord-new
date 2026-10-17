@@ -9,8 +9,9 @@ import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/com
 import { Collapse } from "@/components/ui/collapse";
 import { PasswordField } from "@/components/ui/password-field";
 import { EmailField, PhoneField } from "@/components/ui/contact-fields";
-import { createUser, deleteUser, sendInvitation, setUserPassword, setUserStatus, updateUserRoles } from "./actions";
+import { checkNewUser, createUser, deleteUser, sendInvitation, setUserPassword, setUserStatus, updateUserRoles } from "./actions";
 import type { RoleOption, UserItem } from "./page";
+import type { Duplicate } from "@/lib/user-duplicates";
 
 function RoleChecklist({ roles, selected, onChange }: { roles: RoleOption[]; selected?: string[]; onChange?: (ids: string[]) => void }) {
   return (
@@ -42,10 +43,16 @@ export function CreateUserForm({ roles, departments, departmentId }: { roles: Ro
   const [who, setWho] = useState({ name: "", email: "" });
   const [picked, setPicked] = useState<string[]>([]);
   const admin = roles.some((r) => picked.includes(r.id) && /مدير النظام/.test(r.name));
+  // Duplicates of an existing user's name, email or mobile, checked when a field is left.
+  const [clashes, setClashes] = useState<Duplicate[]>([]);
+  const check = (form: HTMLFormElement) => {
+    const value = (n: string) => (form.elements.namedItem(n) as HTMLInputElement | null)?.value ?? "";
+    checkNewUser({ name: value("full_name"), email: value("email"), phone: value("phone") }).then(setClashes, () => setClashes([]));
+  };
 
   return (
 
-      <ActionForm action={action} state={state} className="grid gap-6 sm:grid-cols-2" onInput={(e) => {
+      <ActionForm action={action} state={state} className="grid gap-6 sm:grid-cols-2" onBlur={(e) => check(e.currentTarget)} onInput={(e) => {
         const f = e.currentTarget;
         setWho({ name: (f.elements.namedItem("full_name") as HTMLInputElement).value, email: (f.elements.namedItem("email") as HTMLInputElement).value });
       }}>
@@ -115,8 +122,18 @@ export function CreateUserForm({ roles, departments, departmentId }: { roles: Ro
         </fieldset>
 
         <div className="flex flex-col gap-3 sm:col-span-2">
+          <Collapse show={clashes.length > 0}>
+            <div role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
+              <p className="font-medium">لا يمكن إضافة المستخدم: البيانات مكررة.</p>
+              <ul className="mt-1 list-inside list-disc">
+                {clashes.map((c) => (
+                  <li key={c.field}>{c.message}</li>
+                ))}
+              </ul>
+            </div>
+          </Collapse>
           <FormMessage state={state} />
-          <div className="flex flex-wrap gap-2">
+          <fieldset disabled={clashes.length > 0} className="flex flex-wrap gap-2">
             {method === "password" ? (
               <SubmitButton name="intent" value="create" pendingLabel="جارٍ الحفظ…">
                 إنشاء المستخدم
@@ -131,7 +148,7 @@ export function CreateUserForm({ roles, departments, departmentId }: { roles: Ro
                 </SubmitButton>
               </>
             )}
-          </div>
+          </fieldset>
         </div>
       </ActionForm>
   );
