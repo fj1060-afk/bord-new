@@ -131,8 +131,8 @@ export async function BoardOverview({ board, canEdit }: { board: Board; canEdit:
             {upcoming.length === 0 && <li className="px-5 py-4 text-ink-muted">لا اجتماعات قادمة.</li>}
             {upcoming.map((m) => (
               <li key={m.id}>
-                <Link href={`/meetings/${m.id}`} className="flex justify-between gap-3 px-5 py-3 hover:bg-paper">
-                  <span>{m.title}</span>
+                <Link href={`/meetings/${m.id}`} className="flex flex-wrap justify-between gap-x-3 gap-y-1 px-5 py-3 hover:bg-paper">
+                  <span className="min-w-0 flex-1 basis-48">{m.title}</span>
                   <span className="text-ink-muted">{meetingReference(m.code)} · {formatDateTime(new Date(m.starts_at))}</span>
                 </Link>
               </li>
@@ -159,7 +159,7 @@ export async function BoardOverview({ board, canEdit }: { board: Board; canEdit:
           {(committees ?? []).length === 0 && <li className="px-5 py-4 text-ink-muted">لا لجان مرتبطة بالمجلس.</li>}
           {((committees ?? []) as unknown as { id: string; name: string; committee_members: { status: string }[] }[]).map((c) => (
             <li key={c.id}>
-              <Link href={`/committees/${c.id}`} className="flex justify-between gap-3 px-5 py-3 hover:bg-paper">
+              <Link href={`/committees/${c.id}`} className="flex flex-wrap justify-between gap-x-3 gap-y-1 px-5 py-3 hover:bg-paper">
                 <span>{c.name}</span>
                 <span className="text-ink-muted">{c.committee_members.filter((m) => m.status === "active").length} أعضاء</span>
               </Link>

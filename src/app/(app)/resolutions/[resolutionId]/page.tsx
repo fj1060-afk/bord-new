@@ -100,7 +100,7 @@ export default async function ResolutionPage({ params }: PageProps<"/resolutions
                     {u.status && <span className="ms-2">{TASK_STATUS[u.status as TaskStatus]}</span>}
                     {u.note && <span className="ms-2">{u.note}</span>}
                     {u.evidence_path && (
-                      <a href={`/my-tasks/evidence/${u.id}`} className="ms-2 text-primary hover:underline">
+                      <a href={`/my-tasks/evidence/${u.id}`} className="ms-2 text-primary [overflow-wrap:anywhere] hover:underline">
                         {u.file_name ?? "الدليل"}
                       </a>
                     )}

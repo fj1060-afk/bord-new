@@ -36,8 +36,8 @@ type DocRequest = {
 function DocumentLink({ meetingId, doc }: { meetingId: string; doc: Doc }) {
   return (
     <a href={`/meetings/${meetingId}/documents/${doc.id}`} className="flex items-center gap-2 text-sm text-primary hover:underline">
-      <FileText size={16} aria-hidden="true" />
-      {doc.title}
+      <FileText size={16} aria-hidden="true" className="shrink-0" />
+      <span className="min-w-0 [overflow-wrap:anywhere]">{doc.title}</span>
       {doc.size_bytes != null && <span className="font-mono text-xs text-ink-muted">{Math.max(1, Math.round(doc.size_bytes / 1024))} KB</span>}
     </a>
   );

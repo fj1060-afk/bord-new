@@ -39,7 +39,7 @@ export function UserRow({ user, roles, group, selected, isSelf, canDelete, canEd
   const who = user.full_name || user.email;
   return (
     <tr className={clsx("motion-colors hover:bg-paper", selected && "bg-primary-soft/40")}>
-      <td className="px-4 py-3">
+      <td className="py-3 pe-2 ps-4 sm:px-4">
         <button type="button" onClick={onEdit} className="flex items-center gap-3 text-start">
           <Avatar name={who} />
           <span className="min-w-0">
@@ -47,8 +47,12 @@ export function UserRow({ user, roles, group, selected, isSelf, canDelete, canEd
               {who}
               {isSelf && <span className="ms-1.5 text-xs font-normal text-ink-muted">(أنت)</span>}
             </span>
-            <span className="block text-xs text-ink-muted md:hidden" dir="ltr">
+            <span className="block text-xs text-ink-muted [overflow-wrap:anywhere] md:hidden" dir="ltr">
               {user.email}
+            </span>
+            {/* On a phone the status sits under the name instead of in its own column. */}
+            <span className="mt-1 block sm:hidden">
+              <StatusPill user={user} />
             </span>
           </span>
         </button>
@@ -68,14 +72,14 @@ export function UserRow({ user, roles, group, selected, isSelf, canDelete, canEd
           {names.length > 2 && <span className="rounded-full bg-paper px-2 py-0.5 text-xs text-ink-muted">+{names.length - 2}</span>}
         </span>
       </td>
-      <td className="px-4 py-3">
+      <td className="hidden px-4 py-3 sm:table-cell">
         <StatusPill user={user} />
         {user.status === "active" && INVITE[user.invite] && <span className="mt-1 block whitespace-nowrap text-[11px] text-ink-muted">{INVITE[user.invite]}</span>}
       </td>
       <td className="hidden whitespace-nowrap px-4 py-3 text-ink-muted xl:table-cell">{formatGregorianDate(new Date(user.created_at)).replace(/^[^،]+،\s*/, "")}</td>
-      <td className="px-4 py-3">
+      <td className="px-2 py-3 sm:px-4">
         <span className="flex items-center justify-end gap-1.5">
-          <button type="button" onClick={onEdit} aria-label={`تعديل ${who}`} title="تعديل" className="motion-press grid size-8 place-items-center rounded-md border border-rule text-ink-muted hover:border-primary hover:text-primary">
+          <button type="button" onClick={onEdit} aria-label={`تعديل ${who}`} title="تعديل" className="motion-press hidden size-8 place-items-center rounded-md border border-rule text-ink-muted hover:border-primary hover:text-primary sm:grid">
             <Pencil size={15} aria-hidden="true" />
           </button>
           {((group && canEditDepartments) || (canDelete && !isSelf)) && (

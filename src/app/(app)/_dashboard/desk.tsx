@@ -70,7 +70,7 @@ function Drawer({ panel: open, onClose }: { panel: Panel | null; onClose: () => 
                     const body = (
                       <>
                         <span className="min-w-0">{l.text}</span>
-                        {l.side && <span className="shrink-0 text-xs text-ink-muted">{l.side}</span>}
+                        {l.side && <span className="max-w-[45%] text-end text-xs text-ink-muted">{l.side}</span>}
                       </>
                     );
                     const cls = clsx("flex justify-between gap-3 rounded-md border-s-[3px] bg-paper px-3 py-2.5", l.tone === "block" ? "border-danger" : l.tone === "warn" ? "border-brass" : l.tone === "ok" ? "border-primary" : "border-rule");
@@ -353,7 +353,7 @@ export function DeskView({ desk }: { desk: Desk }) {
                       ))}
                     </span>
                   </span>
-                  <span className="text-end text-xs text-ink-muted">
+                  <span className="max-w-32 text-end text-xs text-ink-muted md:max-w-none">
                     <b className="block font-mono text-lg font-medium text-ink">{r.days >= 0 ? r.days : "—"}</b>
                     {r.days >= 0 ? "يوماً" : "انعقد"} · {r.note}
                   </span>

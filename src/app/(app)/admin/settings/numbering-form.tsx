@@ -33,7 +33,7 @@ export function NumberingForm({ format, bodies, year, canManage }: { format: Num
 
   return (
     <ActionForm action={action} state={state} className="mb-10">
-      <fieldset disabled={off} className="flex flex-col gap-4 rounded-lg border border-rule bg-surface px-5 py-4">
+      <fieldset disabled={off} className="flex min-w-0 flex-col gap-4 rounded-lg border border-rule bg-surface px-5 py-4">
         <legend className="px-1 font-display text-lg font-bold">ترقيم الاجتماعات</legend>
         <p className="text-xs leading-6 text-ink-muted">
           يُنشأ الرقم تلقائياً عند إصدار الدعوة، ولا يتغير بعدها حتى لو تغير موعد الاجتماع أو هذه الإعدادات. لكل جهة تسلسل مستقل يبدأ من جديد مع كل سنة، والاجتماع الملغى يحتفظ برقمه. الاجتماع غير العادي يُميَّز بحقل «نوع الاجتماع» دون تغيير صيغة الرقم.
@@ -61,7 +61,7 @@ export function NumberingForm({ format, bodies, year, canManage }: { format: Num
             </label>
           </div>
           <span className="text-xs text-ink-muted">رقم الاجتماع الناتج</span>
-          <output dir="ltr" className="font-mono text-3xl font-bold tracking-wide text-primary">
+          <output dir="ltr" className="break-all text-center font-mono text-2xl font-bold tracking-wide text-primary sm:text-3xl">
             {result}
           </output>
           <button
@@ -104,7 +104,7 @@ export function NumberingForm({ format, bodies, year, canManage }: { format: Num
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-rule">
+        <div className="overflow-x-auto rounded-lg border border-rule">
           <table className="w-full text-sm">
             <thead className="bg-paper text-ink-muted">
               <tr>

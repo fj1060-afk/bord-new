@@ -21,7 +21,7 @@ export function PrintDocs({ meetingId, hasMinutes }: { meetingId: string; hasMin
           return (
             <li key={d.key} className="flex flex-wrap items-center gap-2 px-3 py-2.5">
               <Icon size={18} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-ink-muted" />
-              <span className="min-w-0 flex-1 font-medium">{d.label}</span>
+              <span className="min-w-0 flex-1 basis-40 font-medium">{d.label}</span>
               {available ? (
                 <span className="flex gap-1.5">
                   <a href={href} target="_blank" className={`${pill} text-primary`}>

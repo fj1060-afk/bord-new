@@ -67,7 +67,7 @@ export async function ScopeDocuments({ scope }: { scope: Scope }) {
           {(library ?? []).map((d) => (
             <li key={d.id}>
               <a href={`/documents/library/${d.id}`} className={row}>
-                <span className="min-w-0 flex-1">{d.title}</span>
+                <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{d.title}</span>
                 <span className="text-xs text-ink-muted">{LIBRARY_CATEGORIES[d.category as LibraryCategory]} · {formatGregorianDate(new Date(d.created_at))}</span>
               </a>
             </li>
@@ -80,7 +80,7 @@ export async function ScopeDocuments({ scope }: { scope: Scope }) {
           {((packs ?? []) as unknown as { id: string; title: string; meeting: { id: string; number: number | null; code: string | null; starts_at: string } }[]).map((d) => (
             <li key={d.id}>
               <a href={`/meetings/${d.meeting.id}/documents/${d.id}`} className={row}>
-                <span className="min-w-0 flex-1">{d.title}</span>
+                <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{d.title}</span>
                 <span className="text-xs text-ink-muted">{meetingReference(d.meeting.code)}</span>
               </a>
             </li>

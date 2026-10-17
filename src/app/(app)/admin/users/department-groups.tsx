@@ -87,7 +87,7 @@ export function DepartmentBlock({
   return (
     <section className={clsx("rounded-xl border bg-surface", group ? "border-rule" : "border-dashed border-rule")}>
       <div className="flex flex-wrap items-center gap-3 p-3 ps-4">
-        <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex min-w-0 flex-1 items-center gap-3 text-start">
+        <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex min-w-0 flex-1 basis-56 items-center gap-3 text-start">
           <span className={clsx("grid size-10 shrink-0 place-items-center rounded-lg", group && !archived ? "bg-primary-soft text-primary" : "bg-paper text-ink-muted")}>
             {group ? <Building2 size={18} aria-hidden="true" /> : <Users size={18} aria-hidden="true" />}
           </span>
@@ -129,6 +129,7 @@ export function DepartmentBlock({
           {users.length === 0 ? (
             <p className="px-5 py-4 text-sm text-ink-muted">لا مستخدمين في {group ? "هذه الإدارة" : "هذا القسم"} بعد.</p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-paper text-xs text-ink-muted">
                 <tr>
@@ -136,7 +137,7 @@ export function DepartmentBlock({
                   <th className="hidden px-4 py-2.5 text-start font-medium lg:table-cell">المسمى الوظيفي</th>
                   <th className="hidden px-4 py-2.5 text-start font-medium md:table-cell">البريد الإلكتروني</th>
                   <th className="hidden px-4 py-2.5 text-start font-medium md:table-cell">الأدوار</th>
-                  <th className="px-4 py-2.5 text-start font-medium">الحالة</th>
+                  <th className="hidden px-4 py-2.5 text-start font-medium sm:table-cell">الحالة</th>
                   <th className="hidden px-4 py-2.5 text-start font-medium xl:table-cell">تاريخ الانضمام</th>
                   <th className="px-4 py-2.5">
                     <span className="sr-only">الإجراءات</span>
@@ -149,6 +150,7 @@ export function DepartmentBlock({
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </Collapse>

@@ -328,7 +328,7 @@ export function MeetingsTableView({
             </option>
           ))}
         </select>
-        <nav aria-label="الصفحات" className="ms-auto flex items-center gap-1">
+        <nav aria-label="الصفحات" className="ms-auto flex flex-wrap items-center gap-1">
           <PageLink href={query.page > 1 ? tableHref(base, query, { page: query.page - 1 }) : null} label="السابقة">
             <ChevronRight size={16} aria-hidden="true" />
           </PageLink>

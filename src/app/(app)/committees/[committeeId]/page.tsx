@@ -76,8 +76,8 @@ export default async function CommitteePage({ params }: PageProps<"/committees/[
               {upcoming.length === 0 && <li className="px-5 py-4 text-ink-muted">لا اجتماعات قادمة.</li>}
               {upcoming.map((m) => (
                 <li key={m.id}>
-                  <Link href={`/meetings/${m.id}`} className="flex justify-between gap-3 px-5 py-3 hover:bg-paper">
-                    <span>{m.title}</span>
+                  <Link href={`/meetings/${m.id}`} className="flex flex-wrap justify-between gap-x-3 gap-y-1 px-5 py-3 hover:bg-paper">
+                    <span className="min-w-0 flex-1 basis-48">{m.title}</span>
                     <span className="text-ink-muted">{meetingReference(m.code)} · {formatDateTime(new Date(m.starts_at))}</span>
                   </Link>
                 </li>
