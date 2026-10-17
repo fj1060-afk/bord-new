@@ -40,7 +40,30 @@ export type PortalRow = {
   meetingTitle: string | null;
   party: string;
   href: string;
+  /** Shown when the row is opened on the home page. */
+  detail: { item?: string; agendaItemId?: string; meetingDate?: string; note?: string | null; description?: string | null; files: { id: string; title: string }[] };
 };
+
+/** Where a request stands against its deadline, as the home page's status column shows it. */
+export type Timing = "late" | "today" | "soon" | "later" | "answered" | "done";
+export const SOON_DAYS = 7;
+
+const daysBetween = (from: string, to: string) => Math.round((Date.parse(to) - Date.parse(from)) / 86400000);
+
+export function timingOf(stage: Stage, due: string | null, today: string): Timing {
+  if (stage === "done") return "done";
+  if (stage === "answered") return "answered";
+  if (!due) return "later";
+  const days = daysBetween(today, due);
+  return days < 0 ? "late" : days === 0 ? "today" : days <= SOON_DAYS ? "soon" : "later";
+}
+
+/** «متأخر 6 أيام», «اليوم», «خلال 3 أيام», … */
+export function timingLabel(timing: Timing, due: string | null, today: string): string {
+  const n = due ? Math.abs(daysBetween(today, due)) : 0;
+  const days = n === 1 ? "يوم" : n === 2 ? "يومين" : n <= 10 ? `${n} أيام` : `${n} يوماً`;
+  return { late: `متأخر ${days}`, today: "اليوم", soon: `خلال ${days}`, later: "في الموعد", answered: "تم الرد", done: "منجزة" }[timing];
+}
 
 /** Counts per tab, plus overdue. */
 export function tally(rows: PortalRow[]) {

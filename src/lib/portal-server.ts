@@ -9,12 +9,13 @@ type DocRow = {
   title: string;
   due_date: string | null;
   status: string;
+  review_note: string | null;
   department_id: string | null;
   assignee_user_id: string | null;
   department: { name: string } | null;
-  item: { position: number; title: string; meeting: { id: string; title: string; starts_at: string } };
+  item: { id: string; position: number; title: string; meeting: { id: string; title: string; starts_at: string } };
 };
-type TaskRow = { id: string; title: string; due_date: string | null; status: string; department: { name: string } | null; resolution: { id: string; number: number | null; year: number | null } | null };
+type TaskRow = { id: string; title: string; description: string | null; due_date: string | null; status: string; department: { name: string } | null; resolution: { id: string; number: number | null; year: number | null; text: string } | null };
 
 /**
  * Everything asked of the viewer or their departments: documents for agenda items and
@@ -31,18 +32,23 @@ export async function loadPortal(supabase: SupabaseClient, viewer: Viewer): Prom
   const [{ data: docs }, { data: tasks }] = await Promise.all([
     supabase
       .from("document_requests")
-      .select("id, title, due_date, status, department_id, assignee_user_id, department:departments(name), item:agenda_items!inner(position, title, meeting:meetings!agenda_items_meeting_id_fkey!inner(id, title, starts_at))")
+      .select("id, title, due_date, status, review_note, department_id, assignee_user_id, department:departments(name), item:agenda_items!inner(id, position, title, meeting:meetings!agenda_items_meeting_id_fkey!inner(id, title, starts_at))")
       .or(mineOr)
       .order("due_date", { ascending: true, nullsFirst: false }),
     supabase
       .from("resolution_tasks")
-      .select("id, title, due_date, status, department:departments(name), resolution:resolutions(id, number, year)")
+      .select("id, title, description, due_date, status, department:departments(name), resolution:resolutions(id, number, year, text)")
       .or(mineOr)
       .neq("status", "cancelled"),
   ]);
 
+  // The files already sent for each request (RLS: the department's own deliverables).
+  const docRows = (docs ?? []) as unknown as DocRow[];
+  const { data: files } = docRows.length
+    ? await supabase.from("meeting_documents").select("id, title, document_request_id").in("document_request_id", docRows.map((d) => d.id)).order("created_at")
+    : { data: [] as { id: string; title: string; document_request_id: string }[] };
   const rows: PortalRow[] = [];
-  for (const d of (docs ?? []) as unknown as DocRow[]) {
+  for (const d of docRows) {
     const stage = stageOf("document", d.status);
     if (!stage) continue;
     rows.push({
@@ -57,6 +63,13 @@ export async function loadPortal(supabase: SupabaseClient, viewer: Viewer): Prom
       meetingTitle: d.item.meeting.title,
       party: d.department?.name ?? (d.assignee_user_id === viewer.id ? "أنت" : "مكلّف بالاسم"),
       href: `/requests/${d.id}`,
+      detail: {
+        item: `${d.item.position}. ${d.item.title}`,
+        agendaItemId: d.item.id,
+        meetingDate: d.item.meeting.starts_at,
+        note: d.review_note,
+        files: (files ?? []).filter((f) => f.document_request_id === d.id).map((f) => ({ id: f.id, title: f.title })),
+      },
     });
   }
   for (const t of (tasks ?? []) as unknown as TaskRow[]) {
@@ -74,6 +87,7 @@ export async function loadPortal(supabase: SupabaseClient, viewer: Viewer): Prom
       meetingTitle: null,
       party: t.department?.name ?? "أنت",
       href: t.resolution ? `/resolutions/${t.resolution.id}` : "/my-tasks",
+      detail: { item: t.resolution?.text, description: t.description, files: [] },
     });
   }
   return { rows, departments };
