@@ -33,23 +33,40 @@
 .doc .stack-l > .sub, .doc td .sub, .doc-org .sub, .doc .doc-grid .sub, .doc th .sub { text-align: right; }
 .doc .nw { white-space: nowrap; }
 
-/* Letterhead and title: compact, so the content starts high on the page. */
-.doc-head { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--primary); padding-bottom: 6px; }
+/* Letterhead: Arabic with the seal on the right, English and the classification on the left. */
+.doc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.doc-seal { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1.5px solid var(--brass); color: var(--brass); display: grid; place-items: center; font: 700 17pt var(--font-naskh), serif; }
 .doc-org { flex: 1; min-width: 0; line-height: 1.35; }
-.doc-org > span { display: block; font-size: 8pt; color: var(--ink-muted); }
-.doc-head .org { display: block; font-size: 12pt; color: var(--primary); font-family: var(--font-naskh), serif; }
-.doc-seal { width: 34px; height: 34px; flex: none; border-radius: 50%; border: 1.5px solid var(--brass); color: var(--brass); display: grid; place-items: center; font: 700 15pt var(--font-naskh), serif; }
-.doc-badges { display: flex; gap: 6px; flex: none; }
-.doc-badge { border: 1px solid; border-radius: 4px; padding: 0 7px; font-size: 7.6pt; font-weight: 600; white-space: nowrap; }
-.doc-badge.c { color: var(--danger); background: #fbf1f1; }
-.doc-badge.s { color: var(--brass); background: var(--brass-soft); }
-.doc-badge.ok { color: var(--primary); background: var(--primary-soft); }
-.doc-title { text-align: center; margin: 6px 0 6px; }
-.doc-title h1 { font-size: 14pt; line-height: 1.4; }
-.doc-title .en { text-align: center; font-size: 10pt; color: var(--primary); font-weight: 500; }
-.doc-title p { margin: 0; font-size: 9pt; font-weight: 400; color: var(--ink-muted); }
-.doc-title p.sub { text-align: center; }
-.doc-title hr { width: 48px; border: 0; border-top: 2px solid var(--brass); margin: 4px auto 0; }
+.doc-org > span { display: block; font-size: 8.5pt; color: var(--ink-muted); }
+.doc-org .org { display: block; font-size: 13pt; font-weight: 600; color: var(--primary); font-family: var(--font-naskh), serif; }
+.doc-org.en { text-align: left; }
+.doc-org.en .org { font-family: var(--font-body), sans-serif; font-size: 12pt; }
+.doc-marks { display: flex; gap: 8px; margin-top: 2px; font-size: 8pt; }
+.doc-org.en .doc-marks { justify-content: flex-start; direction: ltr; }
+.doc-marks .mark { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.doc-org.en .mark { flex-direction: row-reverse; }
+.doc-marks .mark .en { font-weight: 500; }
+.doc-marks .c { color: var(--brass); }
+.doc-marks .s { color: var(--brass); }
+.doc-marks .ok { color: var(--primary); }
+.doc-marks .dot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .6; }
+
+/* Title band: green title (Arabic | English), a brass rule, then body · meeting number · body in English. */
+.doc-title { border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; margin-bottom: 8px; break-inside: avoid; }
+.doc-title .band { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--primary); color: var(--on-primary); border-bottom: 2px solid var(--brass); }
+.doc-title .band > * { padding: 6px 12px; text-align: center; }
+.doc-title .band > * + * { border-right: 1px solid rgb(255 255 255 / .6); }
+.doc-title h1 { font-size: 14pt; line-height: 1.4; color: inherit; }
+.doc-title .band .en { font-size: 13pt; font-weight: 600; font-family: var(--font-body), sans-serif; align-self: center; }
+.doc-title .facts { display: grid; grid-template-columns: 1fr .85fr 1fr; background: #f1f3f1; text-align: center; align-items: center; }
+.doc-title .facts > div { padding: 5px 12px; font-size: 10pt; }
+.doc-title .facts > div + div { border-right: 1px solid var(--rule); }
+.doc-title .facts .no { line-height: 1.3; }
+.doc-title .facts .no .k { display: block; font-size: 7.6pt; color: var(--ink-muted); }
+.doc-title .facts .no b { font-size: 11pt; font-weight: 700; }
+.doc-title .facts .en, .doc-title .band .en { direction: ltr; text-align: center; font-family: var(--font-body), sans-serif; }
+.doc-title .facts .no b { display: block; }
+.doc-title .facts:not(:has(.en)) { grid-template-columns: 1fr .6fr; }
 
 /* Meeting card: a green date block, then label rows (icon · Arabic | English) over their values. */
 .doc-card { display: grid; grid-template-columns: 30mm 1fr; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; margin-bottom: 8px; break-inside: avoid; }

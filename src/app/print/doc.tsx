@@ -53,39 +53,61 @@ export function BiText({ ar, en, bi }: { ar: ReactNode; en?: string | null; bi: 
   );
 }
 
-/** Letterhead: company and issuer, the English name beneath in smaller type; one badge per status carrying both languages. No dates or references: those live in the card and footer. */
+/** Letterhead: seal and Arabic name on the right; English name, issuer and the classification on the left. No dates or references: those live in the card and footer. */
 export function DocHead({ company, companyEn, issuer, issuerEn, badges, bi }: { company: string; companyEn: string; issuer: string; issuerEn: string; badges: Badge[]; bi: boolean }) {
+  const marks = (
+    <div className="doc-marks">
+      {badges.map((b, i) => (
+        <span key={b.ar} className={`mark ${b.tone}`}>
+          {i > 0 && <i className="dot" aria-hidden="true" />}
+          {bi ? (
+            <>
+              <span>{b.ar}</span>
+              <i className="bar" aria-hidden="true" />
+              <span className="en">{b.en}</span>
+            </>
+          ) : (
+            b.ar
+          )}
+        </span>
+      ))}
+    </div>
+  );
   return (
     <header className="doc-head">
       <div className="doc-seal">م</div>
       <div className="doc-org">
         <b className="org">{company}</b>
         <span>{issuer}</span>
-        {bi && (
-          <span className="en sub">
-            {companyEn || company} · {issuerEn}
-          </span>
-        )}
+        {!bi && marks}
       </div>
-      <div className="doc-badges">
-        {badges.map((b) => (
-          <span key={b.ar} className={`doc-badge ${b.tone}`}>
-            {bi ? `${b.ar} · ${b.en}` : b.ar}
-          </span>
-        ))}
-      </div>
+      {bi && (
+        <div className="doc-org en">
+          <b className="org">{companyEn || company}</b>
+          <span>{issuerEn}</span>
+          {marks}
+        </div>
+      )}
     </header>
   );
 }
 
-export function DocTitle({ title, titleEn, subtitle, subtitleEn, bi }: { title: string; titleEn: string; subtitle: ReactNode; subtitleEn: string; bi: boolean }) {
+/** Title band: the title in green (Arabic | English), then the body and the meeting number on a light row. */
+export function DocTitle({ title, titleEn, body, bodyEn, number, bi }: { title: string; titleEn: string; body: string; bodyEn: string; number: ReactNode; bi: boolean }) {
   return (
     <div className="doc-title">
-      <h1>{title}</h1>
-      {bi && <div className="en">{titleEn}</div>}
-      <p>{subtitle}</p>
-      {bi && <p className="en sub">{subtitleEn}</p>}
-      <hr />
+      <div className="band">
+        <h1>{title}</h1>
+        {bi && <div className="en">{titleEn}</div>}
+      </div>
+      <div className="facts">
+        <div>{body}</div>
+        <div className="no">
+          <span className="k">{bi ? "الاجتماع / Meeting" : "الاجتماع"}</span>
+          <b className="num" dir="ltr">{number}</b>
+        </div>
+        {bi && <div className="en">{bodyEn}</div>}
+      </div>
     </div>
   );
 }

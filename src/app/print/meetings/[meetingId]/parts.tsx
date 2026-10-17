@@ -49,17 +49,7 @@ export function MeetingHead({ m, title, titleEn, badges }: { m: Meeting; title: 
         issuerEn={m.isBoard ? "Board Secretariat" : "Committee Secretariat"}
         badges={badges}
       />
-      <DocTitle
-        bi={m.bi}
-        title={title}
-        titleEn={titleEn}
-        subtitle={
-          <>
-            {m.body} · الاجتماع رقم (<span className="num">{meeting.number}</span>) لعام <span className="num">{year}</span>
-          </>
-        }
-        subtitleEn={`${m.isBoard ? "Board of Directors" : "Committee"} · Meeting No. ${meeting.number} of ${year}`}
-      />
+      <DocTitle bi={m.bi} title={title} titleEn={titleEn} body={m.body} bodyEn={m.isBoard ? "Board of Directors" : "Committee"} number={`${String(meeting.number ?? 0).padStart(2, "0")} / ${year}`} />
     </>
   );
 }
