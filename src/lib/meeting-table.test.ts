@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { meetingMinutes, meetingState, pageWindow, readTableQuery, tableHref } from "./meeting-table";
+import { countdown, durationText, meetingMinutes, meetingState, pageWindow, readTableQuery, tableHref } from "./meeting-table";
 
 describe("meetingState", () => {
   it("puts cancellation and the live session first", () => {
@@ -41,4 +41,23 @@ describe("pageWindow", () => {
   it("shows every page when few", () => expect(pageWindow(2, 4)).toEqual([1, 2, 3, 4]));
   it("folds the middle when many", () => expect(pageWindow(5, 10)).toEqual([1, null, 4, 5, 6, null, 10]));
   it("handles the edges", () => expect(pageWindow(1, 10)).toEqual([1, 2, null, 10]));
+});
+
+describe("durationText", () => {
+  it("says the length in words", () => {
+    expect(durationText(120)).toBe("ساعتان");
+    expect(durationText(60)).toBe("ساعة");
+    expect(durationText(90)).toBe("ساعة ونصف");
+    expect(durationText(180)).toBe("3 ساعات");
+    expect(durationText(45)).toBe("45 دقيقة");
+    expect(durationText(75)).toBe("ساعة و15 دقيقة");
+  });
+});
+
+describe("countdown", () => {
+  it("splits the time left and stops at zero", () => {
+    const now = Date.parse("2026-10-17T16:20:00Z");
+    expect(countdown(Date.parse("2026-10-24T07:00:00Z"), now)).toEqual({ days: 6, hours: 14, minutes: 40 });
+    expect(countdown(now - 1000, now)).toEqual({ days: 0, hours: 0, minutes: 0 });
+  });
 });

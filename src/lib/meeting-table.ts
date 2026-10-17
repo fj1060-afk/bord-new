@@ -81,3 +81,20 @@ export function pageWindow(page: number, pages: number): (number | null)[] {
   }
   return out;
 }
+
+/** A duration in words: "ساعة"، "ساعتان"، "ساعة ونصف"، "3 ساعات"، "45 دقيقة". */
+export function durationText(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} دقيقة`;
+  const hours = h === 1 ? "ساعة" : h === 2 ? "ساعتان" : h <= 10 ? `${h} ساعات` : `${h} ساعة`;
+  if (m === 0) return hours;
+  if (m === 30) return `${hours} ونصف`;
+  return `${hours} و${m} دقيقة`;
+}
+
+/** Days, hours and minutes left until `target`; zero once it has passed. */
+export function countdown(target: number, now: number): { days: number; hours: number; minutes: number } {
+  const left = Math.max(0, Math.floor((target - now) / 60000));
+  return { days: Math.floor(left / 1440), hours: Math.floor((left % 1440) / 60), minutes: left % 60 };
+}

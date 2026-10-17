@@ -8,6 +8,7 @@ import { DOC_REQUEST_STATUS } from "@/lib/meetings";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { MeetingsTable } from "./_components/meetings-table";
+import { MeetingStats } from "./_components/meeting-stats";
 
 export const metadata: Metadata = { title: "الاجتماعات" };
 
@@ -32,7 +33,7 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/meeting
       <PageHeader
         section="الحوكمة"
         title="الاجتماعات"
-        description="كل اجتماعات المجلس واللجان: ابحث وصفِّ وافتح أي اجتماع."
+        description="جدولة الاجتماعات وإصدار الدعوات ومتابعة المحاضر."
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/meetings/requests" className={buttonClass("secondary")}>
@@ -74,6 +75,8 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/meeting
           </ul>
         </section>
       )}
+
+      <MeetingStats />
 
       <MeetingsTable base="/meetings" params={await searchParams} />
     </>

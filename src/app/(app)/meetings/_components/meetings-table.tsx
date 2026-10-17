@@ -1,7 +1,6 @@
 import { requirePage } from "@/lib/auth";
 import { dateParts } from "@/lib/format";
 import { meetingMinutes, meetingState, readTableQuery, type TableQuery } from "@/lib/meeting-table";
-import { meetingReference } from "@/lib/meetings";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { MeetingsTableView, type TableRow } from "./meetings-table-view";
@@ -42,7 +41,11 @@ function filtered(supabase: Awaited<ReturnType<typeof createClient>>, query: Tab
     const [kind, id] = query.body.split(":");
     q = q.eq(kind === "board" ? "board_id" : "committee_id", id);
   }
-  if (query.q) q = q.ilike("title", `%${query.q.replace(/[%_\\]/g, (c) => `\\${c}`)}%`);
+  if (query.q) {
+    // Title or meeting number; characters that would break the filter are dropped.
+    const term = query.q.replace(/[%_\\,()*]/g, " ").trim();
+    if (term) q = q.or(`title.ilike.%${term}%,code.ilike.%${term}%`);
+  }
   if (query.state === "cancelled") q = q.eq("status", "cancelled");
   if (query.state === "ended") q = q.neq("status", "cancelled").eq("live_status", "ended");
   if (query.state === "live") q = q.neq("status", "cancelled").in("live_status", ["in_progress", "paused"]);
@@ -67,7 +70,7 @@ export async function MeetingsTable({ base, params, scope }: { base: string; par
     return {
       id: m.id,
       title: m.title,
-      reference: meetingReference(m.code),
+      code: m.code,
       body: m.board ? { name: m.board.name, tone: "board" } : { name: m.committee?.name ?? "—", tone: m.committee?.kind === "audit" ? "audit" : "committee" },
       date: when.long,
       time: when.time,
