@@ -19,7 +19,7 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
   const body = m.board_id ? { col: "board_id", id: m.board_id } : { col: "committee_id", id: m.committee_id! };
   const [profile, { data: items }, { data: requests }, { data: invitees }, { data: members }, { data: board }, { data: minutes }, { data: circulars }, { data: resolutions }, { data: overrides }] = await Promise.all([
     companyProfile(supabase),
-    supabase.from("agenda_items").select("id, title, kind, owner_user_id, department_id").eq("meeting_id", meetingId),
+    supabase.from("agenda_items").select("id, position, title, kind, owner_user_id, department_id").eq("meeting_id", meetingId),
     supabase.from("document_requests").select("title, status, agenda_item_id, item:agenda_items!inner(meeting_id)").eq("item.meeting_id", meetingId),
     supabase.from("meeting_invitees").select("person_id").eq("meeting_id", meetingId).eq("kind", "member"),
     m.board_id
@@ -50,7 +50,7 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
     boardTermEnd: board?.term_end ?? null,
     secretary: !!profile?.secretary_person_id,
     meeting: m,
-    items: (items ?? []).map((i) => ({ id: i.id, title: i.title, kind: i.kind, owned: !!(i.owner_user_id || i.department_id) })),
+    items: (items ?? []).map((i) => ({ id: i.id, position: i.position, title: i.title, kind: i.kind, owned: !!(i.owner_user_id || i.department_id) })),
     requests: (requests ?? []).map((r) => ({ title: r.title, status: r.status, itemId: r.agenda_item_id })),
     requirements: {
       unsent: unsent.length,

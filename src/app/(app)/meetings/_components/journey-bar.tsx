@@ -1,81 +1,62 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { AlertTriangle, ArrowLeft, Check as CheckIcon, ChevronLeft, ChevronRight, Info, X } from "lucide-react";
+import { Check as CheckIcon, ChevronDown, ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { buttonClass } from "@/components/ui/styles";
-import { blocking, stageDone, STAGES, type Check } from "@/lib/journey";
+import { blocking, stageDone, STAGES, type Check, type Target } from "@/lib/journey";
 import { FixLink } from "./fix-link";
+import { ItemIssues, type IssueItem } from "./item-issues";
 import { OverrideForm } from "./override-form";
 
-const tone = (c: Check) => (c.ok ? "ok" : c.overridden || c.level === "info" ? "info" : c.level);
-const BADGE = { ok: "bg-primary-soft text-primary", info: "bg-paper text-ink-muted", warn: "bg-brass-soft text-brass", block: "bg-danger/10 text-danger" } as const;
-const ICON = { ok: CheckIcon, info: Info, warn: AlertTriangle, block: X } as const;
-const WORD = { info: "للعلم", warn: "تنبيه", block: "مانع" } as const;
+const tone = (c: Check) => (c.overridden || c.level === "info" ? "info" : c.level);
+const DOT = { block: "bg-danger", warn: "bg-brass", info: "bg-ink-muted" } as const;
 
-function Badge({ c }: { c: Check }) {
-  const t = tone(c);
-  const Icon = ICON[t];
-  return (
-    <span className={clsx("grid size-7 shrink-0 place-items-center rounded-full", BADGE[t])}>
-      <Icon size={15} aria-hidden="true" />
-    </span>
-  );
+/** The short chip an item shows for a check, e.g. "بلا مسؤول" or "4 لم تُرسل". */
+function chipFor(c: Check, t: Target): string {
+  const n = t.count ?? 0;
+  switch (c.id) {
+    case "owners": return "بلا مسؤول";
+    case "definite": return "عنوان غير محدد";
+    case "requirements-sent": return n ? `${n} لم تُرسل` : "متطلبات لم تُرسل";
+    case "requirements-checks": return n > 1 ? `${n} تحقق معلّق` : "تحقق معلّق";
+    case "docs": return n > 1 ? `${n} مستندات بانتظار` : "مستند بانتظار";
+    case "periods": return "فترة لم تنتهِ";
+    case "item-dates": return "تاريخ غير متسق";
+    case "requirements-due": return n > 1 ? `${n} مواعيد خارج المدة` : "موعد خارج المدة";
+    default: return c.fix?.label ?? c.label;
+  }
 }
 
-/** One open condition: what is missing, the items it concerns, and a clear way to fix it. */
-function OpenCheck({ c, meetingId, href }: { c: Check; meetingId: string; href: (tab?: string) => string }) {
-  const t = tone(c) as keyof typeof WORD;
-  const fix = c.fix;
-  const first = fix?.anchor ?? fix?.targets?.[0]?.anchor;
-  const button = buttonClass(t === "block" ? "primary" : "secondary", "shrink-0 px-3 py-1.5 text-xs");
-  return (
-    <li className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start">
-      <div className="flex min-w-0 flex-1 gap-3">
-        <Badge c={c} />
-        <div className="min-w-0 flex-1">
-          <p className="font-medium">
-            {c.label}
-            <span className={clsx("ms-2 rounded-full px-2 py-0.5 align-middle text-[11px] font-normal", BADGE[t])}>{WORD[t]}</span>
-          </p>
-          {c.ref && <p className="mt-0.5 text-xs text-ink-muted">{c.ref}</p>}
-          {(fix?.targets?.length ? fix.note ?? c.detail : c.detail) && <p className="mt-1 text-xs text-ink-muted">{fix?.targets?.length ? fix.note ?? c.detail : c.detail}</p>}
-          {!!fix?.targets?.length && (
-            <ul className="mt-2 flex flex-col gap-1.5">
-              {fix.targets.map((target) => (
-                <li key={target.anchor}>
-                  <FixLink href={href(c.tab)} anchor={target.anchor} title="اذهب إلى البند" className="group flex items-center gap-2 rounded-md border border-rule bg-paper px-3 py-1.5 text-xs transition-colors hover:border-primary">
-                    <span className="min-w-0 flex-1 truncate">{target.label}</span>
-                    <ArrowLeft size={14} aria-hidden="true" className="shrink-0 text-primary transition-transform group-hover:-translate-x-0.5" />
-                  </FixLink>
-                </li>
-              ))}
-            </ul>
-          )}
-          {c.overridden && <p className="mt-1 text-xs text-brass">تجاوز بسبب: {c.overridden}</p>}
-          {t === "warn" && <OverrideForm meetingId={meetingId} rule={c.id} />}
-        </div>
-      </div>
-      {fix?.href ? (
-        <Link href={fix.href} className={button}>
-          {fix.label} <ArrowLeft size={14} aria-hidden="true" />
-        </Link>
-      ) : (
-        <FixLink href={href(c.tab)} anchor={first} className={button}>
-          {fix?.label ?? "أكمِل"} <ArrowLeft size={14} aria-hidden="true" />
-        </FixLink>
-      )}
-    </li>
-  );
+/** Open checks that name items, regrouped per item so each item shows once. */
+function byItem(open: Check[]): IssueItem[] {
+  const items = new Map<string, IssueItem>();
+  for (const c of open)
+    for (const t of c.fix?.targets ?? []) {
+      const item = items.get(t.anchor) ?? { anchor: t.anchor, n: t.n, label: t.label, issues: [] };
+      item.issues.push({ id: c.id, level: tone(c), chip: chipFor(c, t), explain: [c.label, t.note ?? (c.id === "requirements-checks" ? c.detail : undefined)].filter(Boolean).join(": ") + (c.ref ? ` (${c.ref})` : ""), overridable: c.level === "warn" && !c.overridden });
+      items.set(t.anchor, item);
+    }
+  const rank = { block: 0, warn: 1, info: 2 };
+  return [...items.values()].map((i) => ({ ...i, issues: i.issues.sort((a, b) => rank[a.level] - rank[b.level]) })).sort((a, b) => (a.n ?? 0) - (b.n ?? 0));
 }
 
-/** The four-stage stepper, the viewed stage's checklist, and previous / next. */
+const blockersText = (n: number) => (n === 1 ? "يمنعك شرط واحد" : n === 2 ? "يمنعك شرطان" : `يمنعك ${n} شروط`);
+
+/** The four-stage stepper, the viewed stage's checks (meeting-wide, then per item), and previous / next. */
 export function JourneyBar({ meetingId, checks, current, view }: { meetingId: string; checks: Check[]; current: number; view: number }) {
   const stageHref = (n: number, tab?: string) => `/meetings/${meetingId}?stage=${n}${tab ? `&tab=${tab}` : ""}`;
   const list = checks.filter((c) => c.stage === view);
   const done = stageDone(checks, view);
-  const missing = list.filter(blocking).length;
+  const blockers = list.filter(blocking).length;
   const open = list.filter((c) => !c.ok && !c.overridden);
   const settled = list.filter((c) => c.ok || c.overridden);
-  const percent = list.length ? Math.round((settled.length / list.length) * 100) : 100;
+  const warnings = open.filter((c) => c.level === "warn").length;
+  const onItems = open.filter((c) => c.fix?.targets?.length);
+  const titleYear = open.find((c) => c.id === "title-year");
+  const spelling = open.find((c) => c.id === "title-spelling");
+  const onMeeting = open.filter((c) => !c.fix?.targets?.length && !(titleYear && c.id === "title-spelling"));
+  const items = byItem(onItems);
+  const unsent = open.find((c) => c.id === "requirements-sent");
+  const agendaHref = stageHref(view, "agenda");
 
   return (
     <section className="mb-6 rounded-lg border border-rule bg-surface">
@@ -107,35 +88,80 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
         })}
       </ol>
 
-      <div className="flex items-center gap-3 border-b border-rule px-5 py-3 text-sm">
-        <span className="shrink-0">
-          <span className="font-mono">{settled.length}</span> من <span className="font-mono">{list.length}</span> مكتملة
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3 text-sm">
+        <strong className="min-w-0 flex-1">{done ? (view === 4 ? "اكتملت رحلة الاجتماع." : "المرحلة مكتملة، جاهز للانتقال.") : `لا يمكن الانتقال بعد: ${blockersText(blockers)}`}</strong>
+        <span className="flex gap-1.5">
+          {blockers > 0 && <span className="rounded-full bg-danger/10 px-2.5 py-0.5 text-xs text-danger">{blockers} مانع</span>}
+          {warnings > 0 && <span className="rounded-full bg-brass-soft px-2.5 py-0.5 text-xs text-brass">{warnings} تنبيه</span>}
         </span>
-        <span className="h-2 flex-1 overflow-hidden rounded-full bg-paper" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label="تقدّم المرحلة">
-          <span className={clsx("block h-full rounded-full transition-[width] duration-500", done ? "bg-primary" : "bg-brass")} style={{ width: `${percent}%` }} />
-        </span>
-        <span className="shrink-0 font-mono text-xs text-ink-muted">{percent}%</span>
       </div>
 
-      {open.length > 0 && (
-        <ul className="divide-y divide-rule text-sm">
-          {open.map((c) => (
-            <OpenCheck key={c.id} c={c} meetingId={meetingId} href={(tab) => stageHref(view, tab)} />
-          ))}
-        </ul>
+      {onMeeting.length > 0 && (
+        <>
+          <p className="border-t border-rule px-5 pb-1 pt-3 text-xs font-medium text-ink-muted">على الاجتماع</p>
+          <ul className="text-sm">
+            {onMeeting.map((c) => (
+              <li key={c.id} className="border-t border-rule first:border-t-0">
+                <details className="group/row">
+                  <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-2.5 hover:bg-paper [&::-webkit-details-marker]:hidden">
+                    <span className={clsx("size-2 shrink-0 rounded-full", DOT[tone(c)])} aria-hidden="true" />
+                    <span className="min-w-0 flex-1 font-medium">
+                      {c.label}
+                      {c.ref && <span className="ms-2 text-xs font-normal text-ink-muted">{c.ref}</span>}
+                    </span>
+                    {c.fix?.href ? (
+                      <Link href={c.fix.href} className="shrink-0 rounded-md border border-rule px-3 py-1 text-xs hover:border-primary">
+                        {c.fix.label}
+                      </Link>
+                    ) : (
+                      <FixLink href={stageHref(view, c.tab)} anchor={c.fix?.anchor} className="shrink-0 rounded-md border border-rule px-3 py-1 text-xs hover:border-primary">
+                        {c.fix?.label ?? "أكمِل"}
+                      </FixLink>
+                    )}
+                    <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-200 group-open/row:rotate-180" />
+                  </summary>
+                  <div className="flex flex-col gap-1 pb-3 pe-5 ps-10 text-xs leading-6 text-ink-muted">
+                    {c.detail && <p>{c.detail}</p>}
+                    {c === titleYear && spelling?.detail && <p>{spelling.detail}</p>}
+                    {c.level === "warn" && <OverrideForm meetingId={meetingId} rule={c.id} />}
+                  </div>
+                </details>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {items.length > 0 && (
+        <>
+          <p className="flex justify-between border-t border-rule px-5 pb-1 pt-3 text-xs font-medium text-ink-muted">
+            <span>على البنود</span>
+            <span>
+              {items.length} {items.length === 1 ? "بند" : "بنود"}
+            </span>
+          </p>
+          <ItemIssues meetingId={meetingId} href={agendaHref} items={items} />
+        </>
+      )}
+
+      {unsent && (
+        <div className="border-t border-rule px-5 py-3">
+          <FixLink href={agendaHref} anchor="send-requirements" className={buttonClass("primary", "text-sm")}>
+            <Send size={15} aria-hidden="true" /> راجع وأرسل طلبات المتطلبات{unsent.detail ? ` (${unsent.detail.match(/\d+/)?.[0] ?? ""})` : ""}
+          </FixLink>
+        </div>
       )}
 
       {settled.length > 0 && (
         <details className="border-t border-rule text-sm" open={open.length === 0}>
-          <summary className="cursor-pointer px-5 py-3 text-ink-muted hover:bg-paper">مكتملة ({settled.length})</summary>
-          <ul className="divide-y divide-rule border-t border-rule">
+          <summary className="cursor-pointer px-5 py-2.5 text-ink-muted hover:bg-paper">مكتملة ({settled.length})</summary>
+          <ul className="flex flex-col gap-1 px-5 pb-3 text-xs text-ink-muted">
             {settled.map((c) => (
-              <li key={c.id} className="flex items-center gap-3 px-5 py-2.5">
-                <Badge c={c} />
-                <span className="min-w-0 flex-1">
+              <li key={c.id} className="flex items-start gap-2">
+                <CheckIcon size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-primary" />
+                <span>
                   {c.label}
-                  {c.ref && <span className="ms-2 text-xs text-ink-muted">({c.ref})</span>}
-                  {c.overridden && <span className="block text-xs text-brass">تجاوز بسبب: {c.overridden}</span>}
+                  {c.overridden && <span className="text-brass"> · تجاوز بسبب: {c.overridden}</span>}
                 </span>
               </li>
             ))}
@@ -151,7 +177,6 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
         ) : (
           <span />
         )}
-        <span className="text-xs text-ink-muted">{done ? (view === 4 ? "اكتملت رحلة الاجتماع." : "المرحلة مكتملة.") : `باقي ${missing} ${missing === 1 ? "شرط" : "شروط"} قبل الانتقال.`}</span>
         {view < 4 &&
           (done ? (
             <Link href={stageHref(view + 1)} className={buttonClass()}>
