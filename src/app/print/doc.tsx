@@ -191,10 +191,8 @@ export function PersonCell({ name, nameEn, role, roleEn, bi }: { name: string; n
     <span>
       <b>{name}</b>
       {role && <small>{role}</small>}
-      <span className="sub en">
-        {nameEn?.trim() || "—"}
-        {roleEn && ` · ${roleEn}`}
-      </span>
+      {/* No English name yet: the English role stands alone rather than after a dash. */}
+      {(nameEn?.trim() || roleEn) && <span className="sub en">{[nameEn?.trim(), roleEn].filter(Boolean).join(" · ")}</span>}
     </span>
   );
 }

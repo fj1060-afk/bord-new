@@ -124,7 +124,7 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
       </table>
       </div>
 
-      <section className="keep">
+      <section>
         <H2 ar="النصاب وافتتاح الجلسة" en="Quorum and Opening" bi={bi} />
         <div className="doc-panel">
           <QuorumBox q={m.quorum} bi={bi} />

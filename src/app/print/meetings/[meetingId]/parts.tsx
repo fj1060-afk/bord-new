@@ -92,8 +92,8 @@ export function heldCells(m: Meeting): Cell[] {
   return [
     { ar: "الموعد المقرر", en: "Scheduled", icon: Clock, value: time(meeting.starts_at), valueEn: timeEn(meeting.starts_at), single: true },
     { ar: "الانعقاد الفعلي", en: "Actual", icon: Timer, value: actual, valueEn: actualEn, single: !!meeting.started_at },
-    { ar: "طريقة الانعقاد", en: "Meeting Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
-    { ar: "مكان الاجتماع", en: "Meeting Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en },
+    { ar: "طريقة الانعقاد", en: "Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
+    { ar: "مكان الاجتماع", en: "Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en },
     { ar: "رئيس الاجتماع", en: "Chair", icon: User, value: m.chair, valueEn: m.chairEn },
     { ar: "أمين السر", en: "Secretary", icon: PenLine, value: m.secretary, valueEn: m.secretaryEn },
   ];

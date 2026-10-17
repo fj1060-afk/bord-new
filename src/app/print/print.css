@@ -87,7 +87,10 @@
 .doc-grid > div:nth-last-child(-n+3) { border-bottom: 0; }
 .doc-grid.c2 { grid-template-columns: repeat(2, 1fr); }
 .doc-grid.c2 > div:nth-last-child(3) { border-bottom: 1px solid var(--rule); }
-.doc-grid .k { display: flex; align-items: center; gap: 5px; font-size: 7.4pt; line-height: 1.3; white-space: nowrap; color: var(--ink-muted); }
+.doc-grid .k { display: flex; align-items: center; gap: 5px; font-size: 7.4pt; line-height: 1.3; color: var(--ink-muted); }
+/* Each label stays whole; in the narrower three-column grid the English one may drop to its own line rather than overflow. */
+.doc-grid .k > span { white-space: nowrap; }
+.doc-grid:not(.c2) .k { flex-wrap: wrap; row-gap: 0; }
 .doc-grid .k .ic { color: var(--brass); flex: none; }
 .doc-grid .k .bar { margin-inline: auto; }
 .doc-grid .v { font-weight: 700; font-size: 9.5pt; line-height: 1.35; }
@@ -101,7 +104,7 @@
 .doc-issued .en { direction: ltr; }
 
 /* Section heading: Arabic on the right, English on the left, a brass rule beneath. */
-.doc h2 { font-size: 13pt; color: var(--primary); margin: 12px 0 6px; padding-bottom: 3px; line-height: 1.35; break-after: avoid; border-bottom: 2px solid transparent; border-image: linear-gradient(to left, var(--brass), #d8c08a) 1; }
+.doc h2 { font-size: 13pt; color: var(--primary); margin: 12px 0 6px; padding-bottom: 3px; line-height: 1.35; break-after: avoid; page-break-after: avoid; border-bottom: 2px solid transparent; border-image: linear-gradient(to left, var(--brass), #d8c08a) 1; }
 .doc h2 .en { font-size: 12pt; font-weight: 700; color: var(--primary); font-family: var(--font-naskh), Georgia, serif; }
 .doc h2 + .ref { margin-top: -2px; }
 
@@ -114,7 +117,9 @@
 .doc-panel > .doc-bi, .doc-panel > .ref { margin-top: 6px; }
 
 /* One soft container (the title band's light colour) holding a white card per item. */
-.doc-items { list-style: none; margin: 4px 0 8px; padding: 12px; background: var(--band-soft); border-radius: 12px; display: flex; flex-direction: column; gap: 10px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+/* Block, not flex: Safari and iOS move a whole flex container to the next page instead of splitting it between cards. */
+.doc-items { list-style: none; margin: 4px 0 8px; padding: 12px; background: var(--band-soft); border-radius: 12px; display: block; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.doc-items > li + li { margin-top: 10px; }
 .doc-items > li { background: #fff; border: 1px solid #dce3df; border-radius: 8px; padding: 10px 12px 8px; break-inside: avoid; page-break-inside: avoid; overflow-wrap: anywhere; }
 .ai-head { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
 .ai-head:has(.ai-en) { grid-template-columns: 26px 1fr 1fr; }
@@ -152,7 +157,7 @@
 .doc td .stack { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 
 /* Quorum */
-.doc-quorum { display: grid; grid-template-columns: repeat(6, 1fr); border: 1.5px solid var(--rule); border-radius: 8px; overflow: hidden; margin: 5px 0 6px; text-align: center; }
+.doc-quorum { break-inside: avoid; page-break-inside: avoid; display: grid; grid-template-columns: repeat(6, 1fr); border: 1.5px solid var(--rule); border-radius: 8px; overflow: hidden; margin: 5px 0 6px; text-align: center; }
 .doc-quorum > div { padding: 4px; border-inline-start: 1px solid var(--rule); }
 .doc-quorum > div:first-child { border: 0; }
 .doc-quorum .k { display: block; font-size: 7.5pt; color: var(--ink-muted); line-height: 1.3; }

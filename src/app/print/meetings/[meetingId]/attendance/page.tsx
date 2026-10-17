@@ -67,7 +67,7 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
       </table>
       </div>
 
-      <section className="keep">
+      <section>
         <H2 ar="التحقق من النصاب" en="Quorum" bi={bi} />
         <div className="doc-panel">
           <QuorumBox q={m.quorum} bi={bi} />
