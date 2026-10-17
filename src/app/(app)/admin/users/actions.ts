@@ -6,6 +6,7 @@ import { requirePage } from "@/lib/auth";
 import { LEVELS } from "@/lib/permissions";
 import { contactFields } from "@/lib/contact-rules";
 import { passwordProblem } from "@/lib/password";
+import { isTestDepartment, isTestPerson } from "@/lib/test-data";
 import { siteUrl } from "@/lib/site-url";
 import { adminConfigured, createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -170,4 +171,31 @@ export async function deleteUser(userId: string) {
   const { error } = await createAdminClient().auth.admin.deleteUser(userId);
   if (error) throw new Error("Could not delete user");
   revalidatePath(PAGE);
+}
+
+/**
+ * Removes what the end-to-end tests left behind: their people (with seats,
+ * invitations, attendance and signatures in trial meetings) and departments.
+ * System administrator only; real records are never matched.
+ */
+export async function purgeTestData(): Promise<ActionState> {
+  await requirePage("/admin/roles", LEVELS.manage);
+  if (!adminConfigured()) return fail(NOT_CONFIGURED);
+  const admin = createAdminClient();
+  const { data: people } = await admin.from("people").select("id, full_name");
+  const ids = (people ?? []).filter((p) => isTestPerson(p.full_name)).map((p) => p.id);
+  if (ids.length) {
+    for (const [table, column] of [["minutes_signatures", "person_id"], ["meeting_proxies", "grantor_person_id"], ["meeting_proxies", "holder_person_id"], ["meeting_attendance", "person_id"], ["meeting_invitees", "person_id"], ["committee_members", "person_id"], ["board_members", "person_id"]] as const) {
+      const { error } = await admin.from(table).delete().in(column, ids);
+      if (error) return fail(`تعذّر حذف ${table}: ${error.message}`);
+    }
+    const { error } = await admin.from("people").delete().in("id", ids);
+    if (error) return fail(`تعذّر حذف الأشخاص: ${error.message}`);
+  }
+  const { data: departments } = await admin.from("departments").select("id, name");
+  const deptIds = (departments ?? []).filter((d) => isTestDepartment(d.name)).map((d) => d.id);
+  let deptFailed = 0;
+  for (const id of deptIds) if ((await admin.from("departments").delete().eq("id", id)).error) deptFailed++;
+  revalidatePath("/", "layout");
+  return { ok: true, message: `حُذف ${ids.length} شخص اختبار و${deptIds.length - deptFailed} إدارة اختبار.${deptFailed ? ` بقيت ${deptFailed} إدارة مرتبطة بطلبات.` : ""}` };
 }

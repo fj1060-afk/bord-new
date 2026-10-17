@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Search } from "lucide-react";
 import { buttonClass, compactInputClass, iconInputClass } from "@/components/ui/styles";
 import { AddPanels } from "./add-panels";
+import { PurgeTestData } from "./purge-test-data";
+import { isTestDepartment, isTestPerson } from "@/lib/test-data";
 import { CreateDepartmentForm } from "../departments/department-forms";
 import { DepartmentGroups, type DepartmentGroup } from "./department-groups";
 
@@ -44,6 +46,8 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
     supabase.from("departments").select("id, name, code, status, department_delegates(user_id)").order("status").order("name"),
     canEditDepartments ? supabase.rpc("list_active_users") : Promise.resolve({ data: [] }),
   ]);
+  const { data: everyone } = can(viewer.permissions, "/admin/roles", LEVELS.manage) ? await supabase.from("people").select("full_name") : { data: [] };
+  const testPeople = (everyone ?? []).filter((p) => isTestPerson(p.full_name)).length;
   const groups: DepartmentGroup[] = (deptRows ?? []).map((d) => ({ id: d.id, name: d.name, code: d.code, status: d.status as DepartmentGroup["status"], userIds: (d.department_delegates as { user_id: string }[]).map((x) => x.user_id) }));
   const users: UserItem[] = (rows ?? []).map(({ user_roles, ...u }) => ({
     ...u,
@@ -93,6 +97,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
           activeUsers={(activeUsers ?? []) as { id: string; full_name: string; email: string }[]}
         />
       )}
+      {can(viewer.permissions, "/admin/roles", LEVELS.manage) && <PurgeTestData people={testPeople} departments={groups.filter((g) => isTestDepartment(g.name)).length} />}
     </>
   );
 }
