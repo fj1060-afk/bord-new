@@ -15,11 +15,41 @@ const DOT = { block: "bg-danger", warn: "bg-brass", info: "bg-ink-muted" } as co
 /** The icon on a meeting-wide check's fix button. */
 const FIX_ICON: Record<string, LucideIcon> = { details: CalendarClock, "notice-time": CalendarClock, term: Landmark, secretary: UserCog, items: ListChecks, "quorum-possible": UserPlus, "title-year": PenLine };
 
-/** A short "where" for a check in the summary: how many items it touches, or its detail when brief. */
+/**
+ * The summary names what is wrong and what to do, since a check's label reads as the
+ * condition to meet («المستندات مسلّمة»), which sounds done when listed as a warning.
+ */
+const PROBLEM: Record<string, [string, string]> = {
+  details: ["بيانات الاجتماع ناقصة", "أكمل التاريخ والوقت والمكان أو الرابط في «بيانات الاجتماع»"],
+  term: ["دورة المجلس لا تغطي تاريخ الاجتماع", "حدّث دورة المجلس أو غيّر الموعد"],
+  secretary: ["لم يُعيَّن أمين سر للمجلس", "عيّنه من ملف الشركة"],
+  items: ["جدول الأعمال فارغ", "أضف بنداً واحداً على الأقل"],
+  definite: ["عنوان بند فيه خيارات «/» أو فراغ «(…)»", "اختر صيغة واحدة وأكمل الفراغ في العنوان"],
+  owners: ["بند قرار بلا مسؤول، أو متطلب بلا جهة", "حدّد المسؤول أو جهة كل متطلب داخل البند"],
+  "requirements-sent": ["متطلبات محفوظة ولم تُرسل لأحد", "راجعها وأرسلها لجهاتها"],
+  "requirements-checks": ["تحققات مطلوبة لم تُؤكَّد بعد", "أكّدها في متطلبات البند"],
+  docs: ["مستندات مطلوبة لم تُسلَّم أو لم تُعتمد بعد", "تابعها مع الجهات، أو تجاوز التنبيه بذكر السبب"],
+  periods: ["البند يعتمد فترة لم تنتهِ قبل موعد الاجتماع", "صحّح السنة أو الفترة في عنوان البند"],
+  "item-dates": ["تاريخ في عنوان البند لا يتسق مع موعد الاجتماع", "صحّح التاريخ في عنوان البند"],
+  "requirements-due": ["مواعيد تسليم فاتت أو تقع بعد الاجتماع", "اضبطها على موعد قبل الاجتماع"],
+  "notice-time": ["الوقت المتبقي أقل من مهلة الدعوة النظامية", "أخّر الموعد أو تجاوز بذكر السبب"],
+  "title-year": ["سنة في عنوان الاجتماع لا تطابق تاريخه", "صحّح السنة في العنوان"],
+  "quorum-possible": ["المدعوون أقل من النصاب المطلوب", "ادعُ بقية الأعضاء من تبويب «المدعوون»"],
+  scheduled: ["موعد الاجتماع لم يُعتمد بعد", "اعتمد الموعد"],
+  pack: ["حزمة المجلس لم تُنشر للأعضاء", "انشر الحزمة"],
+  notice: ["الحزمة نُشرت متأخرة عن المهلة النظامية", "تجاوز بذكر السبب إن كان مبرراً"],
+  held: ["الاجتماع لم يُعقد أو لم يُنهَ بعد", "افتح تبويب «الانعقاد»"],
+  minutes: ["المحضر لم يُعدّ بعد", "ابدأ المحضر"],
+  "minutes-complete": ["المحضر ناقص", "أكمل الحد الأدنى والأصوات والتوقيع"],
+  approved: ["المحضر لم يُوقَّع ولم يُعتمد", "أرسله للتوقيع"],
+  circulars: ["قرارات بالتمرير لم تُثبت في محضر", "أثبتها في هذا الاجتماع"],
+};
+
+/** A short "where" for a check in the summary: the items it touches (in order), or its detail when brief. */
 function summaryOf(c: Check): string | null {
   const n = c.fix?.targets?.length ?? 0;
   if (n) {
-    const nums = c.fix!.targets!.flatMap((t) => (t.n ? [t.n] : []));
+    const nums = c.fix!.targets!.flatMap((t) => (t.n ? [t.n] : [])).sort((a, b) => a - b);
     return nums.length === n ? `${n === 1 ? "البند" : "البنود"} ${nums.join("، ")}` : n === 1 ? "في بند واحد" : n === 2 ? "في بندين" : `في ${n} بنود`;
   }
   return c.detail && c.detail.length <= 60 ? c.detail : null;
@@ -111,14 +141,17 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
         </div>
 
         {(hard.length > 0 || warns.length > 0) && (
-          <ul className="flex flex-col gap-1 rounded-lg bg-paper px-4 py-3 text-xs leading-5" aria-label="ملخص الموانع والتنبيهات">
+          <ul className="flex flex-col gap-1 rounded-lg bg-paper px-3 py-2 text-xs leading-5" aria-label="ملخص الموانع والتنبيهات">
             {[...hard, ...warns].map((c) => (
-              <li key={c.id} className="flex items-start gap-2">
-                <span className={clsx("mt-1.5 size-2 shrink-0 rounded-full", c.level === "block" ? "bg-danger" : "bg-brass")} aria-hidden="true" />
-                <span>
-                  <span className={c.level === "block" ? "font-medium text-danger" : "font-medium text-brass"}>{c.level === "block" ? "مانع" : "تنبيه"}:</span> {c.label}
-                  {summaryOf(c) && <span className="text-ink-muted"> — {summaryOf(c)}</span>}
-                </span>
+              <li key={c.id}>
+                <FixLink href={stageHref(view, c.tab)} anchor={c.fix?.targets?.[0]?.anchor ?? c.fix?.anchor} className="flex items-start gap-2 rounded-md py-1 hover:bg-surface">
+                  <span className={clsx("mt-1.5 size-2 shrink-0 rounded-full", c.level === "block" ? "bg-danger" : "bg-brass")} aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className={c.level === "block" ? "font-medium text-danger" : "font-medium text-brass"}>{c.level === "block" ? "مانع" : "تنبيه"}:</span> {PROBLEM[c.id]?.[0] ?? c.label}
+                    {summaryOf(c) && <span className="text-ink-muted"> — {summaryOf(c)}</span>}
+                    {PROBLEM[c.id] && <span className="block text-ink-muted">الحل: {PROBLEM[c.id][1]}</span>}
+                  </span>
+                </FixLink>
               </li>
             ))}
           </ul>
