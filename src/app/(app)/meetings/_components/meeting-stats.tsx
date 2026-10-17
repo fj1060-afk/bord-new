@@ -24,19 +24,23 @@ function Stat({ icon: Icon, label, value, note, tone, highlight, children }: { i
 }
 
 /** The year at a glance: all meetings, upcoming (with a countdown to the next), held and cancelled. */
-export async function MeetingStats() {
+export async function MeetingStats({ scope }: { scope?: { board: string } | { committee: string } }) {
   const supabase = await createClient();
   const now = new Date();
   const year = Number(riyadhToday(now).slice(0, 4));
   const start = `${year}-01-01T00:00:00+03:00`;
   const end = `${year + 1}-01-01T00:00:00+03:00`;
-  const count = () => supabase.from("meetings").select("id", { count: "exact", head: true }).gte("starts_at", start).lt("starts_at", end);
+  const meetings = (head: boolean, columns = "id") => {
+    const q = supabase.from("meetings").select(columns, head ? { count: "exact", head: true } : undefined);
+    return !scope ? q : "board" in scope ? q.eq("board_id", scope.board) : q.eq("committee_id", scope.committee);
+  };
+  const count = () => meetings(true).gte("starts_at", start).lt("starts_at", end);
   const [{ count: total }, { count: held }, { count: cancelled }, { count: upcoming }, { data: next }] = await Promise.all([
     count(),
     count().neq("status", "cancelled").eq("live_status", "ended"),
     count().eq("status", "cancelled"),
-    supabase.from("meetings").select("id", { count: "exact", head: true }).neq("status", "cancelled").gte("starts_at", now.toISOString()),
-    supabase.from("meetings").select("starts_at").neq("status", "cancelled").gte("starts_at", now.toISOString()).order("starts_at").limit(1).maybeSingle(),
+    meetings(true).neq("status", "cancelled").gte("starts_at", now.toISOString()),
+    meetings(false, "starts_at").neq("status", "cancelled").gte("starts_at", now.toISOString()).order("starts_at").limit(1).maybeSingle<{ starts_at: string }>(),
   ]);
   const when = next ? dateParts(new Date(next.starts_at)) : null;
 

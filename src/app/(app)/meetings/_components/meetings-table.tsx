@@ -93,7 +93,6 @@ export async function MeetingsTable({ base, params, scope }: { base: string; par
       bodies={((bodies ?? []) as { id: string; name: string; kind: string }[]).map((b) => ({ value: `${b.kind}:${b.id}`, label: b.name }))}
       canDelete={can(viewer.permissions, "/admin/roles", LEVELS.manage)}
       showBody={!scope}
-      newHref={scope && can(viewer.permissions, "/meetings", LEVELS.edit) ? `/meetings/new?body=${"board" in scope ? `board:${scope.board}` : `committee:${scope.committee}`}` : null}
     />
   );
 }

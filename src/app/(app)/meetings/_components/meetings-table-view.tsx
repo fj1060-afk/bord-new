@@ -5,11 +5,11 @@ import { useEffect, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Building2, ChevronLeft, ChevronRight, Ellipsis, FileText, FolderOpen, MonitorSmartphone, Plus, ScrollText, Search, Trash2, Video } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, Ellipsis, FileText, FolderOpen, MonitorSmartphone, ScrollText, Search, Trash2, Video } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { TabBar } from "@/components/ui/tab-bar";
 import { FlipList } from "@/components/ui/flip-list";
-import { buttonClass, compactInputClass, iconInputClass } from "@/components/ui/styles";
+import { compactInputClass, iconInputClass } from "@/components/ui/styles";
 import { durationText, MEETING_STATES, PAGE_SIZES, PERIODS, pageWindow, tableHref, type MeetingState, type Period, type TableQuery } from "@/lib/meeting-table";
 import { MEETING_MODES } from "@/lib/meetings";
 import { deleteMeeting, deleteMeetings } from "../_actions/meeting";
@@ -141,7 +141,6 @@ export function MeetingsTableView({
   bodies,
   canDelete,
   showBody,
-  newHref,
 }: {
   base: string;
   query: TableQuery;
@@ -150,7 +149,6 @@ export function MeetingsTableView({
   bodies: { value: string; label: string }[];
   canDelete: boolean;
   showBody: boolean;
-  newHref: string | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -207,11 +205,6 @@ export function MeetingsTableView({
           <Search size={16} aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 my-auto text-ink-muted" />
           <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ابحث بالعنوان أو رقم الاجتماع" className={iconInputClass} />
         </label>
-        {newHref && (
-          <Link href={newHref} className={buttonClass()}>
-            <Plus size={16} aria-hidden="true" /> اجتماع جديد
-          </Link>
-        )}
       </div>
 
       <Collapse show={canDelete && selected.length > 0}>
