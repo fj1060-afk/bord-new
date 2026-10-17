@@ -109,8 +109,8 @@ export function HomeBoard({ rows, today }: { rows: PortalRow[]; today: string })
           <p className="p-8 text-center text-sm text-ink-muted">{filter === "done" ? "لا مهام منجزة بعد." : "لا شيء هنا الآن."}</p>
         ) : (
           <>
-            {/* On a tablet the table scrolls sideways inside its card rather than widening the page. */}
-            <div className="relative hidden overflow-x-auto md:block">
+            {/* On a tablet the table scrolls sideways inside its card rather than widening the page; never vertically. */}
+            <div className="scroll-x relative hidden overflow-x-auto overflow-y-hidden md:block">
             <table className="w-full min-w-[44rem] text-sm">
               <thead className="whitespace-nowrap bg-paper text-xs text-ink-muted">
                 <tr>
@@ -253,7 +253,7 @@ function Action({ row, onUpload, block }: { row: PortalRow; onUpload: () => void
 function Details({ row }: { row: PortalRow }) {
   const d = row.detail;
   return (
-    <div className="grid gap-4 border-t border-rule bg-paper p-4 text-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="relative grid gap-4 border-t border-rule bg-paper p-4 text-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-2">
         {d.item && (
           <p>

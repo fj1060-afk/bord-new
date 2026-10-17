@@ -24,6 +24,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    /* Native scrollbars and form controls follow the dark theme too. */
+    color-scheme: dark;
     --paper: #0f1513;
     --surface: #161e1c;
     --ink: #e4ebe8;
@@ -227,6 +229,12 @@ body {
 .rich-text ul { list-style: disc; padding-inline-start: 1.4em; margin: 0 0 0.4em; }
 .rich-text ol { list-style: decimal; padding-inline-start: 1.4em; margin: 0 0 0.4em; }
 .rich-text > :last-child { margin-bottom: 0; }
+
+/* Content that scrolls sideways (wide tables): a thin scrollbar in the theme's rule colour. */
+.scroll-x {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
 
 /* Dark side panels: a thin scrollbar on a clear track that only shows while the pointer is over the panel. */
 .side-scroll {
