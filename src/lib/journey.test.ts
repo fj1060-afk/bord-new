@@ -32,6 +32,11 @@ describe("meeting journey", () => {
     expect(currentStage(journeyChecks({ ...i, items: [{ ...i.items[0], owned: true }] }))).toBe(2);
   });
 
+  it("offers the department an item's requirements go to as its owner", () => {
+    const i = { ...base, items: [{ id: "a1", title: "القوائم المالية", kind: "decision", owned: false }], ownerSuggest: { a1: { value: "department:d1", label: "المالية" } } };
+    expect(find(i, "owners").fix?.targets?.[0].suggest).toEqual({ value: "department:d1", label: "المالية" });
+  });
+
   it("blocks items left with a choice or a blank", () => {
     const i = { ...base, items: [{ title: "التوصية بزيادة/تخفيض رأس المال", kind: "information", owned: true }] };
     expect(find(i, "definite").ok).toBe(false);

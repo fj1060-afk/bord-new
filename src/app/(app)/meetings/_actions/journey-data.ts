@@ -6,6 +6,7 @@ import { libraryTemplates, matchTemplate } from "@/lib/item-templates";
 import { meetingBody } from "@/lib/item-review-server";
 import { companyProfile } from "@/lib/live-server";
 import { riyadhToday } from "@/lib/minutes";
+import { defaultDue } from "@/lib/requirements";
 import { loadMinutesGaps } from "./minutes-check";
 
 /** Everything the journey checks need for one meeting (RLS applies). */
@@ -33,10 +34,19 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
   ]);
   const gaps = minutes ? await loadMinutesGaps(supabase, meetingId, minutes.id) : [];
   const [{ data: reqRows }, { data: own }] = await Promise.all([
-    supabase.from("agenda_item_requirements").select("agenda_item_id, kind, label, status, custom, checked_at, due_date").eq("meeting_id", meetingId),
+    supabase.from("agenda_item_requirements").select("agenda_item_id, kind, label, status, custom, checked_at, due_date, department_id").eq("meeting_id", meetingId),
     supabase.from("agenda_item_library").select("title, title_en, body, kind, category, needs"),
   ]);
   const library = libraryTemplates(own ?? []);
+  // An item whose requirements all go to one department is offered that department as its owner.
+  const deptIds = [...new Set((reqRows ?? []).map((r) => r.department_id).filter(Boolean))] as string[];
+  const { data: depts } = deptIds.length ? await supabase.from("departments").select("id, name").in("id", deptIds) : { data: [] };
+  const deptName = new Map((depts ?? []).map((d) => [d.id, d.name]));
+  const ownerSuggest: Record<string, { value: string; label: string }> = {};
+  for (const item of items ?? []) {
+    const ids = [...new Set((reqRows ?? []).filter((r) => r.agenda_item_id === item.id && r.department_id).map((r) => r.department_id as string))];
+    if (ids.length === 1 && deptName.has(ids[0])) ownerSuggest[item.id] = { value: `department:${ids[0]}`, label: deptName.get(ids[0])! };
+  }
   const wordings = await meetingBody(supabase, meetingId);
   const wanted = new Map((items ?? []).map((i) => [i.id, new Set((matchTemplate(i.title, library, wordings)?.reqs ?? []).map((r) => r.ar))]));
   const live = (reqRows ?? []).filter((r) => r.status !== "dismissed");
@@ -59,6 +69,8 @@ export async function loadJourney(supabase: SupabaseClient, meetingId: string) {
       uncheckedItems: unchecked.map((r) => r.agenda_item_id),
       dues: live.filter((r) => r.status === "draft" && r.due_date).map((r) => ({ itemId: r.agenda_item_id, due: r.due_date! })),
     },
+    ownerSuggest,
+    dueSuggest: defaultDue(m.starts_at, profile?.invite_days ?? 5, riyadhToday()),
     invitedMembers: (invitees ?? []).length,
     quorumNeeded: quorumNeeded((members ?? []).length, quorumRule(profile, !!m.board_id)),
     minutes: minutes ? { status: minutes.status, gaps } : null,

@@ -4,8 +4,9 @@ import { Check as CheckIcon, ChevronDown, ChevronLeft, ChevronRight, Send } from
 import { buttonClass } from "@/components/ui/styles";
 import { blocking, stageDone, STAGES, type Check, type Target } from "@/lib/journey";
 import { FixLink } from "./fix-link";
-import { ItemIssues, type IssueItem } from "./item-issues";
+import { ItemIssues, type Issue, type IssueItem } from "./item-issues";
 import { OverrideForm } from "./override-form";
+import { ResolvedChecks } from "./resolved-checks";
 
 const tone = (c: Check) => (c.overridden || c.level === "info" ? "info" : c.level);
 const DOT = { block: "bg-danger", warn: "bg-brass", info: "bg-ink-muted" } as const;
@@ -26,13 +27,26 @@ function chipFor(c: Check, t: Target): string {
   }
 }
 
+/** The one-click fix a chip offers; checks fixed inside the item open it for editing. */
+function fixFor(c: Check, t: Target): Issue["fix"] {
+  switch (c.id) {
+    case "owners": return { kind: "owner", suggest: t.suggest };
+    case "requirements-due": return { kind: "due", suggest: t.suggest };
+    case "requirements-sent": return { kind: "send" };
+    default: return { kind: "edit" };
+  }
+}
+
+const SEND_NOTE = "تحديد الإدارة لا يكفي: الطلب لا يصلها حتى يُرسل، وبعد الإرسال يُحتسب ويظهر لها.";
+
 /** Open checks that name items, regrouped per item so each item shows once. */
 function byItem(open: Check[]): IssueItem[] {
   const items = new Map<string, IssueItem>();
   for (const c of open)
     for (const t of c.fix?.targets ?? []) {
       const item = items.get(t.anchor) ?? { anchor: t.anchor, n: t.n, label: t.label, issues: [] };
-      item.issues.push({ id: c.id, level: tone(c), chip: chipFor(c, t), explain: [c.label, t.note ?? (c.id === "requirements-checks" ? c.detail : undefined)].filter(Boolean).join(": ") + (c.ref ? ` (${c.ref})` : ""), overridable: c.level === "warn" && !c.overridden });
+      const explain = [c.label, t.note ?? (c.id === "requirements-checks" ? c.detail : undefined)].filter(Boolean).join(": ") + (c.ref ? ` (${c.ref})` : "");
+      item.issues.push({ id: c.id, level: tone(c), chip: chipFor(c, t), explain: c.id === "requirements-sent" ? `${explain}. ${SEND_NOTE}` : explain, overridable: c.level === "warn" && !c.overridden, fix: fixFor(c, t) });
       items.set(t.anchor, item);
     }
   const rank = { block: 0, warn: 1, info: 2 };
@@ -134,17 +148,9 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
         </>
       )}
 
-      {items.length > 0 && (
-        <>
-          <p className="flex justify-between border-t border-rule px-5 pb-1 pt-3 text-xs font-medium text-ink-muted">
-            <span>على البنود</span>
-            <span>
-              {items.length} {items.length === 1 ? "بند" : "بنود"}
-            </span>
-          </p>
-          <ItemIssues meetingId={meetingId} href={agendaHref} items={items} />
-        </>
-      )}
+      <ResolvedChecks open={onMeeting.map((c) => ({ id: c.id, label: c.label }))} />
+
+      <ItemIssues meetingId={meetingId} href={agendaHref} items={items} />
 
       {unsent && (
         <div className="border-t border-rule px-5 py-3">
