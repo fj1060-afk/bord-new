@@ -33,10 +33,15 @@ The approved design, top to bottom:
   the right and English lighter on the left; a time range shows once, centred.
 - **Section headings**: Arabic on the right, English on the left, brass rule
   beneath.
-- **Agenda items**: green number square, Arabic title beside the English one
-  with a divider, then a light strip with presenter, duration and attachments
-  (brass icons). The purpose column is dropped when every item is for
-  decision, with one line under the heading saying so.
+- **Agenda items**: one container in the title band's light colour
+  (`--band-soft`, radius 12px, padding 12px) holding a white card per item
+  (border 1px `#dce3df`, radius 8px, 10px apart). Each card: green number
+  square on the right, Arabic title right-aligned beside the English one
+  left-aligned with a light divider, then a very light strip with presenter,
+  duration and attachments spread evenly (brass icons, light dividers). A
+  card never splits across pages; the container continues on the next page.
+  The purpose column is dropped when every item is for decision, with one
+  line under the heading saying so.
 - **Notes to members**: light box with a brass edge, Arabic and English side
   by side.
 - **Signatures**: a plain line per signer with role, name, status when signed
