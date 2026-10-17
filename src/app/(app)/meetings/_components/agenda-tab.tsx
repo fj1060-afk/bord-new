@@ -10,6 +10,7 @@ import { RequirementsPanel, type RequestMail, type RequirementRow } from "./requ
 import { SendByParty } from "./send-by-party";
 import { ItemFindings } from "./item-review-panel";
 import { AuthorityBadge } from "./authority-badge";
+import { EditItemButton } from "./edit-item-button";
 import { ExpandAll } from "./expand-all";
 import { needsAction, type IssueItem } from "./item-issue-data";
 import { IssueBadge, ItemFrame } from "./item-frame";
@@ -241,6 +242,7 @@ export function AgendaTab({
                 </details>
                 {editable && (
                   <div className="flex shrink-0 flex-col gap-1 p-2">
+                    <EditItemButton itemId={item.id} title={item.title} />
                     <form action={moveAgendaItem.bind(null, meetingId, item.id, "up")}>
                       <button disabled={index === 0} aria-label="نقل للأعلى" className="rounded p-1.5 text-ink-muted hover:bg-primary-soft disabled:opacity-30">
                         <ArrowUp size={16} />

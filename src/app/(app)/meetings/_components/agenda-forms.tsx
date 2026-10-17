@@ -2,6 +2,7 @@
 
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { Pencil } from "lucide-react";
 import { EnglishField, buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
@@ -246,8 +247,8 @@ export function EditableAgendaItem({ meetingId, item, targets, library, body, ch
   return (
     <div className="flex flex-col gap-2">
       {children}
-      <button type="button" onClick={() => setEditing(true)} className="w-fit text-sm text-primary hover:underline">
-        تعديل البند
+      <button type="button" onClick={() => setEditing(true)} className={buttonClass("secondary", "w-fit gap-1.5 px-3 py-1.5 text-xs")}>
+        <Pencil size={14} aria-hidden="true" /> تعديل البند
       </button>
     </div>
   );
