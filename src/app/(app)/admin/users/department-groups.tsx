@@ -38,8 +38,9 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
         const members = g.userIds.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
         const archived = g.status === "archived";
         return (
-          <details key={g.id} open={open && members.length > 0} className="group/dept overflow-hidden rounded-lg border border-rule bg-surface">
-            <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-3.5 hover:bg-paper [&::-webkit-details-marker]:hidden">
+          <div key={g.id} className="relative">
+          <details open={open && members.length > 0} className="group/dept overflow-hidden rounded-lg border border-rule bg-surface">
+            <summary className={`flex cursor-pointer list-none items-center gap-3 py-3.5 ps-5 hover:bg-paper [&::-webkit-details-marker]:hidden ${rights.canDelete ? "pe-16" : "pe-5"}`}>
               <Building2 size={18} aria-hidden="true" className="shrink-0 text-primary" />
               <span className="min-w-0 flex-1 font-display text-lg font-bold">
                 {g.name}
@@ -61,13 +62,17 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
                     icon={archived ? <ArchiveRestore size={16} aria-hidden="true" /> : <Archive size={16} aria-hidden="true" />}
                     confirm={archived ? `إعادة تفعيل ${g.name}؟` : `أرشفة ${g.name}؟ تختفي من قوائم الاختيار وتبقى سجلاتها.`}
                   />
-                  {rights.canDelete && (
-                    <ConfirmButton action={deleteDepartment.bind(null, g.id)} label={`حذف ${g.name}`} icon={<Trash2 size={16} aria-hidden="true" />} confirm={`حذف «${g.name}» نهائياً؟ يُزال ربط مستخدميها بها، ولا يمكن التراجع.`} />
-                  )}
                 </div>
               )}
             </div>
           </details>
+          {/* In front of the department, outside its fold so it never opens or closes it. */}
+          {rights.canDelete && (
+            <span className="absolute end-4 top-3">
+              <ConfirmButton action={deleteDepartment.bind(null, g.id)} label={`حذف ${g.name}`} icon={<Trash2 size={16} aria-hidden="true" />} confirm={`حذف «${g.name}» نهائياً؟ يُزال ربط مستخدميها بها، ولا يمكن التراجع.`} />
+            </span>
+          )}
+          </div>
         );
       })}
 
