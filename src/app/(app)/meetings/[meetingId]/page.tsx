@@ -256,7 +256,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           requirementsSentAt={meeting.requirements_sent_at}
           requestMails={mail ? mail.recipients.map((r) => ({ name: r.name, to: r.to, ...requestsMail(mail.meeting, r.name, r.requests, mail.tasksUrl) })) : undefined}
           body={wordings}
-          review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1, powers, affiliations, company: profile?.name ?? "", committeeKind: meeting.board_id ? undefined : ((meeting.committee as { kind?: string } | null)?.kind ?? "other") } : undefined}
+          review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1, powers, affiliations, company: profile?.name ?? "", committeeKind: meeting.board_id ? undefined : ((meeting.committee as { kind?: string } | null)?.kind ?? "other"), meetingDay: new Date(Date.parse(meeting.starts_at) + 3 * 3600000).toISOString().slice(0, 10) } : undefined}
         />
       )}
       {tab === "agenda" && (

@@ -7,6 +7,7 @@ import { authorityFindings, type AuthorityTemplate, type Powers } from "./author
 import { fold } from "./fold";
 import { asRecommendation, checkAgainstPowers, committeeRules, POWER_KINDS } from "./committee-powers";
 import { withoutRequirements } from "./requirements";
+import { dateProblems, periodEnd } from "./item-period";
 import { withPhraseFixes } from "./spelling";
 
 /** `fixes` are complete replacement titles; `template` marks remarks about unfilled template parts (expected in the library). */
@@ -227,12 +228,14 @@ export type ReviewContext = {
   company?: string;
   /** The committee kind when the meeting is a committee's: its decisions are checked against its statutory competencies. */
   committeeKind?: string;
+  /** The meeting day (YYYY-MM-DD): periods and dates in the item are checked against it. */
+  meetingDay?: string;
 };
 
 /** `year` is the last completed financial year, used in suggested titles; `listed` adds the CMA rules; `template` and `powers` add who decides. */
 export function reviewItem(
   item: ItemDraft,
-  { disclosures = [], year = new Date().getFullYear() - 1, listed = false, template, powers, affiliations = [], company = "", committeeKind }: ReviewContext = {},
+  { disclosures = [], year = new Date().getFullYear() - 1, listed = false, template, powers, affiliations = [], company = "", committeeKind, meetingDay }: ReviewContext = {},
 ): Finding[] {
   // The auto-filled requirements block lists documents, not what the item is about.
   const about = withoutRequirements(item.description ?? "");
@@ -281,6 +284,11 @@ export function reviewItem(
     // The completed-title suggestions above already start with a verb.
     if (verbless && !findings.some((f) => f.fixes)) findings.push({ level: "tip", text: "صُغ بند القرار بفعل واضح.", fixes: [`التصويت على اعتماد ${base}`, `التصويت على ${base}`] });
     if (!item.description?.trim()) findings.push({ level: "tip", text: "أضف وصفاً يبيّن المطلوب من المجلس وأثر القرار." });
+  }
+  if (meetingDay) {
+    const end = periodEnd(item.title);
+    if (end && end >= meetingDay) findings.push({ level: "warn", text: `الفترة التي يعتمدها البند تنتهي في ${end.split("-").reverse().join("/")}، بعد موعد الاجتماع؛ لا تُعتمد قوائم أو أرباح فترة لم تنتهِ. صحّح السنة.` });
+    for (const problem of dateProblems(item.title, meetingDay)) findings.push({ level: "warn", text: `تاريخ غير متسق في البند: ${problem}.` });
   }
   return findings;
 }

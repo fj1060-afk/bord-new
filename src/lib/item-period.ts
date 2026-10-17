@@ -24,3 +24,30 @@ export const periodNotEnded = (title: string, meetingDay: string) => {
   const end = periodEnd(title);
   return !!end && end >= meetingDay;
 };
+
+const DMY = /(?<!\d)(\d{1,2})\/(\d{1,2})\/(\d{4})(?!\d)/g;
+const DAY_MONTH = /(?<!المنتهي[ةه] في )(?<!\d)(\d{1,2}) ([\p{L}]+) (\d{4})/gu;
+
+/** Dates written in the item (20/10/2026, 1 مايو 2027), except the period end itself. */
+export function datesIn(title: string): string[] {
+  const out: string[] = [];
+  for (const [, d, mo, y] of title.matchAll(DMY)) if (Number(mo) >= 1 && Number(mo) <= 12) out.push(`${y}-${pad(Number(mo))}-${pad(Number(d))}`);
+  for (const [, d, name, y] of title.matchAll(DAY_MONTH)) if (MONTHS[name]) out.push(`${y}-${pad(MONTHS[name])}-${pad(Number(d))}`);
+  return out;
+}
+
+/** Dates in the item that cannot be right: before the meeting, or before the period they belong to has ended. */
+const shown = (iso: string) => iso.split("-").reverse().join("/");
+
+export function dateProblems(title: string, meetingDay: string): string[] {
+  const end = periodEnd(title);
+  const problems: string[] = [];
+  for (const date of datesIn(title)) {
+    if (end && date <= end) problems.push(`${shown(date)} قبل نهاية الفترة في ${shown(end)}`);
+    else if (date < meetingDay) problems.push(`${shown(date)} قبل موعد الاجتماع`);
+  }
+  return problems;
+}
+
+/** Years in a meeting title that lie after the meeting's own year (e.g. "للسنة المالية 2028" in a 2026 meeting). */
+export const yearsAhead = (title: string, meetingDay: string) => [...title.matchAll(/(?<!\d)(20\d{2})(?!\d)/g)].map((m) => Number(m[1])).filter((y) => y > Number(meetingDay.slice(0, 4)));

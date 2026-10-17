@@ -4,7 +4,7 @@
 
 import type { CompanyType } from "./company";
 import { templateGaps } from "./item-review";
-import { periodNotEnded } from "./item-period";
+import { dateProblems, periodNotEnded, yearsAhead } from "./item-period";
 import { hamzaSlips } from "./spelling";
 
 export const STAGES = [
@@ -55,6 +55,8 @@ export function journeyChecks(j: JourneyInput): Check[] {
   const daysLeft = Math.round((Date.parse(meetingDay) - Date.parse(j.today)) / 86400000);
   const noticeShort = !m.pack_published_at && m.meeting_type !== "extraordinary" && m.status !== "cancelled" && daysLeft < j.inviteDays;
   const titleFix = m.title ? hamzaSlips(m.title) : null;
+  const misdated = j.items.filter((i) => dateProblems(i.title, meetingDay).length);
+  const aheadYears = m.title ? yearsAhead(m.title, meetingDay) : [];
   const byIds = (ids?: string[]) => j.items.filter((i) => i.id && ids?.includes(i.id));
   const targets = (list: JourneyInput["items"]) => list.filter((i) => i.id).map((i) => ({ label: i.title, anchor: `item-${i.id}` }));
   const checks: Check[] = [
@@ -68,8 +70,10 @@ export function journeyChecks(j: JourneyInput): Check[] {
     { id: "requirements-checks", stage: 1, tab: "agenda", label: "تأكيد التحققات المطلوبة للبنود", level: "warn", ok: !j.requirements?.unchecked.length, detail: j.requirements?.unchecked.length ? `بانتظار: ${j.requirements.unchecked.join("، ")}` : undefined, fix: { label: "أكّد التحقق", targets: targets(byIds(j.requirements?.uncheckedItems)) } },
     { id: "docs", stage: 1, tab: "agenda", label: "المستندات المطلوبة مسلّمة ومعتمدة", level: "warn", ok: pending.length === 0, detail: pending.length ? `بانتظار: ${pending.map((r) => r.title).join("، ")}` : undefined, fix: { label: "راجع المستندات", targets: targets(byIds(pending.map((r) => r.itemId ?? ""))) } },
     { id: "periods", stage: 1, tab: "agenda", label: "فترات البنود منتهية قبل الاجتماع", level: "warn", ok: unended.length === 0, detail: unended.length ? "بنود تعتمد قوائم أو أرباحاً لفترة لم تنتهِ في تاريخ الاجتماع:" : undefined, fix: { label: "صحّح الفترة", targets: targets(unended), note: "بنود تعتمد قوائم أو أرباحاً لفترة لم تنتهِ في تاريخ الاجتماع:" } },
+    { id: "item-dates", stage: 1, tab: "agenda", label: "تواريخ البنود متسقة مع الاجتماع وفتراتها", level: "warn", ok: misdated.length === 0, detail: misdated.length ? misdated.map((i) => `«${i.title.slice(0, 40)}…»: ${dateProblems(i.title, meetingDay).join("، ")}`).join(" · ") : undefined, fix: { label: "صحّح التاريخ", targets: targets(misdated), note: misdated.length ? `في البنود: ${misdated.flatMap((i) => dateProblems(i.title, meetingDay)).join("، ")}` : undefined } },
     { id: "requirements-due", stage: 1, tab: "agenda", label: "مواعيد المتطلبات بين اليوم وموعد الاجتماع", level: "warn", ok: badDues.length === 0, detail: badDues.length ? `${badDues.length} متطلب موعده فات أو بعد الاجتماع` : undefined, fix: { label: "عدّل المواعيد", targets: targets(byIds(badDues.map((d) => d.itemId))), note: badDues.length ? `${badDues.length} متطلب موعده فات أو بعد الاجتماع، في البنود:` : undefined } },
     { id: "notice-time", stage: 1, tab: "overview", label: `يتسع الوقت لمهلة الدعوة (${j.inviteDays} أيام)`, level: (listed ? "warn" : "info") as Level, ref: "لائحة الحوكمة م30/ج", ok: !noticeShort, detail: noticeShort ? (daysLeft < 0 ? "موعد الاجتماع مضى ولم تُنشر الحزمة." : `باقي ${daysLeft} ${daysLeft === 1 ? "يوم" : "أيام"} على الاجتماع ولم تُنشر الحزمة؛ أجّل الموعد أو اجعله اجتماعاً استثنائياً بمبرر.`) : undefined, fix: { label: "عدّل الموعد", anchor: "meeting-details" } },
+    { id: "title-year", stage: 1, tab: "overview", label: "سنة عنوان الاجتماع تطابق تاريخه", level: "warn", ok: aheadYears.length === 0, detail: aheadYears.length ? `العنوان يذكر ${aheadYears.join(" و")} والاجتماع في ${meetingDay.slice(0, 4)}؛ ترقيم الاجتماعات بسنة انعقادها.` : undefined, fix: { label: "صحّح العنوان", anchor: "meeting-details" } },
     { id: "title-spelling", stage: 1, tab: "overview", label: "عنوان الاجتماع سليم إملائياً", level: "info", ok: !titleFix?.words.length, detail: titleFix?.words.length ? `المقترح: «${titleFix.fixed}»` : undefined, fix: { label: "صحّح العنوان", anchor: "meeting-details" } },
     { id: "quorum-possible", stage: 1, tab: "invitees", label: "الأعضاء المدعوون يكفون لاكتمال النصاب", level: "block", ref: "نظام الشركات م80/2", ok: j.invitedMembers >= j.quorumNeeded, detail: `مدعوون ${j.invitedMembers}، والنصاب ${j.quorumNeeded}`, fix: { label: "ادعُ الأعضاء" } },
     { id: "scheduled", stage: 2, tab: "overview", label: "اعتماد موعد الاجتماع", level: "block", ok: m.status === "scheduled" },
