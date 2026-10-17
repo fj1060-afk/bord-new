@@ -3,7 +3,7 @@
 
 export type MotionToken = "fast" | "menu" | "page" | "stagger" | "stagger-max" | "shift";
 
-const FALLBACK: Record<MotionToken, number> = { fast: 150, menu: 220, page: 300, stagger: 40, "stagger-max": 300, shift: 10 };
+const FALLBACK: Record<MotionToken, number> = { fast: 200, menu: 340, page: 480, stagger: 60, "stagger-max": 420, shift: 14 };
 
 /** A duration (ms) or distance (px) token as a number; falls back when read on the server. */
 export function motion(token: MotionToken): number {

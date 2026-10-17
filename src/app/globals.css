@@ -88,19 +88,19 @@ body {
    few animations run from script (details, drawers, counters). Change them
    here and the whole site follows. */
 :root {
-  --motion-fast: 150ms;    /* buttons, links, fields, chips */
-  --motion-menu: 220ms;    /* menus, tabs, folds, indicators */
-  --motion-page: 300ms;    /* pages, dialogs, drawers */
-  --motion-stagger: 40ms;  /* between siblings of a group */
-  --motion-stagger-max: 300ms;
-  --motion-shift: 10px;    /* how far an entering element travels */
+  --motion-fast: 200ms;    /* buttons, links, fields, chips */
+  --motion-menu: 340ms;    /* menus, tabs, folds, indicators */
+  --motion-page: 480ms;    /* pages, dialogs, drawers */
+  --motion-stagger: 60ms;  /* between siblings of a group */
+  --motion-stagger-max: 420ms;
+  --motion-shift: 14px;    /* how far an entering element travels */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 /* Phones: shorter travel and page entries. */
 @media (max-width: 640px) {
-  :root { --motion-shift: 6px; --motion-page: 250ms; }
+  :root { --motion-shift: 10px; --motion-page: 400ms; }
 }
 /* Reduced motion: keep state changes, drop the movement. */
 @media (prefers-reduced-motion: reduce) {
