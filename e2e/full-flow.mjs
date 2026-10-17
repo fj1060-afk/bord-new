@@ -84,7 +84,7 @@ await step("إضافة عضو جديد للمجلس", async () => {
 
 await step("إنشاء إدارة ثم حذفها", async () => {
   await go("/admin/users");
-  await page.click("summary:has-text('إضافة إدارة')");
+  await page.click("button:has-text('إضافة إدارة')");
   await page.fill("input[name=name]", `إدارة اختبار ${stamp}`);
   await page.click("button:has-text('إضافة الإدارة')");
   await status("أُنشئت الإدارة");

@@ -4,8 +4,9 @@ import { requirePage } from "@/lib/auth";
 import { can, LEVELS } from "@/lib/permissions";
 import { adminConfigured } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { Building2 } from "lucide-react";
-import { buttonClass } from "@/components/ui/styles";
+import { Search } from "lucide-react";
+import { buttonClass, inputClass } from "@/components/ui/styles";
+import { AddPanels } from "./add-panels";
 import { CreateDepartmentForm } from "../departments/department-forms";
 import { DepartmentGroups, type DepartmentGroup } from "./department-groups";
 import { CreateUserForm } from "./user-forms";
@@ -63,34 +64,26 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
           البيئة في Vercel ثم أعد النشر (راجع docs/SETUP.md).
         </p>
       )}
-      <div className="mb-6 flex flex-col gap-3">
-        {canManage && <CreateUserForm roles={roles ?? []} departments={departments} people={(people ?? []).map((p) => ({ id: p.id, name: p.full_name }))} />}
-        {canEditDepartments && (
-          <details className="rounded-lg border border-rule bg-surface">
-            <summary className={buttonClass("secondary", "m-4 w-fit cursor-pointer list-none")}>
-              <Building2 size={16} aria-hidden="true" /> إضافة إدارة
-            </summary>
-            <div className="border-t border-rule p-5">
-              <CreateDepartmentForm />
-            </div>
-          </details>
-        )}
-      </div>
+      <AddPanels
+        search={
+          <form className="flex gap-2" role="search">
+            <label className="relative min-w-0 flex-1">
+              <span className="sr-only">بحث</span>
+              <Search size={16} aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 my-auto text-ink-muted" />
+              <input name="q" type="search" defaultValue={q} placeholder="ابحث بالاسم أو البريد" className={`${inputClass} ps-9`} />
+            </label>
+            <select name="status" defaultValue={status} aria-label="الحالة" className={`${inputClass} w-auto`}>
+              <option value="">كل الحالات</option>
+              <option value="active">نشط</option>
+              <option value="disabled">معطّل</option>
+            </select>
+            <button className={buttonClass("secondary")}>بحث</button>
+          </form>
+        }
+        userForm={canManage ? <CreateUserForm roles={roles ?? []} departments={departments} people={(people ?? []).map((p) => ({ id: p.id, name: p.full_name }))} /> : undefined}
+        departmentForm={canEditDepartments ? <CreateDepartmentForm /> : undefined}
+      />
 
-      <form className="mb-4 flex flex-wrap gap-2" role="search">
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="ابحث بالاسم أو البريد"
-          className="min-w-0 flex-1 rounded-md border border-rule bg-surface px-3 py-2 text-sm"
-        />
-        <select name="status" defaultValue={status} className="rounded-md border border-rule bg-surface px-3 py-2 text-sm">
-          <option value="">كل الحالات</option>
-          <option value="active">نشط</option>
-          <option value="disabled">معطّل</option>
-        </select>
-        <button className="rounded-md border border-rule bg-surface px-4 py-2 text-sm hover:bg-primary-soft">بحث</button>
-      </form>
 
       {users.length === 0 ? (
         <p className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">لا يوجد مستخدمون مطابقون.</p>

@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, Building2, ChevronDown, Trash2, UserMinus } from "lucide-react";
+import { Archive, ArchiveRestore, Building2, ChevronDown, Trash2, UserMinus, Users } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { deleteDepartment, removeDelegate, setDepartmentStatus } from "../departments/actions";
 import { AddDelegateForm } from "../departments/department-forms";
@@ -12,6 +12,8 @@ type Rights = { viewerId: string; canEdit: boolean; canManage: boolean; canDelet
 /** The users grouped under the departments they act for, each department a fold; users with none come last. */
 export function DepartmentGroups({ groups, users, roles, rights, open, activeUsers }: { groups: DepartmentGroup[]; users: UserItem[]; roles: RoleOption[]; rights: Rights; open: boolean; activeUsers: { id: string; full_name: string; email: string }[] }) {
   const byId = new Map(users.map((u) => [u.id, u]));
+  // Every row keeps the same end space, so the chevrons line up whether or not a delete icon sits there.
+  const pad = rights.canDelete ? "pe-16" : "pe-4";
   const placed = new Set(groups.flatMap((g) => g.userIds));
   const loose = users.filter((u) => !placed.has(u.id));
 
@@ -33,21 +35,25 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="motion-stagger flex flex-col gap-2">
       {groups.map((g) => {
         const members = g.userIds.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
         const archived = g.status === "archived";
         return (
           <div key={g.id} className="relative">
           <details open={open && members.length > 0} className="group/dept overflow-hidden rounded-lg border border-rule bg-surface">
-            <summary className={`flex cursor-pointer list-none items-center gap-3 py-3.5 ps-5 hover:bg-paper [&::-webkit-details-marker]:hidden ${rights.canDelete ? "pe-16" : "pe-5"}`}>
-              <Building2 size={18} aria-hidden="true" className="shrink-0 text-primary" />
-              <span className="min-w-0 flex-1 font-display text-lg font-bold">
-                {g.name}
-                {g.code && <span className="ms-2 font-mono text-xs font-normal text-ink-muted">{g.code}</span>}
-                {archived && <span className="ms-2 rounded-full border border-rule px-2 py-0.5 text-xs font-normal text-ink-muted">مؤرشفة</span>}
+            <summary className={`flex cursor-pointer list-none items-center gap-3 py-3 ps-4 hover:bg-paper [&::-webkit-details-marker]:hidden ${pad}`}>
+              <span className={`grid size-10 shrink-0 place-items-center rounded-lg ${archived ? "bg-paper text-ink-muted" : "bg-primary-soft text-primary"}`}>
+                <Building2 size={18} aria-hidden="true" />
               </span>
-              <span className="rounded-full bg-primary-soft px-2.5 py-0.5 font-mono text-xs text-primary">{members.length}</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{g.name}</span>
+                  {g.code && <span className="rounded border border-rule px-1.5 font-mono text-[11px] text-ink-muted">{g.code}</span>}
+                  {archived && <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] text-ink-muted">مؤرشفة</span>}
+                </span>
+                <span className="block text-xs text-ink-muted">{members.length === 0 ? "لا مستخدمين" : members.length === 1 ? "مستخدم واحد" : `${members.length} مستخدمين`}</span>
+              </span>
               <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/dept:rotate-180" />
             </summary>
             <div className="border-t border-rule">
@@ -68,7 +74,7 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
           </details>
           {/* In front of the department, outside its fold so it never opens or closes it. */}
           {rights.canDelete && (
-            <span className="absolute end-4 top-3">
+            <span className="absolute end-3 top-3.5">
               <ConfirmButton action={deleteDepartment.bind(null, g.id)} label={`حذف ${g.name}`} icon={<Trash2 size={16} aria-hidden="true" />} confirm={`حذف «${g.name}» نهائياً؟ يُزال ربط مستخدميها بها، ولا يمكن التراجع.`} />
             </span>
           )}
@@ -78,9 +84,14 @@ export function DepartmentGroups({ groups, users, roles, rights, open, activeUse
 
       {loose.length > 0 && (
         <details open={open || groups.length === 0} className="group/dept overflow-hidden rounded-lg border border-dashed border-rule bg-surface">
-          <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-3.5 hover:bg-paper [&::-webkit-details-marker]:hidden">
-            <span className="min-w-0 flex-1 font-display text-lg font-bold text-ink-muted">بلا إدارة</span>
-            <span className="rounded-full bg-paper px-2.5 py-0.5 font-mono text-xs text-ink-muted">{loose.length}</span>
+          <summary className={`flex cursor-pointer list-none items-center gap-3 py-3 ps-4 hover:bg-paper [&::-webkit-details-marker]:hidden ${pad}`}>
+            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-paper text-ink-muted">
+              <Users size={18} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">بلا إدارة</span>
+              <span className="block text-xs text-ink-muted">{loose.length === 1 ? "مستخدم واحد" : `${loose.length} مستخدمين`}</span>
+            </span>
             <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/dept:rotate-180" />
           </summary>
           <ul className="divide-y divide-rule border-t border-rule">{loose.map((u) => row(u))}</ul>

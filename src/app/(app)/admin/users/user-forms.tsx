@@ -2,7 +2,7 @@
 
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useState, useTransition } from "react";
-import { Trash2, UserPlus } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { formatDateTime } from "@/lib/format";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
@@ -42,12 +42,8 @@ export function CreateUserForm({ roles, departments, people }: { roles: RoleOpti
   const admin = roles.some((r) => picked.includes(r.id) && /مدير النظام/.test(r.name));
 
   return (
-    <details className="group mb-6 rounded-lg border border-rule bg-surface">
-      <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>
-        <UserPlus size={16} aria-hidden="true" />
-        إضافة مستخدم
-      </summary>
-      <ActionForm action={action} state={state} className="grid gap-6 border-t border-rule p-5 sm:grid-cols-2" onInput={(e) => {
+
+      <ActionForm action={action} state={state} className="grid gap-6 sm:grid-cols-2" onInput={(e) => {
         const f = e.currentTarget;
         setWho({ name: (f.elements.namedItem("full_name") as HTMLInputElement).value, email: (f.elements.namedItem("email") as HTMLInputElement).value });
       }}>
@@ -142,7 +138,6 @@ export function CreateUserForm({ roles, departments, people }: { roles: RoleOpti
           </div>
         </div>
       </ActionForm>
-    </details>
   );
 }
 
