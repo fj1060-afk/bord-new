@@ -4,12 +4,10 @@ import { byUrgency, isLate, isPortalUser, portalEnabled, stageOf, tally, timingL
 const row = (over: Partial<PortalRow>): PortalRow => ({ id: "x", kind: "document", title: "t", stage: "new", late: false, due: null, context: "", meetingId: null, meetingTitle: null, party: "", href: "", detail: { files: [] }, ...over });
 
 describe("portal", () => {
-  it("is on in previews and development, off on the live site unless switched on", () => {
-    expect(portalEnabled({ VERCEL_ENV: "preview" })).toBe(true);
+  it("is on everywhere unless switched off", () => {
+    expect(portalEnabled({ VERCEL_ENV: "production" })).toBe(true);
     expect(portalEnabled({})).toBe(true);
-    expect(portalEnabled({ VERCEL_ENV: "production" })).toBe(false);
-    expect(portalEnabled({ VERCEL_ENV: "production", REQUESTS_PORTAL: "on" })).toBe(true);
-    expect(portalEnabled({ VERCEL_ENV: "preview", REQUESTS_PORTAL: "off" })).toBe(false);
+    expect(portalEnabled({ VERCEL_ENV: "production", REQUESTS_PORTAL: "off" })).toBe(false);
   });
 
   it("serves department users only", () => {

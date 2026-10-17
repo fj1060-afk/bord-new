@@ -1,10 +1,9 @@
 // The requests portal for department users: one list of what is asked of them
 // (documents for agenda items, tasks from resolutions), with one set of statuses.
 
-/** The portal is on in previews and development, and on the live site only once REQUESTS_PORTAL=on is set there. */
+/** The portal is on everywhere; REQUESTS_PORTAL=off in Vercel switches it off without a code change. */
 export function portalEnabled(env: Record<string, string | undefined> = process.env): boolean {
-  if (env.REQUESTS_PORTAL === "off") return false;
-  return env.REQUESTS_PORTAL === "on" || env.VERCEL_ENV !== "production";
+  return env.REQUESTS_PORTAL !== "off";
 }
 
 /** Department users: no organizer or board/committee pages, so they get the portal's three pages. */
