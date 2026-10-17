@@ -237,5 +237,5 @@ export function DocChrome({ footer, header, bi, note, fileName }: { footer: stri
   );
 }
 
-/** Latin reference that reads the same in Arabic and English: BD-2026-07 (board) or CM-2026-03 (committee). */
-export const reference = (isBoard: boolean, number: number | null, startsAt: string) => `${isBoard ? "BD" : "CM"}-${startsAt.slice(0, 4)}-${number ? String(number).padStart(2, "0") : "DRAFT"}`;
+/** The meeting's issued code (e.g. BD-2026-001), which reads the same in Arabic and English; drafts show DRAFT. */
+export const reference = (code: string | null, startsAt: string) => code ?? `DRAFT-${startsAt.slice(0, 4)}`;

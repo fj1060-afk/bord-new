@@ -30,10 +30,16 @@ export function riyadhParts(iso: string): { date: string; time: string } {
 }
 
 /** "اجتماع المجلس رقم 3 لعام 2026" style reference. */
-export function meetingReference(number: number | null, startsAt: string): string {
-  const year = riyadhParts(startsAt).date.slice(0, 4);
-  // Drafts are numbered when their invitation is issued.
-  return number ? `رقم ${number} لعام ${year}` : `لعام ${year} (يُرقَّم عند إصدار الدعوة)`;
+/** The meeting's number as issued (e.g. BD-2026-001); drafts are numbered when their invitation is issued. */
+export function meetingReference(code: string | null): string {
+  return code ?? "مسودة (يُرقَّم عند إصدار الدعوة)";
+}
+
+export type NumberingFormat = { separator: string; digits: number; withYear: boolean };
+
+/** The code the database writes when an invitation is issued, for previews: BD-2026-001. */
+export function meetingCode(body: string, year: number, number: number, f: NumberingFormat): string {
+  return [body, ...(f.withYear ? [String(year)] : []), String(number).padStart(f.digits, "0")].join(f.separator);
 }
 
 export function totalMinutes(items: { duration_minutes: number | null }[]): number {

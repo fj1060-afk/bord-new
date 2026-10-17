@@ -24,7 +24,7 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
     m.supabase.from("meeting_documents").select("agenda_item_id").eq("meeting_id", meetingId),
   ]);
   const start = new Date(meeting.starts_at);
-  const ref = reference(m.isBoard, meeting.number, meeting.starts_at);
+  const ref = reference(meeting.code, meeting.starts_at);
   const allDecision = (items ?? []).length > 0 && (items ?? []).every((i) => i.kind === "decision");
   const docCount = (id: string) => (docs ?? []).filter((d) => d.agenda_item_id === id).length;
   const mode = meeting.mode as keyof typeof MEETING_MODES;

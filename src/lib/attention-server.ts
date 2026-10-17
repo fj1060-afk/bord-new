@@ -14,7 +14,7 @@ import { riyadhToday } from "./minutes";
 import { currentYear } from "./org";
 import { can, LEVELS } from "./permissions";
 
-type Meeting = { id: string; title: string; number: number | null; starts_at: string; status: string; live_status: string; board_id: string | null; committee_id: string | null; committee: { name: string } | null };
+type Meeting = { id: string; title: string; number: number | null; code: string | null; starts_at: string; status: string; live_status: string; board_id: string | null; committee_id: string | null; committee: { name: string } | null };
 export type PipelineRow = { id: string; title: string; where: string; days: number; stage: number; stuck: boolean; note: string; checks: { label: string; ok: boolean; level: string; detail?: string }[] };
 
 const bodyOf = (m: { board_id: string | null; committee_id: string | null; committee?: { name: string } | null }) =>
@@ -41,7 +41,7 @@ export async function collectAttention(supabase: SupabaseClient, viewer: Viewer)
 
   const [{ data: meetings }, { data: docs }, findings, profile, { data: committees }, { data: tasks }, { data: toSign }, { data: circulars }, { data: myDisclosure }, { data: boardRows }] = await Promise.all([
     organizer
-      ? supabase.from("meetings").select("id, title, number, starts_at, status, live_status, board_id, committee_id, committee:committees(name)").neq("status", "cancelled").gte("starts_at", recent).lte("starts_at", soon).order("starts_at")
+      ? supabase.from("meetings").select("id, title, number, code, starts_at, status, live_status, board_id, committee_id, committee:committees(name)").neq("status", "cancelled").gte("starts_at", recent).lte("starts_at", soon).order("starts_at")
       : Promise.resolve({ data: [] }),
     organizer || myDepts.length
       ? supabase
@@ -76,7 +76,7 @@ export async function collectAttention(supabase: SupabaseClient, viewer: Viewer)
     const where = `${bodyName} · ${m.title} · ${date(m.starts_at)}`;
     if (m.live_status === "ended" && stage === 4 && !open.length) continue;
     if (days >= 0 || m.live_status === "ended")
-      pipeline.push({ id: m.id, title: m.title, where: `${bodyName} · ${meetingReference(m.number, m.starts_at)} · ${date(m.starts_at)}`, days, stage, stuck: open.some((c) => c.level === "block"), note: open[0]?.label ?? "على المسار", checks: checks.filter((c) => c.stage === stage).map((c) => ({ label: c.label, ok: c.ok || !!c.overridden, level: c.level, detail: c.detail })) });
+      pipeline.push({ id: m.id, title: m.title, where: `${bodyName} · ${meetingReference(m.code)} · ${date(m.starts_at)}`, days, stage, stuck: open.some((c) => c.level === "block"), note: open[0]?.label ?? "على المسار", checks: checks.filter((c) => c.stage === stage).map((c) => ({ label: c.label, ok: c.ok || !!c.overridden, level: c.level, detail: c.detail })) });
     for (const c of open)
       items.push({
         id: `j-${m.id}-${c.id}`,

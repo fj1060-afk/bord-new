@@ -12,14 +12,17 @@ The approved design, top to bottom:
   text, no box) on the left.
 - **Title band**: green band split Arabic | English with a brass rule under it;
   a light row beneath with the body (Arabic), «رقم الاجتماع / Meeting No.» and
-  the number as `01 / 2026`, and the body in English.
+  the issued code (e.g. `BD-2026-001`), and the body in English.
 - **Issue date line** (invitation only): «تاريخ إصدار الدعوة» on the right and
   «Invitation issued» on the left, under the title band; drafts read «مسودة —
   لم تُصدر بعد / Draft — not yet issued». The date is recorded when the
   meeting is approved (draft → scheduled).
-- **Numbering**: a meeting is numbered when its invitation is issued, per body
-  and per year of the meeting date (`01 / 2026`); drafts show «مسودة / Draft»
-  and a cancelled meeting keeps its number with a «ملغى | Cancelled» mark.
+- **Numbering**: a meeting gets its code when its invitation is issued
+  (`BD-2026-001`: body code, year, sequence; the format and each body's code
+  are set under Settings → «ترقيم الاجتماعات»). The sequence is per body and
+  year, the code never changes after issue, drafts show «مسودة / Draft», and a
+  cancelled meeting keeps its code with a «ملغى | Cancelled» mark. The same
+  code is the document reference in the footer and the file name.
 - **Meeting card**: green date block on the right, captioned «تاريخ الاجتماع /
   Meeting Date» (or «تاريخ الانعقاد / Held on» once held) (weekday in both languages
   split by a bar, large day, then month and year on one smaller row —

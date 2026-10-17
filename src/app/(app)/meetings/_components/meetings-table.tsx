@@ -12,6 +12,7 @@ type Raw = {
   id: string;
   title: string;
   number: number | null;
+  code: string | null;
   starts_at: string;
   duration_minutes: number | null;
   mode: string;
@@ -33,7 +34,7 @@ function filtered(supabase: Awaited<ReturnType<typeof createClient>>, query: Tab
   let q = supabase
     .from("meetings")
     .select(
-      "id, title, number, starts_at, duration_minutes, mode, status, live_status, started_at, ended_at, pack_published_at, board:boards(name), committee:committees(name, kind), meeting_invitees(count), minutes(id)",
+      "id, title, number, code, starts_at, duration_minutes, mode, status, live_status, started_at, ended_at, pack_published_at, board:boards(name), committee:committees(name, kind), meeting_invitees(count), minutes(id)",
       { count: "exact" },
     );
   if (scope) q = "board" in scope ? q.eq("board_id", scope.board) : q.eq("committee_id", scope.committee);
@@ -66,7 +67,7 @@ export async function MeetingsTable({ base, params, scope }: { base: string; par
     return {
       id: m.id,
       title: m.title,
-      reference: meetingReference(m.number, m.starts_at),
+      reference: meetingReference(m.code),
       body: m.board ? { name: m.board.name, tone: "board" } : { name: m.committee?.name ?? "—", tone: m.committee?.kind === "audit" ? "audit" : "committee" },
       date: when.long,
       time: when.time,

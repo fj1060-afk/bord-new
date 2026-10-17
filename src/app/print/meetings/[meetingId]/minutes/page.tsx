@@ -36,7 +36,7 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
   const notes = Object.fromEntries((rows ?? []).map((r) => [r.agenda_item_id, r]));
   const allRemarks = (remarks ?? []) as unknown as Remark[];
   const signed = new Map((signatures ?? []).map((s) => [s.person_id, s]));
-  const ref = reference(m.isBoard, meeting.number, meeting.starts_at);
+  const ref = reference(meeting.code, meeting.starts_at);
   const heldOn = m.held.toISOString().slice(0, 10);
   const early = (signatures ?? []).filter((s) => s.signed_at.slice(0, 10) < heldOn).length;
   const warnings = [...gaps, ...(early ? [`${early} توقيع مؤرخ قبل تاريخ انعقاد الاجتماع.`] : [])];

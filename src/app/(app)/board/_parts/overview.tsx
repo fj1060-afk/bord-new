@@ -48,7 +48,7 @@ export async function BoardOverview({ board, canEdit }: { board: Board; canEdit:
     companyProfile(supabase),
     complianceFindings(supabase),
     supabase.from("board_members").select("person_id, category, start_date, person:people(full_name, disclosures(year), person_positions(role, listed, end_year))").eq("board_id", board.id).eq("status", "active"),
-    supabase.from("meetings").select("id, title, number, starts_at, status, live_status").eq("board_id", board.id).neq("status", "cancelled").gte("starts_at", `${year}-01-01T00:00:00+03:00`).order("starts_at"),
+    supabase.from("meetings").select("id, title, number, code, starts_at, status, live_status").eq("board_id", board.id).neq("status", "cancelled").gte("starts_at", `${year}-01-01T00:00:00+03:00`).order("starts_at"),
     supabase.from("resolutions").select("id, status, resolution_tasks(status, due_date), meeting:meetings!inner(board_id)").eq("meeting.board_id", board.id),
     supabase.from("committees").select("id, name, committee_members(status)").eq("board_id", board.id).eq("status", "active"),
   ]);
@@ -133,7 +133,7 @@ export async function BoardOverview({ board, canEdit }: { board: Board; canEdit:
               <li key={m.id}>
                 <Link href={`/meetings/${m.id}`} className="flex justify-between gap-3 px-5 py-3 hover:bg-paper">
                   <span>{m.title}</span>
-                  <span className="text-ink-muted">{meetingReference(m.number, m.starts_at)} · {formatDateTime(new Date(m.starts_at))}</span>
+                  <span className="text-ink-muted">{meetingReference(m.code)} · {formatDateTime(new Date(m.starts_at))}</span>
                 </Link>
               </li>
             ))}

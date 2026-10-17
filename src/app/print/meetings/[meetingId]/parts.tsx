@@ -39,7 +39,6 @@ export function H2({ ar, en, bi }: { ar: string; en: string; bi: boolean }) {
 export function MeetingHead({ m, title, titleEn, badges: given }: { m: Meeting; title: string; titleEn: string; badges: Badge[] }) {
   const { meeting } = m;
   const badges: Badge[] = meeting.status === "cancelled" ? [...given, { ar: "ملغى", en: "Cancelled", tone: "c" }] : given;
-  const year = meeting.starts_at.slice(0, 4);
   return (
     <>
       <DocHead
@@ -50,7 +49,7 @@ export function MeetingHead({ m, title, titleEn, badges: given }: { m: Meeting; 
         issuerEn={m.isBoard ? "Board Secretariat" : "Committee Secretariat"}
         badges={badges}
       />
-      <DocTitle bi={m.bi} title={title} titleEn={titleEn} body={m.body} bodyEn={m.isBoard ? "Board of Directors" : "Committee"} number={meeting.number ? `${String(meeting.number).padStart(2, "0")} / ${year}` : m.bi ? "مسودة · Draft" : "مسودة"} />
+      <DocTitle bi={m.bi} title={title} titleEn={titleEn} body={m.body} bodyEn={m.isBoard ? "Board of Directors" : "Committee"} number={meeting.code ?? (m.bi ? "مسودة · Draft" : "مسودة")} />
     </>
   );
 }

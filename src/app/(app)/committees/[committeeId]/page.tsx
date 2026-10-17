@@ -24,7 +24,7 @@ export default async function CommitteePage({ params }: PageProps<"/committees/[
   const today = riyadhToday();
   const [{ data: members }, { data: meetings }, { data: resolutions }] = await Promise.all([
     supabase.from("committee_members").select("id, position, person:people(id, full_name)").eq("committee_id", committeeId).eq("status", "active"),
-    supabase.from("meetings").select("id, title, number, starts_at, live_status, status").eq("committee_id", committeeId).neq("status", "cancelled").gte("starts_at", `${year}-01-01T00:00:00+03:00`).order("starts_at"),
+    supabase.from("meetings").select("id, title, number, code, starts_at, live_status, status").eq("committee_id", committeeId).neq("status", "cancelled").gte("starts_at", `${year}-01-01T00:00:00+03:00`).order("starts_at"),
     supabase.from("resolutions").select("resolution_tasks(status, due_date), meeting:meetings!inner(committee_id)").eq("meeting.committee_id", committeeId),
   ]);
   const rows = sortByPosition(((members ?? []) as unknown as { id: string; position: keyof typeof COMMITTEE_POSITIONS; person: { id: string; full_name: string } }[]).map((m) => ({ ...m, name: m.person.full_name })));
@@ -78,7 +78,7 @@ export default async function CommitteePage({ params }: PageProps<"/committees/[
                 <li key={m.id}>
                   <Link href={`/meetings/${m.id}`} className="flex justify-between gap-3 px-5 py-3 hover:bg-paper">
                     <span>{m.title}</span>
-                    <span className="text-ink-muted">{meetingReference(m.number, m.starts_at)} · {formatDateTime(new Date(m.starts_at))}</span>
+                    <span className="text-ink-muted">{meetingReference(m.code)} · {formatDateTime(new Date(m.starts_at))}</span>
                   </Link>
                 </li>
               ))}

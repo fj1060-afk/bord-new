@@ -57,7 +57,7 @@ export async function ScopeDocuments({ scope }: { scope: Scope }) {
   const own = `${column(scope)}.eq.${idOf(scope)}`;
   const [{ data: library }, { data: packs }] = await Promise.all([
     supabase.from("library_documents").select("id, title, category, created_at").eq("archived", false).or("board" in scope ? `${own},and(category.in.(charter,regulation,policy),committee_id.is.null)` : own).order("created_at", { ascending: false }).limit(100),
-    supabase.from("meeting_documents").select("id, title, meeting:meetings!inner(id, title, number, starts_at, board_id, committee_id)").eq(`meeting.${column(scope)}`, idOf(scope)).order("created_at", { ascending: false }).limit(100),
+    supabase.from("meeting_documents").select("id, title, meeting:meetings!inner(id, title, number, code, starts_at, board_id, committee_id)").eq(`meeting.${column(scope)}`, idOf(scope)).order("created_at", { ascending: false }).limit(100),
   ]);
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -77,11 +77,11 @@ export async function ScopeDocuments({ scope }: { scope: Scope }) {
       <Panel title="مستندات الاجتماعات">
         <ul className="divide-y divide-rule">
           {(packs ?? []).length === 0 && empty("لا مستندات اجتماعات.")}
-          {((packs ?? []) as unknown as { id: string; title: string; meeting: { id: string; number: number | null; starts_at: string } }[]).map((d) => (
+          {((packs ?? []) as unknown as { id: string; title: string; meeting: { id: string; number: number | null; code: string | null; starts_at: string } }[]).map((d) => (
             <li key={d.id}>
               <a href={`/meetings/${d.meeting.id}/documents/${d.id}`} className={row}>
                 <span className="min-w-0 flex-1">{d.title}</span>
-                <span className="text-xs text-ink-muted">{meetingReference(d.meeting.number, d.meeting.starts_at)}</span>
+                <span className="text-xs text-ink-muted">{meetingReference(d.meeting.code)}</span>
               </a>
             </li>
           ))}
@@ -91,14 +91,14 @@ export async function ScopeDocuments({ scope }: { scope: Scope }) {
   );
 }
 
-type MinutesRow = { id: string; status: keyof typeof MINUTES_STATUS; meeting: { id: string; title: string; number: number | null; starts_at: string } };
+type MinutesRow = { id: string; status: keyof typeof MINUTES_STATUS; meeting: { id: string; title: string; number: number | null; code: string | null; starts_at: string } };
 
 /** Minutes of the scope's meetings and where they stand. */
 export async function ScopeMinutes({ scope }: { scope: Scope }) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("minutes")
-    .select("id, status, meeting:meetings!inner(id, title, number, starts_at, board_id, committee_id)")
+    .select("id, status, meeting:meetings!inner(id, title, number, code, starts_at, board_id, committee_id)")
     .eq(`meeting.${column(scope)}`, idOf(scope))
     .order("created_at", { ascending: false })
     .limit(100);
@@ -110,7 +110,7 @@ export async function ScopeMinutes({ scope }: { scope: Scope }) {
           <li key={m.id}>
             <Link href={`/meetings/${m.meeting.id}?tab=minutes`} className={row}>
               <span className="min-w-0 flex-1 font-medium">{m.meeting.title}</span>
-              <span className="text-ink-muted">{meetingReference(m.meeting.number, m.meeting.starts_at)} · {formatGregorianDate(new Date(m.meeting.starts_at))}</span>
+              <span className="text-ink-muted">{meetingReference(m.meeting.code)} · {formatGregorianDate(new Date(m.meeting.starts_at))}</span>
               <span className={clsx("rounded-full px-2 py-0.5 text-xs", m.status === "approved" ? "bg-primary-soft text-primary" : m.status === "review" ? "bg-brass-soft text-brass" : "border border-rule text-ink-muted")}>{MINUTES_STATUS[m.status]}</span>
             </Link>
           </li>

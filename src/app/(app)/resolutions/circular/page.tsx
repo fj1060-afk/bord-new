@@ -53,7 +53,7 @@ export default async function CircularPage({ searchParams }: PageProps<"/resolut
     ? await Promise.all([
         supabase.from("boards").select("id, name").eq("status", "active"),
         supabase.from("committees").select("id, name").eq("status", "active"),
-        supabase.from("meetings").select("id, number, starts_at, board_id, committee_id").neq("status", "cancelled").order("starts_at", { ascending: false }).limit(50),
+        supabase.from("meetings").select("id, number, code, starts_at, board_id, committee_id").neq("status", "cancelled").order("starts_at", { ascending: false }).limit(50),
       ])
     : [{ data: [] }, { data: [] }, { data: [] }];
   // Organizers see members whose CV ties them to a company the text names.
@@ -119,7 +119,7 @@ export default async function CircularPage({ searchParams }: PageProps<"/resolut
                     <ConfirmButton action={closeCircular.bind(null, r.id, true)} label="سحب" confirm="سحب القرار؟" />
                   </>
                 )}
-                {r.status === "passed" && (r.ratified_meeting_id ? <span className="text-xs text-primary">أُثبت في محضر الاجتماع</span> : manage && <RatifyForm circularId={r.id} meetings={bodyMeetings.map((m) => ({ id: m.id, label: meetingReference(m.number, m.starts_at) }))} />)}
+                {r.status === "passed" && (r.ratified_meeting_id ? <span className="text-xs text-primary">أُثبت في محضر الاجتماع</span> : manage && <RatifyForm circularId={r.id} meetings={bodyMeetings.map((m) => ({ id: m.id, label: `${meetingReference(m.code)} · ${m.starts_at.slice(0, 10)}` }))} />)}
               </div>
             </li>
           );

@@ -11,7 +11,7 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
   const { meetingId } = await params;
   const m = await loadMeeting(meetingId);
   const { meeting, bi } = m;
-  const ref = reference(m.isBoard, meeting.number, meeting.starts_at);
+  const ref = reference(meeting.code, meeting.starts_at);
   const proxyNote = (id: string): [string, string] => {
     if (m.status[id] === "proxy" && m.holderOf[id]) return [`أناب: ${m.names[m.holderOf[id]]}`, `Proxy holder: ${m.namesEn[m.holderOf[id]] || m.names[m.holderOf[id]]}`];
     const granted = Object.entries(m.holderOf).find(([, holder]) => holder === id);

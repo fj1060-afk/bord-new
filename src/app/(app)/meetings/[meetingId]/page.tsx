@@ -118,7 +118,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   return (
     <>
       <MeetingHeader
-        section={`${body?.name ?? ""} · اجتماع ${meetingReference(meeting.number, meeting.starts_at)}`}
+        section={`${body?.name ?? ""} · اجتماع ${meetingReference(meeting.code)}`}
         title={meeting.title}
         when={dateParts(new Date(meeting.starts_at)).long}
         time={dateParts(new Date(meeting.starts_at)).time}

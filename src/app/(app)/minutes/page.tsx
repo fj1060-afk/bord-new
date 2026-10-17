@@ -14,7 +14,7 @@ type Row = {
   id: string;
   status: MinutesStatus;
   version: number;
-  meeting: { id: string; title: string; number: number | null; starts_at: string; board: { name: string } | null; committee: { name: string } | null };
+  meeting: { id: string; title: string; number: number | null; code: string | null; starts_at: string; board: { name: string } | null; committee: { name: string } | null };
 };
 
 export default async function MinutesPage() {
@@ -22,7 +22,7 @@ export default async function MinutesPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("minutes")
-    .select("id, status, version, meeting:meetings(id, title, number, starts_at, board:boards(name), committee:committees(name))")
+    .select("id, status, version, meeting:meetings(id, title, number, code, starts_at, board:boards(name), committee:committees(name))")
     .order("created_at", { ascending: false });
   const rows = (data ?? []) as unknown as Row[];
 
@@ -50,7 +50,7 @@ export default async function MinutesPage() {
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">{m.meeting.title}</span>
                 <span className="block text-xs text-ink-muted">
-                  {(m.meeting.board ?? m.meeting.committee)?.name} · {meetingReference(m.meeting.number, m.meeting.starts_at)} · {formatGregorianDate(new Date(m.meeting.starts_at))}
+                  {(m.meeting.board ?? m.meeting.committee)?.name} · {meetingReference(m.meeting.code)} · {formatGregorianDate(new Date(m.meeting.starts_at))}
                 </span>
               </span>
               {pending.has(m.id) && <span className="rounded-full bg-brass px-2.5 py-0.5 text-xs text-white">بانتظار توقيعك</span>}

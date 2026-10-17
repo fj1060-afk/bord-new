@@ -10,6 +10,8 @@ import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
 const PAGE = "/committees";
+/** Default meeting-number code for a new committee (editable under settings → meeting numbering). */
+const COMMITTEE_CODES: Record<string, string> = { audit: "AC", remuneration_nomination: "NRC", nomination: "NC", remuneration: "RMC", executive: "EXC", risk: "RC", other: "CM" };
 
 export async function saveCommittee(committeeId: string | null, _prev: ActionState, form: FormData): Promise<ActionState> {
   await requirePage(PAGE, LEVELS.manage);
@@ -31,7 +33,7 @@ export async function saveCommittee(committeeId: string | null, _prev: ActionSta
   const { data: board } = await supabase.from("boards").select("id").eq("status", "active").limit(1).maybeSingle();
   const { data, error } = await supabase
     .from("committees")
-    .insert({ name, mandate, kind, board_id: board?.id ?? null })
+    .insert({ name, mandate, kind, code: COMMITTEE_CODES[kind], board_id: board?.id ?? null })
     .select("id")
     .single();
   if (error || !data) return { ok: false, message: "تعذّر إنشاء اللجنة." };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { meetingReference, moveItem, riyadhParts, riyadhTimestamp, rsvpSummary, storagePath, totalMinutes } from "./meetings";
+import { meetingCode, meetingReference, moveItem, riyadhParts, riyadhTimestamp, rsvpSummary, storagePath, totalMinutes } from "./meetings";
 
 describe("meetings", () => {
   it("converts Riyadh date and time to UTC and back", () => {
@@ -15,8 +15,10 @@ describe("meetings", () => {
   });
 
   it("builds the meeting reference from the Riyadh year", () => {
-    expect(meetingReference(3, "2026-10-20T06:30:00Z")).toBe("رقم 3 لعام 2026");
-    expect(meetingReference(null, "2026-10-20T06:30:00Z")).toBe("لعام 2026 (يُرقَّم عند إصدار الدعوة)");
+    expect(meetingReference("BD-2026-003")).toBe("BD-2026-003");
+    expect(meetingReference(null)).toBe("مسودة (يُرقَّم عند إصدار الدعوة)");
+    expect(meetingCode("BD", 2026, 1, { separator: "-", digits: 3, withYear: true })).toBe("BD-2026-001");
+    expect(meetingCode("AC", 2026, 12, { separator: "/", digits: 2, withYear: false })).toBe("AC/12");
   });
 
   it("sums agenda durations, ignoring blanks", () => {

@@ -8,6 +8,8 @@ import { aiConfig } from "@/lib/ai";
 import { serviceSettings } from "@/lib/ai-server";
 import { EndSessionButton } from "./end-session-button";
 import { ServicesForm } from "./services-form";
+import { NumberingForm } from "./numbering-form";
+import { riyadhToday } from "@/lib/minutes";
 
 export const metadata: Metadata = { title: "الإعدادات" };
 
@@ -40,7 +42,14 @@ export default async function SettingsPage({ searchParams }: PageProps<"/admin/s
     .limit(100);
   if (entity in ENTITY_LABELS) auditQuery = auditQuery.eq("entity_type", entity);
 
-  const [{ data: sessions }, { data: logs }, services] = await Promise.all([supabase.rpc("list_sessions"), auditQuery, serviceSettings(supabase)]);
+  const [{ data: sessions }, { data: logs }, services, { data: numbering }, { data: boards }, { data: committees }] = await Promise.all([
+    supabase.rpc("list_sessions"),
+    auditQuery,
+    serviceSettings(supabase),
+    supabase.from("service_settings").select("meeting_number_separator, meeting_number_digits, meeting_number_with_year").maybeSingle(),
+    supabase.from("boards").select("id, name, code").eq("status", "active").order("name"),
+    supabase.from("committees").select("id, name, code").eq("status", "active").order("name"),
+  ]);
   const { ready, host, model } = aiConfig(process.env);
   const canEndAny = can(viewer.permissions, "/admin/settings", LEVELS.manage);
 
@@ -49,6 +58,13 @@ export default async function SettingsPage({ searchParams }: PageProps<"/admin/s
       <PageHeader section="الإدارة" title="الإعدادات" description="الخدمات الخارجية والاجتماعات والخصوصية، والجلسات النشطة، وسجل العمليات الحساسة." />
 
       <ServicesForm settings={services} ai={{ ready, host, model }} canManage={canEndAny} />
+
+      <NumberingForm
+        canManage={canEndAny}
+        year={Number(riyadhToday().slice(0, 4))}
+        format={{ separator: numbering?.meeting_number_separator ?? "-", digits: numbering?.meeting_number_digits ?? 3, withYear: numbering?.meeting_number_with_year ?? true }}
+        bodies={[...(boards ?? []).map((b) => ({ key: `board:${b.id}`, name: b.name, code: b.code })), ...(committees ?? []).map((c) => ({ key: `committee:${c.id}`, name: c.name, code: c.code }))]}
+      />
 
       <section className="mb-10">
         <h2 className="mb-3 font-display text-xl font-bold">الجلسات النشطة</h2>
