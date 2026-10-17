@@ -10,6 +10,9 @@ import { RequirementsPanel, SendRequirementsBar, type RequestMail, type Requirem
 import { ItemFindings } from "./item-review-panel";
 import { AuthorityBadge } from "./authority-badge";
 import { ExpandAll } from "./expand-all";
+import { needsAction, type IssueItem } from "./item-issue-data";
+import { IssueBadge, ItemFrame } from "./item-frame";
+import { ItemNeeds } from "./item-issues";
 import { FlipList } from "@/components/ui/flip-list";
 import { reviewItem, type ReviewContext } from "@/lib/item-review";
 import { bodyMismatch, duplicateOf } from "@/lib/item-body";
@@ -56,7 +59,10 @@ export function AgendaTab({
   requirements,
   requirementsSentAt,
   requestMails,
+  issues,
 }: {
+  /** Open preparation checks per item (organizers only). */
+  issues?: IssueItem[];
   requestMails?: RequestMail[];
   requirements?: RequirementRow[];
   requirementsSentAt?: string | null;
@@ -115,6 +121,8 @@ export function AgendaTab({
           const waiting = requests.filter((r) => r.status !== "accepted").length;
           const description = withoutBeforeMeeting(item.description ?? "");
           const descriptionEn = withoutBeforeMeeting(item.description_en ?? "");
+          const itemIssues = issues?.find((i) => i.anchor === `item-${item.id}`)?.issues ?? [];
+          const needs = needsAction(itemIssues);
           const content = (
             <>
               {(ownerLabel(item) || item.presenter) && (
@@ -146,7 +154,7 @@ export function AgendaTab({
           );
 
           return (
-            <li key={item.id} id={`item-${item.id}`} data-flip-key={item.id} data-flip-state={`${notes.length}:${waiting}`} className="scroll-mt-24 rounded-lg border border-rule bg-surface">
+            <ItemFrame key={item.id} level={needs.level} count={needs.count} id={`item-${item.id}`} data-flip-key={item.id} data-flip-state={`${notes.length}:${waiting}`} className="scroll-mt-24 rounded-lg border bg-surface">
               <div className="flex">
                 <details className="group min-w-0 flex-1">
                   <summary className="flex cursor-pointer list-none items-start gap-3 p-4 hover:bg-paper [&::-webkit-details-marker]:hidden">
@@ -167,10 +175,12 @@ export function AgendaTab({
                         {notes.length > 0 && <span className="text-brass">{notes.length} ملاحظات</span>}
                       </span>
                     </span>
+                    {issues && <IssueBadge level={needs.level} count={needs.count} />}
                     <ChevronDown size={18} aria-hidden="true" className="mt-1 shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open:rotate-180" />
                   </summary>
 
                   <div className="border-t border-rule p-4">
+                    {issues && <ItemNeeds meetingId={meetingId} itemId={item.id} issues={itemIssues} />}
                     {editable ? (
                       <EditableAgendaItem meetingId={meetingId} item={item} targets={targets} library={library} body={body}>
                         {content}
@@ -241,7 +251,7 @@ export function AgendaTab({
                   </div>
                 )}
               </div>
-            </li>
+            </ItemFrame>
           );
         })}
       </FlipList>

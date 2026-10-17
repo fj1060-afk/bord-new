@@ -7,6 +7,7 @@ import { ITEM_KINDS } from "@/lib/meetings";
 import { requestDocument, reviewDocumentRequest, saveAgendaItem } from "../_actions/agenda";
 import { byDepartment, ownerOf, type Target } from "./agenda-targets";
 import { useAutoEnglish } from "./auto-english";
+import { onEditItem } from "./edit-item-event";
 import { isRequirementsOnly, requirementsText, type Req } from "@/lib/requirements";
 import { AUTHORITY } from "@/lib/authority";
 import { ItemReviewPanel } from "./item-review-panel";
@@ -231,6 +232,7 @@ export function AgendaItemForm({ meetingId, item, targets, library, body, onDone
 
 export function EditableAgendaItem({ meetingId, item, targets, library, body, children }: { meetingId: string; item: AgendaItem; targets: Target[]; library?: Template[]; body?: Body; children: React.ReactNode }) {
   const [editing, setEditing] = useState(false);
+  useEffect(() => onEditItem(item.id, () => setEditing(true)), [item.id]);
   if (editing) {
     return (
       <div className="flex flex-col gap-3">

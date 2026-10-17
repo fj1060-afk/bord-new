@@ -2,57 +2,15 @@ import Link from "next/link";
 import clsx from "clsx";
 import { Check as CheckIcon, ChevronDown, ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { buttonClass } from "@/components/ui/styles";
-import { blocking, stageDone, STAGES, type Check, type Target } from "@/lib/journey";
+import { blocking, stageDone, STAGES, type Check } from "@/lib/journey";
 import { FixLink } from "./fix-link";
-import { ItemIssues, type Issue, type IssueItem } from "./item-issues";
+import { itemIssues, needsAction, tone } from "./item-issue-data";
 import { OverrideForm } from "./override-form";
 import { ResolvedChecks } from "./resolved-checks";
 
-const tone = (c: Check) => (c.overridden || c.level === "info" ? "info" : c.level);
 const DOT = { block: "bg-danger", warn: "bg-brass", info: "bg-ink-muted" } as const;
 
-/** The short chip an item shows for a check, e.g. "بلا مسؤول" or "4 لم تُرسل". */
-function chipFor(c: Check, t: Target): string {
-  const n = t.count ?? 0;
-  switch (c.id) {
-    case "owners": return "بلا مسؤول";
-    case "definite": return "عنوان غير محدد";
-    case "requirements-sent": return n ? `${n} لم تُرسل` : "متطلبات لم تُرسل";
-    case "requirements-checks": return n > 1 ? `${n} تحقق معلّق` : "تحقق معلّق";
-    case "docs": return n > 1 ? `${n} مستندات بانتظار` : "مستند بانتظار";
-    case "periods": return "فترة لم تنتهِ";
-    case "item-dates": return "تاريخ غير متسق";
-    case "requirements-due": return n > 1 ? `${n} مواعيد خارج المدة` : "موعد خارج المدة";
-    default: return c.fix?.label ?? c.label;
-  }
-}
-
-/** The one-click fix a chip offers; checks fixed inside the item open it for editing. */
-function fixFor(c: Check, t: Target): Issue["fix"] {
-  switch (c.id) {
-    case "owners": return { kind: "owner", suggest: t.suggest };
-    case "requirements-due": return { kind: "due", suggest: t.suggest };
-    case "requirements-sent": return { kind: "send" };
-    default: return { kind: "edit" };
-  }
-}
-
-const SEND_NOTE = "تحديد الإدارة لا يكفي: الطلب لا يصلها حتى يُرسل، وبعد الإرسال يُحتسب ويظهر لها.";
-
-/** Open checks that name items, regrouped per item so each item shows once. */
-function byItem(open: Check[]): IssueItem[] {
-  const items = new Map<string, IssueItem>();
-  for (const c of open)
-    for (const t of c.fix?.targets ?? []) {
-      const item = items.get(t.anchor) ?? { anchor: t.anchor, n: t.n, label: t.label, issues: [] };
-      const explain = [c.label, t.note ?? (c.id === "requirements-checks" ? c.detail : undefined)].filter(Boolean).join(": ") + (c.ref ? ` (${c.ref})` : "");
-      item.issues.push({ id: c.id, level: tone(c), chip: chipFor(c, t), explain: c.id === "requirements-sent" ? `${explain}. ${SEND_NOTE}` : explain, overridable: c.level === "warn" && !c.overridden, fix: fixFor(c, t) });
-      items.set(t.anchor, item);
-    }
-  const rank = { block: 0, warn: 1, info: 2 };
-  return [...items.values()].map((i) => ({ ...i, issues: i.issues.sort((a, b) => rank[a.level] - rank[b.level]) })).sort((a, b) => (a.n ?? 0) - (b.n ?? 0));
-}
-
+const notesText = (n: number) => (n === 1 ? "ملاحظة واحدة" : n === 2 ? "ملاحظتان" : n <= 10 ? `${n} ملاحظات` : `${n} ملاحظة`);
 const blockersText = (n: number) => (n === 1 ? "يمنعك شرط واحد" : n === 2 ? "يمنعك شرطان" : `يمنعك ${n} شروط`);
 
 /** The four-stage stepper, the viewed stage's checks (meeting-wide, then per item), and previous / next. */
@@ -68,7 +26,8 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
   const titleYear = open.find((c) => c.id === "title-year");
   const spelling = open.find((c) => c.id === "title-spelling");
   const onMeeting = open.filter((c) => !c.fix?.targets?.length && !(titleYear && c.id === "title-spelling"));
-  const items = byItem(onItems);
+  const items = itemIssues(onItems).filter((i) => needsAction(i.issues).count);
+  const notes = items.reduce((n, i) => n + needsAction(i.issues).count, 0);
   const unsent = open.find((c) => c.id === "requirements-sent");
   const agendaHref = stageHref(view, "agenda");
 
@@ -150,7 +109,16 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
 
       <ResolvedChecks open={onMeeting.map((c) => ({ id: c.id, label: c.label }))} />
 
-      <ItemIssues meetingId={meetingId} href={agendaHref} items={items} />
+      {items.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 border-t border-rule px-5 py-3 text-sm">
+          <span className="min-w-0 flex-1">
+            على البنود: <strong>{notesText(notes)}</strong> في {items.length === 1 ? "بند واحد" : items.length === 2 ? "بندين" : `${items.length} بنود`}
+          </span>
+          <FixLink href={agendaHref} anchor={items[0].anchor} className="motion-press shrink-0 rounded-md bg-primary px-3 py-1 text-xs text-on-primary hover:opacity-90">
+            انتقل للبند {items[0].n ?? "الأول"}
+          </FixLink>
+        </div>
+      )}
 
       {unsent && (
         <div className="border-t border-rule px-5 py-3">

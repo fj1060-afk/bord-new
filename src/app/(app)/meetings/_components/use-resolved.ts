@@ -36,3 +36,19 @@ export function useResolved<T>(list: T[], key: (t: T) => string) {
   }, [gone]);
   return { gone, fading };
 }
+
+/** True for a moment after `count` drops to zero, so a finished item can show it is done. */
+export function useJustCleared(count: number) {
+  const [prev, setPrev] = useState(count);
+  const [cleared, setCleared] = useState(false);
+  if (count !== prev) {
+    setPrev(count);
+    setCleared(prev > 0 && count === 0);
+  }
+  useEffect(() => {
+    if (!cleared) return;
+    const t = setTimeout(() => setCleared(false), SHOW_MS + FADE_MS);
+    return () => clearTimeout(t);
+  }, [cleared]);
+  return cleared;
+}

@@ -25,6 +25,7 @@ import { packDeadline, requestsMail } from "@/lib/meeting-mail";
 import { meetingMail } from "@/lib/meeting-mail-server";
 import { loadPowers } from "@/lib/authority-server";
 import { JourneyBar } from "../_components/journey-bar";
+import { itemIssues } from "../_components/item-issue-data";
 import { loadJourney } from "../_actions/journey-data";
 import { currentStage, stageDone, STAGES } from "@/lib/journey";
 import { DocIntroForm } from "../_components/doc-intro-form";
@@ -259,6 +260,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
             requirementsSentAt={meeting.requirements_sent_at}
             requestMails={mail ? mail.recipients.map((r) => ({ name: r.name, to: r.to, ...requestsMail(mail.meeting, r.name, r.requests, mail.tasksUrl) })) : undefined}
             body={wordings}
+            issues={checks ? itemIssues(checks) : undefined}
             review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1, powers, affiliations, company: profile?.name ?? "", committeeKind: meeting.board_id ? undefined : ((meeting.committee as { kind?: string } | null)?.kind ?? "other"), meetingDay: new Date(Date.parse(meeting.starts_at) + 3 * 3600000).toISOString().slice(0, 10) } : undefined}
           />
         )}

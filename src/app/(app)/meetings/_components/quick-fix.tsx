@@ -1,29 +1,27 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Pencil, Send, Wand2 } from "lucide-react";
+import { ArrowDown, Pencil, Send, Wand2 } from "lucide-react";
 import type { ActionState } from "@/components/ui/form";
 import { inputWith } from "@/components/ui/styles";
 import { setItemDueDates, setItemOwner } from "../_actions/quick-fixes";
 import { sendRequirements } from "../_actions/requirements";
-import { FixLink } from "./fix-link";
-
-export type QuickFixKind = { kind: "owner" | "due" | "send" | "edit"; suggest?: { value: string; label: string } };
+import { editItem } from "./edit-item-event";
+import type { QuickFixKind } from "./item-issue-data";
 
 const solid = "motion-press inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1 text-xs text-on-primary hover:opacity-90 disabled:opacity-50";
 const plain = "motion-press inline-flex items-center gap-1.5 rounded-md border border-rule px-3 py-1 text-xs hover:border-primary disabled:opacity-50";
 
-/** The one-click fix an item chip offers: the suggested owner or deadline, sending, or opening the item. */
-export function QuickFix({ meetingId, href, anchor, fix }: { meetingId: string; href: string; anchor: string; fix: QuickFixKind }) {
-  const itemId = anchor.replace(/^item-/, "");
+/** The one-click fix an issue offers: the suggested owner or deadline, sending, or the item's edit form. */
+export function QuickFix({ meetingId, itemId, fix }: { meetingId: string; itemId: string; fix: QuickFixKind }) {
   const [pending, start] = useTransition();
   const [state, setState] = useState<ActionState>(null);
   const [date, setDate] = useState(fix.suggest?.value ?? "");
   const run = (act: () => Promise<ActionState>) => start(async () => setState(await act()));
   const open = (label: string) => (
-    <FixLink href={href} anchor={anchor} className={plain}>
+    <button type="button" onClick={() => editItem(itemId)} className={plain}>
       <Pencil size={13} aria-hidden="true" /> {label}
-    </FixLink>
+    </button>
   );
 
   return (
@@ -56,7 +54,12 @@ export function QuickFix({ meetingId, href, anchor, fix }: { meetingId: string; 
           <Send size={13} aria-hidden="true" /> أرسل طلبات الاجتماع الآن
         </button>
       )}
-      {fix.kind === "edit" && open("افتح البند للتعديل")}
+      {fix.kind === "edit" && open("عدّل البند")}
+      {fix.kind === "below" && (
+        <span className="inline-flex items-center gap-1 text-ink-muted">
+          <ArrowDown size={13} aria-hidden="true" /> تجده في مستندات البند ومتطلباته أدناه
+        </span>
+      )}
       {pending && <span className="text-ink-muted">جارٍ الحفظ…</span>}
       {!pending && state && <span className={state.ok ? "text-primary" : "text-danger"}>{state.message}</span>}
     </div>
