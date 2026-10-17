@@ -33,9 +33,11 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
   const term = q.replace(/[,()*%\\]/g, " ").trim();
   if (term) query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%`);
 
-  const [{ data: rows }, { data: roles }] = await Promise.all([
+  const [{ data: rows }, { data: roles }, { data: departments }, { data: people }] = await Promise.all([
     query,
     supabase.from("roles").select("id, name").order("created_at"),
+    supabase.from("departments").select("id, name").eq("status", "active").order("name"),
+    supabase.from("people").select("id, full_name").is("user_id", null).order("full_name"),
   ]);
   const users: UserItem[] = (rows ?? []).map(({ user_roles, ...u }) => ({
     ...u,
@@ -53,7 +55,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
           البيئة في Vercel ثم أعد النشر (راجع docs/SETUP.md).
         </p>
       )}
-      {canManage && <CreateUserForm roles={roles ?? []} />}
+      {canManage && <CreateUserForm roles={roles ?? []} departments={departments ?? []} people={(people ?? []).map((p) => ({ id: p.id, name: p.full_name }))} />}
 
       <form className="mb-4 flex flex-wrap gap-2" role="search">
         <input

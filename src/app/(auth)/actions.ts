@@ -1,5 +1,6 @@
 "use server";
 
+import { passwordProblem } from "@/lib/password";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/components/ui/form";
 import { siteUrl } from "@/lib/site-url";
@@ -41,7 +42,8 @@ export async function requestPasswordReset(_prev: ActionState, form: FormData): 
 export async function setPassword(_prev: ActionState, form: FormData): Promise<ActionState> {
   const password = String(form.get("password") ?? "");
   const confirm = String(form.get("confirm") ?? "");
-  if (password.length < 10) return { ok: false, message: "كلمة المرور يجب أن تكون 10 أحرف على الأقل." };
+  const problem = passwordProblem(password);
+  if (problem) return { ok: false, message: problem };
   if (password !== confirm) return { ok: false, message: "كلمتا المرور غير متطابقتين." };
 
   const supabase = await createClient();
