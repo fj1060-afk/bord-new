@@ -62,10 +62,20 @@ export function OutlookPanel({ meetingId, meeting, minutes, invitees, items, dea
               <CalendarDays size={14} aria-hidden="true" /> آخر موعد: <span className="font-mono">{deadline}</span>
               {due && <strong className="text-brass"> · حان الموعد</strong>}
             </span>
-            <MailButton to={to} subject={pack.subject} body={pack.body} label="رسالة الحزمة للأعضاء" variant={due ? "primary" : "secondary"} />
+            <MailButton to={to} subject={pack.subject} body={pack.body} label="رسالة الحزمة للأعضاء" variant={due ? "primary" : "secondary"} emptyNote={null} />
             {!to.length && (
               <p className="inline-flex items-center gap-1.5 text-xs text-danger">
-                <CircleAlert size={14} aria-hidden="true" /> لا يوجد بريد إلكتروني مضاف للأعضاء.
+                <CircleAlert size={14} aria-hidden="true" />
+                {invitees.length ? (
+                  "لا يوجد بريد إلكتروني مضاف للأعضاء."
+                ) : (
+                  <>
+                    لا يوجد أعضاء مدعوون لهذا الاجتماع؛{" "}
+                    <a href={`/meetings/${meetingId}?tab=invitees`} className="underline">
+                      أضفهم من تبويب «المدعوون»
+                    </a>
+                  </>
+                )}
               </p>
             )}
           </>
