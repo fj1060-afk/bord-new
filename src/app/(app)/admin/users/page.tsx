@@ -83,6 +83,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
                 isSelf={user.id === viewer.id}
                 canEdit={canEdit}
                 canManage={canManage}
+                canDelete={can(viewer.permissions, "/admin/roles", LEVELS.manage)}
               />
             ))}
           </ul>

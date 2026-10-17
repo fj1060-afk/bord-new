@@ -114,3 +114,13 @@ export async function setUserStatus(userId: string, status: "active" | "disabled
   });
   revalidatePath(PAGE);
 }
+
+/** Deletes a trial account outright (system administrator). The person record stays; links to the user are cleared and the audit log keeps the rest. */
+export async function deleteUser(userId: string) {
+  const viewer = await requirePage("/admin/roles", LEVELS.manage);
+  if (userId === viewer.id) throw new Error("Cannot delete yourself");
+  if (!adminConfigured()) throw new Error("SUPABASE_SECRET_KEY is not set");
+  const { error } = await createAdminClient().auth.admin.deleteUser(userId);
+  if (error) throw new Error("Could not delete user");
+  revalidatePath(PAGE);
+}

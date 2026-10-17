@@ -2,10 +2,11 @@
 
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useTransition } from "react";
-import { UserPlus } from "lucide-react";
+import { Trash2, UserPlus } from "lucide-react";
+import { ConfirmButton } from "@/components/org/confirm-button";
 import { formatDateTime } from "@/lib/format";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
-import { createUser, sendInvitation, setUserStatus, updateUserRoles } from "./actions";
+import { createUser, deleteUser, sendInvitation, setUserStatus, updateUserRoles } from "./actions";
 import type { RoleOption, UserItem } from "./page";
 
 function RoleChecklist({ roles, selected }: { roles: RoleOption[]; selected?: string[] }) {
@@ -69,12 +70,15 @@ export function UserRow({
   isSelf,
   canEdit,
   canManage,
+  canDelete,
 }: {
   user: UserItem;
   roles: RoleOption[];
   isSelf: boolean;
   canEdit: boolean;
   canManage: boolean;
+  /** System administrator, while the data is trial. */
+  canDelete?: boolean;
 }) {
   const [state, action] = useActionState(updateUserRoles.bind(null, user.id), null);
   const [pending, startTransition] = useTransition();
@@ -83,8 +87,8 @@ export function UserRow({
   const disabled = user.status === "disabled";
 
   return (
-    <li>
-      <details className="group">
+    <li className="flex items-start">
+      <details className="group min-w-0 flex-1">
         <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 hover:bg-paper">
           <span className="min-w-0 flex-1">
             <span className="block font-medium">
@@ -142,6 +146,11 @@ export function UserRow({
           {isSelf && <p className="text-sm text-ink-muted">لا يمكنك تعديل أدوارك أو تعطيل حسابك بنفسك.</p>}
         </div>
       </details>
+      {canDelete && !isSelf && (
+        <span className="shrink-0 py-3.5 pe-3">
+          <ConfirmButton action={deleteUser.bind(null, user.id)} label={`حذف ${user.full_name || user.email}`} icon={<Trash2 size={16} aria-hidden="true" />} confirm={`حذف حساب «${user.full_name || user.email}» نهائياً؟ يبقى سجله في الأشخاص والتدقيق، ولا يمكن التراجع.`} />
+        </span>
+      )}
     </li>
   );
 }
