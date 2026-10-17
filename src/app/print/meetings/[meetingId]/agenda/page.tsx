@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { englishTime, ITEM_KINDS_EN, MEETING_MODES_EN, MEETING_TYPES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
 import { ITEM_KINDS, MEETING_MODES, MEETING_TYPES } from "@/lib/meetings";
-import { Clock, FileText, Mail, MapPin, Paperclip, User, Users } from "lucide-react";
+import { Clock, FileText, MapPin, Paperclip, User, Users } from "lucide-react";
 import { BiText, DocChrome, InfoCard, L, reference, Signatures } from "../../../doc";
 import { loadMeeting } from "../_meeting";
-import { dayBlock, H2, IssuedLine, MeetingHead, noticeOf } from "../parts";
+import { dayBlock, H2, IssuedLine, longTime, MeetingHead } from "../parts";
 
 export const metadata: Metadata = { title: "جدول الأعمال" };
 
@@ -24,8 +24,6 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
     m.supabase.from("meeting_documents").select("agenda_item_id").eq("meeting_id", meetingId),
   ]);
   const start = new Date(meeting.starts_at);
-  const end = new Date(start.getTime() + meeting.duration_minutes * 60000);
-  const notice = noticeOf(m);
   const ref = reference(m.isBoard, meeting.number, meeting.starts_at);
   const allDecision = (items ?? []).length > 0 && (items ?? []).every((i) => i.kind === "decision");
   const docCount = (id: string) => (docs ?? []).filter((d) => d.agenda_item_id === id).length;
@@ -40,21 +38,13 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
       <IssuedLine m={m} />
       <InfoCard
         bi={bi}
-        caption={["موعد الاجتماع", "Meeting date"]}
+        caption={["تاريخ الاجتماع", "Meeting Date"]}
         day={dayBlock(start)}
         cells={[
-          { ar: "الوقت", en: "Time", icon: Clock, single: true, value: <span className="nw">{d.time} – {dateParts(end).time}</span>, valueEn: <span className="nw">{englishTime(start)} – {englishTime(end)}</span> },
-          { ar: "نوع الاجتماع", en: "Type", icon: FileText, value: MEETING_TYPES[type], valueEn: MEETING_TYPES_EN[type] },
-          { ar: "طريقة الانعقاد", en: "Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
-          { ar: "المكان", en: "Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
-          { ar: "الدعوة من", en: "Called by", icon: User, value: m.chair, valueEn: m.chairEn || "—" },
-          {
-            ar: "مهلة الدعوة",
-            en: "Notice period",
-            icon: Mail,
-            value: notice ? <span className={notice.ok ? "ok" : "warn"}>{notice.days} {notice.days === 1 ? "يوم" : "أيام"} {notice.ok ? "✓" : `⚠ (النظامي ${notice.required})`}</span> : "تُحسب عند الإصدار",
-            valueEn: notice ? <span className={notice.ok ? "ok" : "warn"}>{notice.days} {notice.days === 1 ? "day" : "days"} {notice.ok ? "✓" : `⚠ (minimum ${notice.required})`}</span> : "Set when issued",
-          },
+          { ar: "وقت الاجتماع", en: "Meeting Time", icon: Clock, value: longTime(d.time), valueEn: englishTime(start) },
+          { ar: "نوع الاجتماع", en: "Meeting Type", icon: FileText, value: MEETING_TYPES[type], valueEn: MEETING_TYPES_EN[type] },
+          { ar: "طريقة الانعقاد", en: "Meeting Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
+          { ar: "مكان الاجتماع", en: "Meeting Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
         ]}
       />
       {meeting.agenda_intro && <BiText bi={bi} ar={meeting.agenda_intro} en={meeting.agenda_intro_en} />}

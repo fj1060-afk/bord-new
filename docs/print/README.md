@@ -11,8 +11,8 @@ The approved design, top to bottom:
   English name, issuer and the classification («Confidential | سري», brass
   text, no box) on the left.
 - **Title band**: green band split Arabic | English with a brass rule under it;
-  a light row beneath with the body (Arabic), «الاجتماع / Meeting» and the
-  number as `01 / 2026`, and the body in English.
+  a light row beneath with the body (Arabic), «رقم الاجتماع / Meeting No.» and
+  the number as `01 / 2026`, and the body in English.
 - **Issue date line** (invitation only): «تاريخ إصدار الدعوة» on the right and
   «Invitation issued» on the left, under the title band; drafts read «مسودة —
   لم تُصدر بعد / Draft — not yet issued». The date is recorded when the
@@ -20,13 +20,14 @@ The approved design, top to bottom:
 - **Numbering**: a meeting is numbered when its invitation is issued, per body
   and per year of the meeting date (`01 / 2026`); drafts show «مسودة / Draft»
   and a cancelled meeting keeps its number with a «ملغى | Cancelled» mark.
-- **Meeting card**: green date block on the right, captioned «موعد الاجتماع /
-  Meeting date» (or «تاريخ الانعقاد / Held on» once held) (weekday in both languages
+- **Meeting card**: green date block on the right, captioned «تاريخ الاجتماع /
+  Meeting Date» (or «تاريخ الانعقاد / Held on» once held) (weekday in both languages
   split by a bar, large day, then month and year on one smaller row —
   «أكتوبر | October 2026» — and the Hijri date); cells with a brass
-  icon, Arabic and English labels split by a brass bar, Arabic value bold on
-  the right and English lighter on the left; a time range shows once, centred. The invitation shows «مهلة الدعوة /
-  Notice period» (days from issue to meeting, ✓ or ⚠ against the required notice).
+  icon (the invitation has four: «وقت الاجتماع / Meeting Time» as the start
+  time, e.g. «10:00 صباحًا», «نوع الاجتماع / Meeting Type» (عادي/استثنائي),
+  «طريقة الانعقاد / Meeting Format» and «مكان الاجتماع / Meeting Venue»), Arabic and English labels split by a brass bar, Arabic value bold on
+  the right and English lighter on the left; a time range shows once, centred.
 - **Section headings**: Arabic on the right, English on the left, brass rule
   beneath.
 - **Agenda items**: green number square, Arabic title beside the English one

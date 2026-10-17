@@ -1,6 +1,6 @@
 // Labels and pure rules for meeting preparation.
 
-export const MEETING_TYPES = { regular: "اعتيادي", extraordinary: "استثنائي" } as const;
+export const MEETING_TYPES = { regular: "عادي", extraordinary: "استثنائي" } as const;
 export const MEETING_MODES = { in_person: "حضوري", virtual: "عن بُعد", hybrid: "مدمج" } as const;
 export const MEETING_STATUS = { draft: "مسودة", scheduled: "مُجدول", cancelled: "ملغى" } as const;
 export const RSVP = { pending: "لم يرد", accepted: "سيحضر", declined: "معتذر", tentative: "غير مؤكد" } as const;

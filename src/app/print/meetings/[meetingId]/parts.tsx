@@ -68,13 +68,8 @@ export function IssuedLine({ m }: { m: Meeting }) {
   );
 }
 
-/** Whole days between the invitation and the meeting (Riyadh dates), and whether that meets the required notice. */
-export function noticeOf(m: Meeting) {
-  if (!m.meeting.invited_at) return null;
-  const day = (iso: string) => Date.parse(new Date(Date.parse(iso) + 3 * 3600000).toISOString().slice(0, 10));
-  const days = Math.round((day(m.meeting.starts_at) - day(m.meeting.invited_at)) / 86400000);
-  return { days, ok: days >= m.inviteDays, required: m.inviteDays };
-}
+/** "10:00 ص" → "10:00 صباحًا", as the documents spell the time out. */
+export const longTime = (t: string) => t.replace(/\sص$/, " صباحًا").replace(/\sم$/, " مساءً");
 
 /** The date block for a day: weekday and month in both languages, day, year and Hijri date. */
 export function dayBlock(date: Date): Day {
@@ -98,8 +93,8 @@ export function heldCells(m: Meeting): Cell[] {
   return [
     { ar: "الموعد المقرر", en: "Scheduled", icon: Clock, value: time(meeting.starts_at), valueEn: timeEn(meeting.starts_at), single: true },
     { ar: "الانعقاد الفعلي", en: "Actual", icon: Timer, value: actual, valueEn: actualEn, single: !!meeting.started_at },
-    { ar: "طريقة الانعقاد", en: "Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
-    { ar: "المكان", en: "Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
+    { ar: "طريقة الانعقاد", en: "Meeting Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
+    { ar: "مكان الاجتماع", en: "Meeting Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
     { ar: "رئيس الاجتماع", en: "Chair", icon: User, value: m.chair, valueEn: m.chairEn || "—" },
     { ar: "أمين السر", en: "Secretary", icon: PenLine, value: m.secretary, valueEn: m.secretaryEn || "—" },
   ];

@@ -70,7 +70,7 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
     <main className="doc">
       <DocChrome bi={bi} header={`${m.body} · ${ref} · محضر الاجتماع`} fileName={`${ref}-محضر-الاجتماع`} footer={minutes.version ? `${ref} · ${bi ? "v" : "الإصدار "}${minutes.version}` : `${ref} · ${bi ? "Draft" : "مسودة"}`} note={warnings.length ? <ul className="list-disc ps-5">{warnings.map((w) => <li key={w}>{w}</li>)}</ul> : null} />
       <MeetingHead m={m} title={m.isBoard ? "محضر اجتماع مجلس الإدارة" : "محضر اجتماع"} titleEn={m.isBoard ? "Minutes of the Board of Directors Meeting" : "Meeting Minutes"} badges={[{ ar: "سري", en: "Confidential", tone: "c" }, status]} />
-      <InfoCard bi={bi} day={heldDay(m)} cells={heldCells(m)} caption={meeting.started_at ? ["تاريخ الانعقاد", "Held on"] : ["موعد الاجتماع", "Meeting date"]} />
+      <InfoCard bi={bi} day={heldDay(m)} cells={heldCells(m)} caption={meeting.started_at ? ["تاريخ الانعقاد", "Held on"] : ["تاريخ الاجتماع", "Meeting Date"]} />
 
       <H2 ar="الحضور" en="Attendance" bi={bi} />
       <table>

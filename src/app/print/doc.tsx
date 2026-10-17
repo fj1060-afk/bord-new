@@ -103,7 +103,15 @@ export function DocTitle({ title, titleEn, body, bodyEn, number, bi }: { title: 
       <div className="facts">
         <div>{body}</div>
         <div className="no">
-          <span className="k">{bi ? "الاجتماع / Meeting" : "الاجتماع"}</span>
+          <span className="k">
+            رقم الاجتماع
+            {bi && (
+              <>
+                {" / "}
+                <bdi dir="ltr">Meeting No.</bdi>
+              </>
+            )}
+          </span>
           <b className="num" dir="ltr">{number}</b>
         </div>
         {bi && <div className="en">{bodyEn}</div>}
@@ -141,7 +149,7 @@ export function InfoCard({ day, cells, bi, caption }: { day: Day; cells: Cell[];
         <span className="dl my">{bi ? both(day.month, `${day.monthEn} ${day.year}`) : `${day.month} ${day.year}`}</span>
         <small>{day.hijri}</small>
       </div>
-      <div className="doc-grid">
+      <div className={cells.length === 4 ? "doc-grid c2" : "doc-grid"}>
         {cells.map(({ ar, en, icon: Icon, value, valueEn, single }) => (
           <div key={ar}>
             <div className="k">

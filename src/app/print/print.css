@@ -83,6 +83,8 @@
 .doc-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
 .doc-grid > div { padding: 7px 11px; border-inline-start: 1px solid var(--rule); border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 3px; }
 .doc-grid > div:nth-last-child(-n+3) { border-bottom: 0; }
+.doc-grid.c2 { grid-template-columns: repeat(2, 1fr); }
+.doc-grid.c2 > div:nth-last-child(3) { border-bottom: 1px solid var(--rule); }
 .doc-grid .k { display: flex; align-items: center; gap: 6px; font-size: 8pt; color: var(--ink-muted); }
 .doc-grid .k .ic { color: var(--brass); flex: none; }
 .doc-grid .k .bar { margin-inline: auto; }
@@ -95,8 +97,6 @@
 .doc-issued { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--rule); padding: 0 2px 4px; margin: -2px 0 8px; font-size: 8.3pt; color: var(--ink-muted); }
 .doc-issued b { color: var(--ink); font-weight: 600; }
 .doc-issued .en { direction: ltr; }
-.doc-grid .ok { color: var(--primary); }
-.doc-grid .warn { color: var(--danger); }
 
 /* Section heading: Arabic on the right, English on the left, a brass rule beneath. */
 .doc h2 { font-size: 13pt; color: var(--primary); margin: 12px 0 6px; padding-bottom: 3px; line-height: 1.35; break-after: avoid; border-bottom: 2px solid transparent; border-image: linear-gradient(to left, var(--brass), #d8c08a) 1; }
