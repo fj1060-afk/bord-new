@@ -43,12 +43,12 @@ export async function collectAttention(supabase: SupabaseClient, viewer: Viewer)
     organizer
       ? supabase.from("meetings").select("id, title, number, code, starts_at, status, live_status, board_id, committee_id, committee:committees(name)").neq("status", "cancelled").gte("starts_at", recent).lte("starts_at", soon).order("starts_at")
       : Promise.resolve({ data: [] }),
-    organizer || myDepts.length
-      ? supabase
-          .from("document_requests")
-          .select("id, title, due_date, status, department_id, department:departments(name), item:agenda_items!inner(title, meeting:meetings!inner(id, title, starts_at, board_id, committee_id, status, committee:committees(name)))")
-          .in("status", ["requested", "returned"])
-      : Promise.resolve({ data: [] }),
+    // Everyone: RLS returns only the requests the viewer may answer (their departments' or their own).
+    // agenda_items and meetings are linked twice (meetings.current_item_id), so the embed names its key.
+    supabase
+      .from("document_requests")
+      .select("id, title, due_date, status, department_id, assignee_user_id, department:departments(name), item:agenda_items!inner(title, meeting:meetings!agenda_items_meeting_id_fkey!inner(id, title, starts_at, board_id, committee_id, status, committee:committees(name)))")
+      .in("status", ["requested", "returned"]),
     can(p, "/governance-office") ? complianceFindings(supabase) : Promise.resolve(null),
     companyProfile(supabase),
     can(p, "/committees")
@@ -95,8 +95,8 @@ export async function collectAttention(supabase: SupabaseClient, viewer: Viewer)
   }
 
   // 2. Documents asked of departments.
-  for (const d of (docs ?? []) as unknown as { id: string; title: string; due_date: string | null; status: string; department_id: string; department: { name: string } | null; item: { title: string; meeting: Meeting } }[]) {
-    const mine = myDepts.includes(d.department_id);
+  for (const d of (docs ?? []) as unknown as { id: string; title: string; due_date: string | null; status: string; department_id: string | null; assignee_user_id: string | null; department: { name: string } | null; item: { title: string; meeting: Meeting } }[]) {
+    const mine = (!!d.department_id && myDepts.includes(d.department_id)) || d.assignee_user_id === viewer.id;
     if (!organizer && !mine) continue;
     const days = d.due_date ? daysUntil(today, d.due_date) : null;
     const { body, bodyName } = bodyOf(d.item.meeting);
@@ -106,7 +106,7 @@ export async function collectAttention(supabase: SupabaseClient, viewer: Viewer)
       icon: "file",
       what: d.status === "returned" ? `مستند أُعيد للتعديل: ${d.title}` : `مستند مطلوب: ${d.title}`,
       where: `${bodyName} · ${d.item.meeting.title} · البند: ${d.item.title}`,
-      who: d.department?.name ?? "الإدارة",
+      who: d.department?.name ?? (d.assignee_user_id === viewer.id ? "أنت" : "مكلّف بالاسم"),
       days,
       href: `/meetings/${d.item.meeting.id}?tab=agenda`,
       action: mine ? "رفع المستند" : "فتح البند",
