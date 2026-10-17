@@ -27,7 +27,8 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
       {meeting.attendance_intro && <BiText bi={bi} ar={meeting.attendance_intro} en={meeting.attendance_intro_en} />}
 
       <H2 ar={m.isBoard ? "أعضاء المجلس" : "أعضاء اللجنة"} en={m.isBoard ? "Board Members" : "Committee Members"} bi={bi} />
-      <table>
+      <div className="doc-panel">
+        <table>
         <thead>
           <tr>
             <th style={{ width: "4%" }}>م</th>
@@ -64,16 +65,20 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
           })}
         </tbody>
       </table>
+      </div>
 
       <section className="keep">
         <H2 ar="التحقق من النصاب" en="Quorum" bi={bi} />
-        <QuorumBox q={m.quorum} bi={bi} />
+        <div className="doc-panel">
+          <QuorumBox q={m.quorum} bi={bi} />
+        </div>
       </section>
 
       {m.guests.length > 0 && (
         <>
           <H2 ar="المدعوون من غير الأعضاء" en="Invited Guests" bi={bi} />
-          <table>
+          <div className="doc-panel">
+            <table>
             <thead>
               <tr>
                 <th style={{ width: "4%" }}>م</th>
@@ -101,6 +106,7 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
               ))}
             </tbody>
           </table>
+          </div>
         </>
       )}
 

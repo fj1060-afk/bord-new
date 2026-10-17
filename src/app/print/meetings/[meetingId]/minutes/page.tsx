@@ -73,7 +73,8 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
       <InfoCard bi={bi} day={heldDay(m)} cells={heldCells(m)} caption={meeting.started_at ? ["تاريخ الانعقاد", "Held on"] : ["تاريخ الاجتماع", "Meeting Date"]} />
 
       <H2 ar="الحضور" en="Attendance" bi={bi} />
-      <table>
+      <div className="doc-panel">
+        <table>
         <thead>
           <tr>
             <th style={{ width: "4%" }}>م</th>
@@ -121,10 +122,13 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
           ))}
         </tbody>
       </table>
+      </div>
 
       <section className="keep">
         <H2 ar="النصاب وافتتاح الجلسة" en="Quorum and Opening" bi={bi} />
-        <QuorumBox q={m.quorum} bi={bi} />
+        <div className="doc-panel">
+          <QuorumBox q={m.quorum} bi={bi} />
+        </div>
         <BiText bi={bi} ar={minutes.intro} en={minutes.intro_en} />
         <BiText
           bi={bi}
@@ -134,11 +138,12 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
       </section>
 
       <H2 ar="البنود والقرارات" en="Items and Resolutions" bi={bi} />
+      <ol className="doc-items">
       {(items ?? []).map((item) => {
         const kind = item.kind as keyof typeof ITEM_KINDS;
         const note = notes[item.id];
         return (
-          <section key={item.id} className="doc-item">
+          <li key={item.id}>
             <header className="ai-head">
               <span className="no num">{item.position}</span>
               <div className="ai-ar">
@@ -219,12 +224,12 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
                   );
                 })}
             </div>
-          </section>
+          </li>
         );
       })}
 
       {(circulars ?? []).map((c) => (
-        <section key={c.id} className="doc-item">
+        <li key={c.id}>
           <header>
             <L as="div" bi={bi} ar={`إثبات قرار بالتمرير: ${c.title}`} en="Circular resolution recorded" />
           </header>
@@ -235,8 +240,9 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
               en={`The Board recorded the resolution passed by circulation${c.closed_at ? ` on ${englishDate(new Date(c.closed_at))}` : ""} with ${c.votes.filter((v) => v.vote === "approve").length} approvals (Companies Law Art. 82).`}
             />
           </div>
-        </section>
+        </li>
       ))}
+      </ol>
 
       {general.map((x) => (
         <div key={x.id} className="doc-remark">

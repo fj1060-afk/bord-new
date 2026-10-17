@@ -104,6 +104,13 @@
 .doc h2 + .ref { margin-top: -2px; }
 
 /* Agenda items: number square, Arabic beside English, then a strip with presenter, duration and attachments. */
+/* Tables and the quorum box sit in the same soft container as the agenda items, on white. */
+.doc-panel { margin: 4px 0 8px; padding: 12px; background: var(--band-soft); border-radius: 12px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.doc-panel > table { margin: 0; background: #fff; border: 1px solid #dce3df; border-radius: 8px; border-collapse: separate; border-spacing: 0; overflow: hidden; }
+.doc-panel > table tr:last-child td { border-bottom: 0; }
+.doc-panel .doc-quorum { margin: 0; background: #fff; border-color: #dce3df; }
+.doc-panel > .doc-bi, .doc-panel > .ref { margin-top: 6px; }
+
 /* One soft container (the title band's light colour) holding a white card per item. */
 .doc-items { list-style: none; margin: 4px 0 8px; padding: 12px; background: var(--band-soft); border-radius: 12px; display: flex; flex-direction: column; gap: 10px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .doc-items > li { background: #fff; border: 1px solid #dce3df; border-radius: 8px; padding: 10px 12px 8px; break-inside: avoid; page-break-inside: avoid; overflow-wrap: anywhere; }
@@ -162,11 +169,9 @@
 .doc-agenda { margin: 0 0 6px; }
 .doc-agenda > div { display: grid; grid-template-columns: 22px 1fr; padding: 2px 0; border-bottom: 1px dotted var(--rule); }
 .doc-agenda > div.bi { grid-template-columns: 22px 1fr 1fr; gap: 12px; }
-/* An item may continue on the next page; its header never stays behind alone. */
-.doc-item { border: 1.5px solid var(--rule); border-radius: 8px; margin-bottom: 8px; }
-.doc-item > header { background: var(--paper); border-bottom: 1px solid var(--rule); padding: 6px 10px; break-after: avoid; border-radius: 8px 8px 0 0; }
+/* In the minutes each item card has its discussion and resolutions beneath the header. */
+.doc-items > li > .ai-head + div { margin-top: 8px; padding-top: 8px; border-top: 1px solid #dce3df; }
 .doc-result, .doc-remark { break-inside: avoid; }
-.doc-item > div { padding: 6px 10px; }
 .doc .label { font-size: 8pt; font-weight: 700; color: var(--ink-muted); }
 .doc-result { background: var(--primary-soft); border-inline-start: 4px solid var(--primary); border-radius: 4px; padding: 5px 10px; margin-top: 5px; }
 .doc-result .no { font-weight: 700; color: var(--primary); }

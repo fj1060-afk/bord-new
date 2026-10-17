@@ -42,6 +42,11 @@ The approved design, top to bottom:
   card never splits across pages; the container continues on the next page.
   The purpose column is dropped when every item is for decision, with one
   line under the heading saying so.
+- **Other sections, same pattern**: the attendance tables (members, guests)
+  and the quorum box sit in the same soft container on white with a 1px
+  `#dce3df` border and rounded corners; in the minutes each item is a white
+  card (number square, Arabic | English titles, then discussion and
+  resolutions under a light rule) inside one container, like the agenda.
 - **Notes to members**: light box with a brass edge, Arabic and English side
   by side.
 - **Signatures**: a plain line per signer with role, name, status when signed
