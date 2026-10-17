@@ -36,7 +36,7 @@ export async function listPeople(supabase: SupabaseClient): Promise<PersonOption
     supabase.from("people").select("id, full_name, executive_title, user_id").order("full_name"),
     supabase.from("board_members").select("person_id, position, category, board:boards!inner(status)").eq("status", "active").eq("board.status", "active"),
     supabase.from("committee_members").select("person_id, position, committee:committees!inner(name, status)").eq("status", "active").eq("committee.status", "active"),
-    supabase.from("department_delegates").select("user_id, department:departments(name)"),
+    supabase.from("department_delegates").select("user_id, department:departments!inner(name, status)").eq("department.status", "active"),
   ]);
   const boardOf = new Map((board ?? []).map((b) => [b.person_id, { position: b.position, category: b.category }]));
   const committeesOf = new Map<string, { name: string; position: string }[]>();
