@@ -1,8 +1,9 @@
-import { englishDate, englishTime, MEETING_MODES_EN } from "@/lib/doc-labels";
+import { Clock, MapPin, PenLine, Timer, User, Users } from "lucide-react";
+import { englishDayParts, englishTime, MEETING_MODES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
 import type { AttendanceStatus } from "@/lib/live";
 import { MEETING_MODES } from "@/lib/meetings";
-import { DocHead, DocTitle, L, type Badge, type Cell } from "../../doc";
+import { DocHead, DocTitle, L, type Badge, type Cell, type Day } from "../../doc";
 import type { loadMeeting } from "./_meeting";
 
 export type Meeting = Awaited<ReturnType<typeof loadMeeting>>;
@@ -63,11 +64,15 @@ export function MeetingHead({ m, title, titleEn, badges }: { m: Meeting; title: 
   );
 }
 
-/** The date block shows the day the meeting was actually held (or is scheduled). */
-export function heldDay(m: Meeting) {
-  const d = dateParts(m.held);
-  return { ...d, en: englishDate(m.held) };
+/** The date block for a day: weekday and month in both languages, day, year and Hijri date. */
+export function dayBlock(date: Date): Day {
+  const d = dateParts(date);
+  const en = englishDayParts(date);
+  return { weekday: d.weekday, weekdayEn: en.weekday, day: d.day, month: d.month, monthEn: en.month, year: d.year, hijri: d.hijri };
 }
+
+/** The date block shows the day the meeting was actually held (or is scheduled). */
+export const heldDay = (m: Meeting) => dayBlock(m.held);
 
 const time = (iso: string | null) => (iso ? dateParts(new Date(iso)).time : null);
 const timeEn = (iso: string | null) => (iso ? englishTime(new Date(iso)) : null);
@@ -79,12 +84,12 @@ export function heldCells(m: Meeting): Cell[] {
   const actual = meeting.started_at ? <span className="nw">{time(meeting.started_at)} – {time(meeting.ended_at) ?? "…"}</span> : "لم يُعقد";
   const actualEn = meeting.started_at ? <span className="nw">{timeEn(meeting.started_at)} – {timeEn(meeting.ended_at) ?? "…"}</span> : "Not held";
   return [
-    { ar: "الموعد المقرر", en: "Scheduled", value: time(meeting.starts_at), valueEn: timeEn(meeting.starts_at) },
-    { ar: "الانعقاد الفعلي", en: "Actual", value: actual, valueEn: actualEn },
-    { ar: "طريقة الانعقاد", en: "Format", value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
-    { ar: "المكان", en: "Venue", value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
-    { ar: "رئيس الاجتماع", en: "Chair", value: m.chair, valueEn: m.chairEn || "—" },
-    { ar: "أمين السر", en: "Secretary", value: m.secretary, valueEn: m.secretaryEn || "—" },
+    { ar: "الموعد المقرر", en: "Scheduled", icon: Clock, value: time(meeting.starts_at), valueEn: timeEn(meeting.starts_at), single: true },
+    { ar: "الانعقاد الفعلي", en: "Actual", icon: Timer, value: actual, valueEn: actualEn, single: !!meeting.started_at },
+    { ar: "طريقة الانعقاد", en: "Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
+    { ar: "المكان", en: "Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
+    { ar: "رئيس الاجتماع", en: "Chair", icon: User, value: m.chair, valueEn: m.chairEn || "—" },
+    { ar: "أمين السر", en: "Secretary", icon: PenLine, value: m.secretary, valueEn: m.secretaryEn || "—" },
   ];
 }
 

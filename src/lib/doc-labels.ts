@@ -17,6 +17,14 @@ export function englishDate(date: Date): string {
   return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** Weekday and month names in English, in Riyadh time, for the printed date block. */
+export function englishDayParts(date: Date) {
+  const d = new Date(date.getTime() + 3 * 3600000);
+  return { weekday: WEEKDAYS[d.getUTCDay()], month: MONTHS[d.getUTCMonth()] };
+}
+
 /** "10:00 AM" in Riyadh time. */
 export function englishTime(date: Date): string {
   const d = new Date(date.getTime() + 3 * 3600000);

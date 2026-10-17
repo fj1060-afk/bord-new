@@ -60,6 +60,8 @@ const partFormat = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFor
 const weekdayFormat = partFormat({ weekday: "long" });
 const dayFormat = partFormat({ day: "numeric" });
 const monthYearFormat = partFormat({ month: "long", year: "numeric" });
+const monthFormat = partFormat({ month: "long" });
+const yearFormat = partFormat({ year: "numeric" });
 const longDateFormat = partFormat({ day: "numeric", month: "long", year: "numeric" });
 const timeFormat = partFormat({ hour: "numeric", minute: "2-digit" });
 
@@ -69,6 +71,8 @@ export function dateParts(date: Date) {
     weekday: weekdayFormat.format(date),
     day: dayFormat.format(date),
     monthYear: monthYearFormat.format(date),
+    month: monthFormat.format(date),
+    year: yearFormat.format(date),
     hijri: formatHijriDate(date),
     long: longDateFormat.format(date),
     time: timeFormat.format(date),

@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { englishDate, englishTime, ITEM_KINDS_EN, MEETING_MODES_EN, MEETING_TYPES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
 import { ITEM_KINDS, MEETING_MODES, MEETING_TYPES } from "@/lib/meetings";
-import { BiText, DocChrome, InfoCard, L, reference, Signatures, Th } from "../../../doc";
+import { Clock, FileText, Mail, MapPin, Paperclip, User, Users } from "lucide-react";
+import { BiText, DocChrome, InfoCard, L, reference, Signatures } from "../../../doc";
 import { loadMeeting } from "../_meeting";
-import { H2, MeetingHead } from "../parts";
+import { dayBlock, H2, MeetingHead } from "../parts";
 
 export const metadata: Metadata = { title: "جدول الأعمال" };
 
@@ -32,7 +33,6 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
   const mode = meeting.mode as keyof typeof MEETING_MODES;
   const type = meeting.meeting_type as keyof typeof MEETING_TYPES;
   const d = dateParts(start);
-  const th = (ar: string, en: string, width?: string) => <Th ar={ar} en={en} bi={bi} width={width} />;
 
   return (
     <main className="doc">
@@ -40,14 +40,14 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
       <MeetingHead m={m} title="دعوة وجدول أعمال اجتماع" titleEn="Meeting Invitation and Agenda" badges={[{ ar: "سري", en: "Confidential", tone: "c" }]} />
       <InfoCard
         bi={bi}
-        day={{ ...d, en: englishDate(start) }}
+        day={dayBlock(start)}
         cells={[
-          { ar: "الوقت", en: "Time", value: <span className="nw">{d.time} – {dateParts(end).time}</span>, valueEn: <span className="nw">{englishTime(start)} – {englishTime(end)}</span> },
-          { ar: "نوع الاجتماع", en: "Type", value: MEETING_TYPES[type], valueEn: MEETING_TYPES_EN[type] },
-          { ar: "طريقة الانعقاد", en: "Format", value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
-          { ar: "المكان", en: "Venue", value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
-          { ar: "الدعوة من", en: "Called by", value: m.chair, valueEn: m.chairEn || "—" },
-          { ar: "إرسال الدعوة", en: "Invitation sent", value: sent ? `${dateParts(sent).long} (قبل ${notice} أيام)` : "—", valueEn: sent ? `${englishDate(sent)} (${notice} days before)` : "—" },
+          { ar: "الوقت", en: "Time", icon: Clock, single: true, value: <span className="nw">{d.time} – {dateParts(end).time}</span>, valueEn: <span className="nw">{englishTime(start)} – {englishTime(end)}</span> },
+          { ar: "نوع الاجتماع", en: "Type", icon: FileText, value: MEETING_TYPES[type], valueEn: MEETING_TYPES_EN[type] },
+          { ar: "طريقة الانعقاد", en: "Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
+          { ar: "المكان", en: "Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
+          { ar: "الدعوة من", en: "Called by", icon: User, value: m.chair, valueEn: m.chairEn || "—" },
+          { ar: "إرسال الدعوة", en: "Invitation sent", icon: Mail, value: sent ? `${dateParts(sent).long} (قبل ${notice} أيام)` : "—", valueEn: sent ? `${englishDate(sent)} (${notice} days before)` : "—" },
         ]}
       />
       {meeting.agenda_intro && <BiText bi={bi} ar={meeting.agenda_intro} en={meeting.agenda_intro_en} />}
@@ -57,42 +57,42 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
         </p>
       )}
 
-      <H2 ar={allDecision ? "بنود جدول الأعمال (جميعها للقرار)" : "بنود جدول الأعمال"} en={allDecision ? "Agenda Items (all for decision)" : "Agenda Items"} bi={bi} />
-      <table>
-        <thead>
-          <tr>
-            <th style={{ width: "4%" }}>م</th>
-            {th("البند", "Item", allDecision ? "66%" : "58%")}
-            {!allDecision && th("الغرض", "Purpose", "10%")}
-            {th("العرض", "Presenter", "16%")}
-            {th("المدة", "Min", "7%")}
-            {th("مرفقات", "Docs", "7%")}
-          </tr>
-        </thead>
-        <tbody>
-          {(items ?? []).map((i) => {
-            const kind = i.kind as keyof typeof ITEM_KINDS;
-            return (
-              <tr key={i.id}>
-                <td className="num">{i.position}</td>
-                <td>
-                  <span className="title">{i.title}</span>
-                  {bi && <span className="sub en">{i.title_en?.trim() || <span className="missing">English title not provided.</span>}</span>}
-                </td>
-                {!allDecision && (
-                  <td>
-                    <span className={kind === "decision" ? "pill" : "pill m"}>{ITEM_KINDS[kind]}</span>
-                    {bi && <span className="note-en">{ITEM_KINDS_EN[kind]}</span>}
-                  </td>
-                )}
-                <td>{i.presenter || "—"}</td>
-                <td className="num">{i.duration_minutes ?? "—"}</td>
-                <td className="num">{docCount(i.id) || "—"}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <H2 ar="بنود جدول الأعمال" en="Agenda Items" bi={bi} />
+      {allDecision && <p className="ref">{bi ? "جميع البنود للقرار · All items are for decision" : "جميع البنود للقرار"}</p>}
+      <ol className="doc-items">
+        {(items ?? []).map((i) => {
+          const kind = i.kind as keyof typeof ITEM_KINDS;
+          const label = (ar: string, en: string) => <span className="ml">{bi ? `${ar} / ${en}` : ar}:</span>;
+          return (
+            <li key={i.id}>
+              <div className="ai-head">
+                <span className="no num">{i.position}</span>
+                <div className="ai-ar">
+                  {i.title}
+                  {!allDecision && (
+                    <span className={kind === "decision" ? "pill" : "pill m"}>
+                      {ITEM_KINDS[kind]}
+                      {bi && ` · ${ITEM_KINDS_EN[kind]}`}
+                    </span>
+                  )}
+                </div>
+                {bi && <div className="ai-en en">{i.title_en?.trim() || <span className="missing">English title not provided.</span>}</div>}
+              </div>
+              <div className="ai-meta">
+                <span>
+                  <User size={14} strokeWidth={1.6} aria-hidden="true" /> {label("العرض", "Presenter")} {i.presenter || "—"}
+                </span>
+                <span>
+                  <Clock size={14} strokeWidth={1.6} aria-hidden="true" /> {label("المدة", "Duration")} <b className="num">{i.duration_minutes ?? "—"}</b> {i.duration_minutes ? (bi ? "min" : "دقيقة") : ""}
+                </span>
+                <span>
+                  <Paperclip size={14} strokeWidth={1.6} aria-hidden="true" /> {label("المرفقات", "Attachments")} <b className="num">{docCount(i.id) || "—"}</b>
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
 
       <div className="doc-box">
         <L as="div" className="label-row" ar="تنبيهات للأعضاء" en="Notes to members" bi={bi} />

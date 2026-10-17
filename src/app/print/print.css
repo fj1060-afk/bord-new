@@ -51,22 +51,47 @@
 .doc-title p.sub { text-align: center; }
 .doc-title hr { width: 48px; border: 0; border-top: 2px solid var(--brass); margin: 4px auto 0; }
 
-/* Meeting card */
-.doc-card { display: grid; grid-template-columns: 92px 1fr; border: 1.5px solid var(--rule); border-radius: 10px; overflow: hidden; margin-bottom: 6px; break-inside: avoid; }
-.doc-date { background: var(--primary); color: var(--on-primary); text-align: center; padding: 6px 4px; display: flex; flex-direction: column; justify-content: center; }
-.doc-date .d { font-size: 20pt; font-weight: 700; line-height: 1.2; font-family: var(--font-mono-latin), monospace; }
-.doc-date small { display: block; font-size: 7.5pt; opacity: .85; border-top: 1px solid rgb(255 255 255 / .3); margin-top: 3px; padding-top: 2px; }
+/* Meeting card: a green date block, then label rows (icon · Arabic | English) over their values. */
+.doc-card { display: grid; grid-template-columns: 30mm 1fr; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; margin-bottom: 8px; break-inside: avoid; }
+.doc-date { background: var(--primary); color: var(--on-primary); text-align: center; padding: 8px 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1px; }
+.doc-date .dl { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 9pt; }
+.doc-date .dl .en { font-size: 8.5pt; }
+.doc-date .d { font-size: 26pt; font-weight: 700; line-height: 1.1; font-family: var(--font-mono-latin), monospace; }
+.doc-date .y { font-size: 11pt; font-family: var(--font-mono-latin), monospace; }
+.doc-date small { font-size: 7pt; opacity: .75; margin-top: 2px; }
+.doc .bar { display: inline-block; width: 1px; height: .95em; background: var(--brass); vertical-align: middle; flex: none; }
+.doc-date .bar { background: rgb(255 255 255 / .55); }
 .doc-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
-.doc-grid > div { padding: 5px 10px; border-inline-start: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.doc-grid > div { padding: 7px 11px; border-inline-start: 1px solid var(--rule); border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 3px; }
 .doc-grid > div:nth-last-child(-n+3) { border-bottom: 0; }
-.doc-grid .k { font-size: 7.5pt; color: var(--ink-muted); line-height: 1.3; }
-.doc-grid .k .sub { font-size: 6.8pt; }
-.doc-grid .v { font-weight: 600; font-size: 9.2pt; line-height: 1.4; }
-
+.doc-grid .k { display: flex; align-items: center; gap: 6px; font-size: 8pt; color: var(--ink-muted); }
+.doc-grid .k .ic { color: var(--brass); flex: none; }
+.doc-grid .k .bar { margin-inline: auto; }
+.doc-grid .v { font-weight: 700; font-size: 10pt; line-height: 1.4; }
+.doc-grid .v.one { text-align: center; direction: ltr; font-family: var(--font-body), sans-serif; }
+.doc-grid .v.pair > .en { font-weight: 400; font-size: 8.5pt; color: var(--ink-muted); }
 
 /* Sections and tables */
-.doc h2 { font-size: 11.5pt; margin: 10px 0 4px; padding-inline-start: 8px; border-inline-start: 4px solid var(--primary); line-height: 1.35; break-after: avoid; }
-.doc h2 .en { font-size: 10pt; font-weight: 600; color: var(--primary); font-family: var(--font-body), sans-serif; }
+/* Section heading: Arabic on the right, English on the left, a brass rule beneath. */
+.doc h2 { font-size: 13pt; color: var(--primary); margin: 12px 0 6px; padding-bottom: 3px; line-height: 1.35; break-after: avoid; border-bottom: 2px solid transparent; border-image: linear-gradient(to left, var(--brass), #d8c08a) 1; }
+.doc h2 .en { font-size: 12pt; font-weight: 700; color: var(--primary); font-family: var(--font-naskh), Georgia, serif; }
+.doc h2 + .ref { margin-top: -2px; }
+
+/* Agenda items: number square, Arabic beside English, then a strip with presenter, duration and attachments. */
+.doc-items { list-style: none; margin: 0 0 6px; padding: 0; }
+.doc-items > li { padding: 7px 0; border-bottom: 1px solid var(--rule); break-inside: avoid; }
+.ai-head { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+.ai-head:has(.ai-en) { grid-template-columns: 26px 1fr 1fr; }
+.ai-head .no { display: grid; place-items: center; height: 26px; background: var(--primary); color: var(--on-primary); font-size: 11pt; font-weight: 600; }
+.ai-ar { font-size: 10pt; font-weight: 600; line-height: 1.6; padding-top: 2px; }
+.ai-ar .pill { margin-inline-start: 6px; vertical-align: 1px; }
+.ai-en { font-size: 9.5pt; line-height: 1.5; padding-top: 2px; padding-left: 10px; border-right: 1px solid var(--rule); padding-right: 12px; font-family: var(--font-naskh), Georgia, serif; }
+.ai-meta { display: grid; grid-template-columns: repeat(3, 1fr); background: #f3f4f2; margin-top: 6px; padding: 4px 0; font-size: 8.3pt; color: var(--ink-muted); }
+.ai-meta > span { display: flex; align-items: center; gap: 6px; padding: 0 12px; border-inline-start: 1px solid var(--rule); }
+.ai-meta > span:first-child { border: 0; }
+.ai-meta svg { color: var(--brass); flex: none; }
+.ai-meta b { color: var(--ink); font-weight: 600; }
+.ai-meta .ml { white-space: nowrap; }
 .doc-bi { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .doc-bi > .en { border-right: 1px solid var(--rule); padding-right: 12px; }
 .doc table { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 8.8pt; }
@@ -111,8 +136,7 @@
 .doc-agenda > div.bi { grid-template-columns: 22px 1fr 1fr; gap: 12px; }
 /* An item may continue on the next page; its header never stays behind alone. */
 .doc-item { border: 1.5px solid var(--rule); border-radius: 8px; margin-bottom: 8px; }
-.doc-item > header { background: var(--paper); border-bottom: 1px solid var(--rule); padding: 5px 10px; font-weight: 700; break-after: avoid; border-radius: 8px 8px 0 0; }
-.doc-item > header .sub { font-weight: 500; }
+.doc-item > header { background: var(--paper); border-bottom: 1px solid var(--rule); padding: 6px 10px; break-after: avoid; border-radius: 8px 8px 0 0; }
 .doc-result, .doc-remark { break-inside: avoid; }
 .doc-item > div { padding: 6px 10px; }
 .doc .label { font-size: 8pt; font-weight: 700; color: var(--ink-muted); }

@@ -7,7 +7,7 @@ import { ITEM_KINDS } from "@/lib/meetings";
 import { resolutionReference } from "@/lib/minutes";
 import { BOARD_CATEGORIES } from "@/lib/org";
 import { REMARK_KINDS, voteTally, type RemarkKind } from "@/lib/secretary";
-import { BiText, DocChrome, InfoCard, L, PersonCell, reference, S, Signatures, Th, type Signer } from "../../../doc";
+import { BiText, DocChrome, InfoCard, L, PersonCell, reference, Signatures, Th, type Signer } from "../../../doc";
 import { loadMeeting } from "../_meeting";
 import { Capacity, H2, heldCells, heldDay, MeetingHead, Method, QuorumBox } from "../parts";
 
@@ -139,17 +139,15 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
         const note = notes[item.id];
         return (
           <section key={item.id} className="doc-item">
-            <header>
-              <S
-                as="div"
-                bi={bi}
-                ar={
-                  <>
-                    البند <span className="num">{item.position}</span>: {item.title} <span className={kind === "decision" ? "pill" : "pill m"}>{item.status === "deferred" ? (bi ? "مؤجل · Deferred" : "مؤجل") : bi ? `${ITEM_KINDS[kind]} · ${ITEM_KINDS_EN[kind]}` : ITEM_KINDS[kind]}</span>
-                  </>
-                }
-                en={<>Item {item.position}: {item.title_en?.trim() || "English title not provided."}</>}
-              />
+            <header className="ai-head">
+              <span className="no num">{item.position}</span>
+              <div className="ai-ar">
+                {item.title}
+                <span className={kind === "decision" && item.status !== "deferred" ? "pill" : "pill m"}>
+                  {item.status === "deferred" ? (bi ? "مؤجل · Deferred" : "مؤجل") : bi ? `${ITEM_KINDS[kind]} · ${ITEM_KINDS_EN[kind]}` : ITEM_KINDS[kind]}
+                </span>
+              </div>
+              {bi && <div className="ai-en en">{item.title_en?.trim() || <span className="missing">English title not provided.</span>}</div>}
             </header>
             <div>
               <L as="div" className="label" ar="المناقشة" en="Discussion" bi={bi} />

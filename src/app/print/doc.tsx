@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import { RichText } from "@/components/ui/rich-text";
 import { plainText } from "@/lib/rich-text";
 import { PrintButton } from "./print-button";
@@ -89,24 +90,51 @@ export function DocTitle({ title, titleEn, subtitle, subtitleEn, bi }: { title: 
   );
 }
 
-export type Cell = { ar: string; en: string; value: ReactNode; valueEn?: ReactNode };
+export type Cell = { ar: string; en: string; icon: LucideIcon; value: ReactNode; valueEn?: ReactNode; /** One value for both languages (e.g. a time range), centred. */ single?: boolean };
+export type Day = { weekday: string; weekdayEn: string; day: string; month: string; monthEn: string; year: string; hijri: string };
 
-/** The date block beside a grid of label/value cells. */
-export function InfoCard({ day, cells, bi }: { day: { weekday: string; day: string; monthYear: string; hijri: string; en: string }; cells: Cell[]; bi: boolean }) {
+/** The date block beside a grid of cells: icon and label (Arabic | English) above, the value in each language below. */
+export function InfoCard({ day, cells, bi }: { day: Day; cells: Cell[]; bi: boolean }) {
+  const both = (ar: ReactNode, en: ReactNode) =>
+    bi ? (
+      <>
+        <span>{ar}</span>
+        <i className="bar" aria-hidden="true" />
+        <span className="en">{en}</span>
+      </>
+    ) : (
+      <span>{ar}</span>
+    );
   return (
     <div className="doc-card">
       <div className="doc-date">
-        <span>{day.weekday}</span>
+        <span className="dl">{both(day.weekday, day.weekdayEn)}</span>
         <span className="d">{day.day}</span>
-        <span>{day.monthYear}م</span>
+        <span className="dl">{both(day.month, day.monthEn)}</span>
+        <span className="y">{day.year}</span>
         <small>{day.hijri}</small>
-        {bi && <small className="en-c">{day.en}</small>}
       </div>
       <div className="doc-grid">
-        {cells.map((c) => (
-          <div key={c.ar}>
-            <S ar={c.ar} en={c.en} bi={bi} className="k" />
-            <S ar={c.value || "—"} en={c.valueEn ?? (bi ? c.value : undefined)} bi={bi} className="v" />
+        {cells.map(({ ar, en, icon: Icon, value, valueEn, single }) => (
+          <div key={ar}>
+            <div className="k">
+              <Icon size={15} strokeWidth={1.6} aria-hidden="true" className="ic" />
+              <span>{ar}</span>
+              {bi && (
+                <>
+                  <i className="bar" aria-hidden="true" />
+                  <span className="en">{en}</span>
+                </>
+              )}
+            </div>
+            {single || !bi ? (
+              <div className={single ? "v one" : "v"}>{(bi && single ? valueEn : value) || "—"}</div>
+            ) : (
+              <div className="v pair">
+                <span>{value || "—"}</span>
+                <span className="en">{valueEn ?? value ?? "—"}</span>
+              </div>
+            )}
           </div>
         ))}
       </div>
