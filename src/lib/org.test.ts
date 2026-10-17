@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BOARD_POSITIONS, currentYear, isOneOf, membershipError, sortByPosition, termEnd, termYears } from "./org";
+import { BOARD_POSITIONS, currentYear, isOneOf, membershipError, seatTitle, sortByPosition, termEnd, termYears } from "./org";
 
 describe("org", () => {
   it("sorts chair, vice chair, secretary, then members by name", () => {
@@ -38,5 +38,18 @@ describe("org", () => {
     expect(membershipError("23505", 'violates "committee_members_one_active"')).toContain("عضو نشط");
     expect(membershipError("23514", "check")).toContain("التواريخ");
     expect(membershipError(undefined, undefined)).toContain("تعذّر");
+  });
+});
+
+describe("seatTitle", () => {
+  it("names board seats with their category", () => {
+    expect(seatTitle(true, "chair", "independent")).toBe("رئيس مجلس الإدارة · مستقل");
+    expect(seatTitle(true, "member", "non_executive")).toBe("عضو مجلس الإدارة · غير تنفيذي");
+    expect(seatTitle(true, "vice_chair")).toBe("نائب رئيس مجلس الإدارة");
+  });
+  it("names committee seats", () => {
+    expect(seatTitle(false, "chair")).toBe("رئيس اللجنة");
+    expect(seatTitle(false, "secretary")).toBe("أمين اللجنة");
+    expect(seatTitle(false, "member")).toBe("عضو اللجنة");
   });
 });

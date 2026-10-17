@@ -18,6 +18,14 @@ export type BoardPosition = keyof typeof BOARD_POSITIONS;
 export type BoardCategory = keyof typeof BOARD_CATEGORIES;
 export type CommitteePosition = keyof typeof COMMITTEE_POSITIONS;
 
+/** A seat as people read it, e.g. «رئيس مجلس الإدارة · مستقل» or «عضو اللجنة». */
+export function seatTitle(isBoard: boolean, position: string, category?: string | null): string {
+  if (!isBoard) return { chair: "رئيس اللجنة", secretary: "أمين اللجنة" }[position] ?? "عضو اللجنة";
+  const title = { chair: "رئيس مجلس الإدارة", vice_chair: "نائب رئيس مجلس الإدارة" }[position] ?? "عضو مجلس الإدارة";
+  const kind = category && BOARD_CATEGORIES[category as BoardCategory];
+  return kind ? `${title} · ${kind}` : title;
+}
+
 const POSITION_ORDER: Record<string, number> = { chair: 0, vice_chair: 1, secretary: 2, member: 3 };
 
 /** Chair first, then vice chair and secretary, then members by name. */

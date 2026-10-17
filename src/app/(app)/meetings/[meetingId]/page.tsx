@@ -1,3 +1,4 @@
+import { seatTitle } from "@/lib/org";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TabBar } from "@/components/ui/tab-bar";
@@ -256,7 +257,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           <InfoRequests meetingId={meetingId} items={agenda} organizer={organizer} invitee={Boolean(meeting.pack_published_at) && inviteeRows.some((i) => i.person_id === viewer.personId)} />
         )}
 
-        {tab === "invitees" && <InviteesTab meetingId={meetingId} invitees={inviteeRows} people={people} editable={editable} />}
+        {tab === "invitees" && <InviteesTab meetingId={meetingId} invitees={inviteeRows} people={people} editable={editable} titles={await inviteeTitles(supabase, meeting, inviteeRows)} />}
 
         {tab === "minutes" && <MinutesTab meeting={meeting} items={agenda} viewerId={viewer.id} organizer={organizer} />}
 
@@ -309,4 +310,21 @@ async function loadLive(supabase: SupabaseClient, meetingId: string, isBoard: bo
 function withObsolete(rows: Omit<RequirementRow, "obsolete">[], items: { id: string; title: string }[], own: Template[], body: Body): RequirementRow[] {
   const wanted = new Map(items.map((i) => [i.id, new Set((matchTemplate(i.title, own, body)?.reqs ?? []).map((r) => r.ar))]));
   return rows.map((r) => ({ ...r, obsolete: r.status === "sent" && !r.custom && !wanted.get(r.agenda_item_id)?.has(r.label) }));
+}
+
+/** What each invitee is in this meeting: a member's seat (chair first) or a guest's job title. */
+async function inviteeTitles(supabase: Awaited<ReturnType<typeof createClient>>, meeting: { board_id: string | null; committee_id: string | null }, invitees: { person_id: string; person: { user_id: string | null } }[]) {
+  const ids = invitees.map((i) => i.person_id);
+  const userIds = invitees.flatMap((i) => (i.person.user_id ? [i.person.user_id] : []));
+  const [{ data: seats }, { data: people }, { data: profiles }] = await Promise.all([
+    meeting.board_id
+      ? supabase.from("board_members").select("person_id, position, category").eq("board_id", meeting.board_id).eq("status", "active").in("person_id", ids)
+      : supabase.from("committee_members").select("person_id, position").eq("committee_id", meeting.committee_id!).eq("status", "active").in("person_id", ids),
+    supabase.from("people").select("id, job_title, user_id").in("id", ids),
+    userIds.length ? supabase.from("profiles").select("id, job_title").in("id", userIds) : Promise.resolve({ data: [] as { id: string; job_title: string | null }[] }),
+  ]);
+  const titles: Record<string, { title: string | null; position: string }> = {};
+  for (const p of people ?? []) titles[p.id] = { title: p.job_title || (profiles ?? []).find((x) => x.id === p.user_id)?.job_title || null, position: "guest" };
+  for (const s of (seats ?? []) as { person_id: string; position: string; category?: string }[]) titles[s.person_id] = { title: seatTitle(!!meeting.board_id, s.position, s.category), position: s.position };
+  return titles;
 }
