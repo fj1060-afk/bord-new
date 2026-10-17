@@ -5,13 +5,18 @@ import { requirePage } from "@/lib/auth";
 import { greeting } from "@/lib/dashboard";
 import { loadDesk } from "@/lib/desk-server";
 import { formatGregorianDate, formatHijriDate } from "@/lib/format";
-import { can, LEVELS } from "@/lib/permissions";
+import { can, LEVELS, type Level } from "@/lib/permissions";
+import { isPortalUser, portalEnabled } from "@/lib/portal";
+import { PortalHome } from "./_portal/portal-home";
 import { createClient } from "@/lib/supabase/server";
 import { DeskView } from "./_dashboard/desk";
 
 export default async function HomePage() {
   const viewer = await requirePage("/");
   const supabase = await createClient();
+  // Department users get the requests portal's home (switched on per environment).
+  if (portalEnabled() && isPortalUser((page, level) => can(viewer.permissions, page, level as Level | undefined)))
+    return <PortalHome supabase={supabase} viewer={viewer} greeting={greeting()} />;
   const desk = await loadDesk(supabase, viewer);
   const today = new Date();
 

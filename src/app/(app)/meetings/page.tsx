@@ -5,7 +5,9 @@ import { PageHeader } from "@/components/ui/page-header";
 import { buttonClass } from "@/components/ui/styles";
 import { requirePage } from "@/lib/auth";
 import { DOC_REQUEST_STATUS } from "@/lib/meetings";
-import { can, LEVELS } from "@/lib/permissions";
+import { can, LEVELS, type Level } from "@/lib/permissions";
+import { isPortalUser, portalEnabled } from "@/lib/portal";
+import { PortalMeetings } from "../_portal/portal-meetings";
 import { createClient } from "@/lib/supabase/server";
 import { MeetingsTable } from "./_components/meetings-table";
 import { MeetingStats } from "./_components/meeting-stats";
@@ -16,6 +18,9 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/meeting
   const viewer = await requirePage("/meetings");
   const organizer = can(viewer.permissions, "/meetings", LEVELS.edit);
   const supabase = await createClient();
+  // Department users see only their meetings, without the secretariat's tools (switched on per environment).
+  if (portalEnabled() && isPortalUser((page, level) => can(viewer.permissions, page, level as Level | undefined)))
+    return <PortalMeetings supabase={supabase} period={((await searchParams) as { period?: string }).period ?? ""} />;
 
   const [{ count: pendingRequests }, { data: docRequests }] = await Promise.all([
     supabase.from("agenda_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),

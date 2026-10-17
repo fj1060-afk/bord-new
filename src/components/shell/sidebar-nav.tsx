@@ -179,14 +179,17 @@ function Section({ section, current, onNavigate }: { section: SideSection; curre
 export function SidebarNav({
   allowed,
   committees,
+  portal,
   onNavigate,
 }: {
   /** Page permissions the viewer holds; links needing others are hidden. */
   allowed: string[];
   committees: CommitteeLink[];
+  /** Department users get the portal's links, with their account page. */
+  portal?: { account: string };
   onNavigate?: () => void;
 }) {
-  const sections = buildSidebar(allowed, committees);
+  const sections = buildSidebar(allowed, committees, portal);
   const pathname = usePathname();
   const search = useSearchParams().toString();
   // Highlight the clicked link at once, before its page arrives.
