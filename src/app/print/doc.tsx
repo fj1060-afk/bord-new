@@ -167,7 +167,8 @@ export function InfoCard({ day, cells, bi, caption }: { day: Day; cells: Cell[];
             ) : (
               <div className="v pair">
                 <span>{value || "—"}</span>
-                <span className="en">{valueEn ?? value ?? "—"}</span>
+                {/* No English form (e.g. a name not yet translated): the Arabic stands alone rather than repeated. */}
+                {valueEn && <span className="en">{valueEn}</span>}
               </div>
             )}
           </div>

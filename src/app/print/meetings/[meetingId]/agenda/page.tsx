@@ -44,7 +44,7 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
           { ar: "وقت الاجتماع", en: "Meeting Time", icon: Clock, value: longTime(d.time), valueEn: englishTime(start) },
           { ar: "نوع الاجتماع", en: "Meeting Type", icon: FileText, value: MEETING_TYPES[type], valueEn: MEETING_TYPES_EN[type] },
           { ar: "طريقة الانعقاد", en: "Meeting Format", icon: Users, value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
-          { ar: "مكان الاجتماع", en: "Meeting Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
+          { ar: "مكان الاجتماع", en: "Meeting Venue", icon: MapPin, value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en },
         ]}
       />
       {meeting.agenda_intro && <BiText bi={bi} ar={meeting.agenda_intro} en={meeting.agenda_intro_en} />}

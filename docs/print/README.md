@@ -31,6 +31,10 @@ The approved design, top to bottom:
   time, e.g. «10:00 صباحًا», «نوع الاجتماع / Meeting Type» (عادي/استثنائي),
   «طريقة الانعقاد / Meeting Format» and «مكان الاجتماع / Meeting Venue»), Arabic and English labels split by a brass bar, Arabic value bold on
   the right and English lighter on the left; a time range shows once, centred.
+  The card is compact: labels stay on one line, cells use tight padding, and a
+  value with no English form (a name not yet translated) shows in Arabic only,
+  never repeated or replaced by a dash. A draft's number reads «مسودة · Draft» in
+  the body font (the mono font breaks the Arabic letters apart).
 - **Section headings**: Arabic on the right, English on the left, brass rule
   beneath.
 - **Agenda items**: one container in the title band's light colour
