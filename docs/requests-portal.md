@@ -95,3 +95,47 @@ who sees what, plus the UI checks on the Vercel preview of this branch:
 secretary creates → CFO sees it → assigns to an employee → employee uploads → sends reply →
 secretary returns → resubmitted → accepted; plus no requests, multiple roles, department-only,
 person-only, overdue, returned, and file access.
+
+## 7. Migration 0053 proposal (awaiting approval; nothing run yet)
+
+### Step 0: backup (before anything else)
+- New schema `backup_20261017` (not exposed through the API; no grants to app users) with full
+  copies of `document_requests`, `meeting_documents`, `department_delegates`, and the current
+  definitions of `can_fulfil_request`, `can_view_document`, `mark_request_submitted` and the
+  `document_requests` status constraint.
+- Verified by row counts and an md5 of every row, original vs copy. Restoring = copy rows back /
+  re-run the saved definitions.
+
+### Step 1: additive changes
+| # | Change | Effect on the live site |
+|---|---|---|
+| 1 | `department_delegates.is_manager boolean not null default false` (decision A) | None: no code reads it |
+| 2 | `document_requests`: `handler_user_id`, `response_note`, `responded_at`, `responded_by` (all nullable) | None: empty, ignored |
+| 3 | Status constraint widened to also allow `in_progress` (existing values unchanged) | None: nothing writes it on the live site |
+| 4 | `meeting_documents.hold_submit boolean not null default false` | None: the live code never sets it |
+| 5 | `mark_request_submitted`: if `hold_submit` then `in_progress`, else exactly today's behaviour | None: `hold_submit` is always false on the live site |
+| 6 | New table `request_extensions` with its own RLS | None |
+| 7 | New functions: `submit_document_request`, `assign_document_request` (managers and organizers), `decide_extension` (organizers), `request_activity` | None until called |
+| 8 | `can_fulfil_request` also true for `handler_user_id` | None: handler is empty everywhere |
+| 9 | `can_view_document` also true for the request's named person and handler | **Small fix on the live site:** a person named on a request can open files others uploaded for that same request (today only the uploader and organizers can) |
+
+### Per-environment separation (decision B)
+The new behaviour (upload ≠ submit) runs only when the app sets `hold_submit = true`, which the
+branch code does only where `portalEnabled()` is true (previews, development, or the live site
+once `REQUESTS_PORTAL=on`). The live site keeps auto-submitting until you switch it on.
+
+### Deferred to merge (decision C)
+Limiting `agenda_items` for contributors is an RLS change that cannot be split by environment.
+It goes in a separate migration `0054`, reported and approved before the merge. Until then the
+portal never links department users to a meeting's full agenda.
+
+### Testing
+- Dry run of the whole migration inside a transaction that is rolled back, with checks.
+- After applying: each user's view probed under their identity (CFO, CEO, committee chair,
+  board member, secretary); the live site's queries (dashboard, meeting page, uploads, users)
+  re-run; Supabase API and Postgres logs checked for errors.
+
+### Rollback
+`0053_rollback.sql`: restore the three functions and the constraint from the backup, drop the new
+functions and table, drop the four `document_requests` columns, `hold_submit` and `is_manager`.
+Drops are run only on your instruction (from the SQL editor).
