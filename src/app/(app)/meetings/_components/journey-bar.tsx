@@ -3,6 +3,8 @@ import clsx from "clsx";
 import { Check as CheckIcon, ChevronDown, ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { buttonClass } from "@/components/ui/styles";
 import { blocking, stageDone, STAGES, type Check } from "@/lib/journey";
+import { fixMeetingTitleSpelling } from "../_actions/quick-fixes";
+import { AutoFix } from "./auto-fix";
 import { FixLink } from "./fix-link";
 import { itemIssues, needsAction, tone } from "./item-issue-data";
 import { OverrideForm } from "./override-form";
@@ -84,7 +86,9 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
                       {c.label}
                       {c.ref && <span className="ms-2 text-xs font-normal text-ink-muted">{c.ref}</span>}
                     </span>
-                    {c.fix?.href ? (
+                    {c.id === "title-spelling" ? (
+                      <AutoFix action={fixMeetingTitleSpelling.bind(null, meetingId)} />
+                    ) : c.fix?.href ? (
                       <Link href={c.fix.href} className="motion-press shrink-0 rounded-md border border-rule px-3 py-1 text-xs hover:border-primary">
                         {c.fix.label}
                       </Link>
@@ -97,7 +101,12 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
                   </summary>
                   <div className="flex flex-col gap-1 pb-3 pe-5 ps-10 text-xs leading-6 text-ink-muted">
                     {c.detail && <p>{c.detail}</p>}
-                    {c === titleYear && spelling?.detail && <p>{spelling.detail}</p>}
+                    {c === titleYear && spelling?.detail && (
+                      <p className="flex flex-wrap items-center gap-2">
+                        {spelling.detail}
+                        <AutoFix action={fixMeetingTitleSpelling.bind(null, meetingId)} label="صحّح الإملاء تلقائياً" />
+                      </p>
+                    )}
                     {c.level === "warn" && <OverrideForm meetingId={meetingId} rule={c.id} />}
                   </div>
                 </details>
