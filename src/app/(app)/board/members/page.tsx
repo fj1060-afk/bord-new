@@ -21,7 +21,7 @@ export default async function BoardMembersPage() {
     <>
       <PageHeader section="مجلس الإدارة" title="الأعضاء" description="تشكيل المجلس، وتسجيل الأعضاء وملفاتهم، والإدارة التنفيذية." />
       <RegulationNote notes={NOTES.board} />
-      <BoardMembers board={board} canEdit={can(viewer.permissions, "/board", LEVELS.edit)} canManage={canManage} maxYears={maxYears} />
+      <BoardMembers board={board} canEdit={can(viewer.permissions, "/board", LEVELS.edit)} canManage={canManage} canDelete={can(viewer.permissions, "/admin/roles", LEVELS.manage)} maxYears={maxYears} />
     </>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { RegulationNote } from "@/components/ui/regulation-note";
 import { NOTES } from "@/lib/regulations";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -11,7 +12,7 @@ import { COMMITTEE_POSITIONS, sortByPosition } from "@/lib/org";
 import { listPeople } from "@/lib/people";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
-import { endCommitteeMembership, setCommitteeStatus } from "../../actions";
+import { deleteCommitteeMembership, endCommitteeMembership, setCommitteeStatus } from "../../actions";
 import { AddCommitteeMemberForm, CommitteeForm } from "../../committee-forms";
 
 export const metadata: Metadata = { title: "أعضاء اللجنة" };
@@ -75,7 +76,15 @@ export default async function CommitteeMembersPage({ params }: PageProps<"/commi
               <ConfirmButton
                 action={endCommitteeMembership.bind(null, committee.id, m.id)}
                 label="إنهاء العضوية"
-                confirm={`إنهاء عضوية ${m.person.full_name} في اللجنة اليوم؟`}
+                confirm={`إنهاء عضوية ${m.person.full_name} في اللجنة اليوم؟ يبقى سجلها محفوظاً.`}
+              />
+            )}
+            {can(viewer.permissions, "/admin/roles", LEVELS.manage) && (
+              <ConfirmButton
+                action={deleteCommitteeMembership.bind(null, m.id)}
+                label={`حذف ${m.person.full_name} من اللجنة`}
+                icon={<Trash2 size={16} aria-hidden="true" />}
+                confirm={`حذف ${m.person.full_name} من أعضاء اللجنة نهائياً؟ لا يبقى للعضوية سجل (الشخص نفسه يبقى في النظام).`}
               />
             )}
           </li>

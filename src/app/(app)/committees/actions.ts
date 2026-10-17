@@ -90,3 +90,12 @@ export async function deleteCommittee(committeeId: string) {
   revalidatePath("/", "layout");
   redirect(PAGE);
 }
+
+/** Deletes a trial committee membership outright (system administrator); ending it keeps the history instead. */
+export async function deleteCommitteeMembership(membershipId: string) {
+  await requirePage("/admin/roles", LEVELS.manage);
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("committee_members").delete().eq("id", membershipId).select("id");
+  if (error || !data?.length) throw new Error("Could not delete membership");
+  revalidatePath("/", "layout");
+}

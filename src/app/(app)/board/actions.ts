@@ -90,3 +90,12 @@ export async function removeExecutive(personId: string) {
   if (error) throw new Error("Could not update person");
   revalidatePath(PAGE);
 }
+
+/** Deletes a trial membership outright (system administrator); ending it keeps the history instead. */
+export async function deleteBoardMembership(membershipId: string) {
+  await requirePage("/admin/roles", LEVELS.manage);
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("board_members").delete().eq("id", membershipId).select("id");
+  if (error || !data?.length) throw new Error("Could not delete membership");
+  revalidatePath("/", "layout");
+}
