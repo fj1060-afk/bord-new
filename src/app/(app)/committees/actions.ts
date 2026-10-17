@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
-import { COMMITTEE_KINDS, COMMITTEE_POSITIONS, isOneOf, membershipError } from "@/lib/org";
-import { resolvePerson } from "@/lib/people";
+import { COMMITTEE_KINDS, isOneOf } from "@/lib/org";
 import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -49,38 +48,6 @@ export async function setCommitteeStatus(committeeId: string, status: "active" |
   revalidatePath(`${PAGE}/${committeeId}`, "layout");
 }
 
-export async function addCommitteeMember(committeeId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
-  await requirePage(PAGE, LEVELS.edit);
-  const position = form.get("position");
-  if (!isOneOf(position, COMMITTEE_POSITIONS)) return { ok: false, message: "اختر المنصب." };
-
-  const supabase = await createClient();
-  const person = await resolvePerson(supabase, form);
-  if ("error" in person) return { ok: false, message: person.error };
-
-  const { error } = await supabase.from("committee_members").insert({
-    committee_id: committeeId,
-    person_id: person.id,
-    position,
-    start_date: String(form.get("start_date") || "") || undefined,
-  });
-  if (error) return { ok: false, message: membershipError(error.code, error.message) };
-  revalidatePath(`${PAGE}/${committeeId}`, "layout");
-  return { ok: true, message: "أُضيف العضو." };
-}
-
-export async function endCommitteeMembership(committeeId: string, membershipId: string) {
-  await requirePage(PAGE, LEVELS.edit);
-  const supabase = await createClient();
-  const today = new Date().toISOString().slice(0, 10);
-  const { error } = await supabase
-    .from("committee_members")
-    .update({ status: "ended", end_date: today })
-    .eq("id", membershipId);
-  if (error) throw new Error("Could not end membership");
-  revalidatePath(`${PAGE}/${committeeId}`, "layout");
-}
-
 /** Deletes a committee with no meetings or circular resolutions (system administrator, while data is trial). */
 export async function deleteCommittee(committeeId: string) {
   await requirePage("/admin/roles", LEVELS.manage);
@@ -91,11 +58,3 @@ export async function deleteCommittee(committeeId: string) {
   redirect(PAGE);
 }
 
-/** Deletes a trial committee membership outright (system administrator); ending it keeps the history instead. */
-export async function deleteCommitteeMembership(membershipId: string) {
-  await requirePage("/admin/roles", LEVELS.manage);
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("committee_members").delete().eq("id", membershipId).select("id");
-  if (error || !data?.length) throw new Error("Could not delete membership");
-  revalidatePath("/", "layout");
-}

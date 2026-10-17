@@ -2,18 +2,16 @@ import type { Metadata } from "next";
 import { RegulationNote } from "@/components/ui/regulation-note";
 import { NOTES } from "@/lib/regulations";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/org/confirm-button";
 import { PageHeader } from "@/components/ui/page-header";
 import { requirePage } from "@/lib/auth";
 import { formatGregorianDate } from "@/lib/format";
 import { COMMITTEE_POSITIONS, sortByPosition } from "@/lib/org";
-import { listPeople } from "@/lib/people";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
-import { deleteCommitteeMembership, endCommitteeMembership, setCommitteeStatus } from "../../actions";
-import { AddCommitteeMemberForm, CommitteeForm } from "../../committee-forms";
+import { setCommitteeStatus } from "../../actions";
+import { CommitteeForm } from "../../committee-forms";
 
 export const metadata: Metadata = { title: "أعضاء اللجنة" };
 
@@ -31,14 +29,13 @@ export default async function CommitteeMembersPage({ params }: PageProps<"/commi
   const canManage = can(viewer.permissions, "/committees", LEVELS.manage);
   const supabase = await createClient();
 
-  const [{ data: committee }, { data: rows }, people] = await Promise.all([
+  const [{ data: committee }, { data: rows }] = await Promise.all([
     supabase.from("committees").select("id, name, mandate, kind, status").eq("id", committeeId).maybeSingle(),
     supabase
       .from("committee_members")
       .select("id, position, start_date, person:people(id, full_name)")
       .eq("committee_id", committeeId)
       .eq("status", "active"),
-    canEdit ? listPeople(supabase) : Promise.resolve([]),
   ]);
   if (!committee) notFound();
   const members = sortByPosition(
@@ -60,7 +57,13 @@ export default async function CommitteeMembersPage({ params }: PageProps<"/commi
       <h2 className="mb-3 font-display text-xl font-bold">الأعضاء</h2>
       {canEdit && !archived && (
         <div className="mb-4">
-          <AddCommitteeMemberForm committeeId={committee.id} people={people} />
+          <p className="rounded-md bg-paper px-4 py-3 text-sm text-ink-muted">
+            أعضاء اللجنة ومناصبهم تُعدَّل من{" "}
+            <Link href="/admin/users" className="font-medium text-primary hover:underline">
+              المستخدمون والإدارات
+            </Link>{" "}
+            ← المستخدم ← تبويب «المنصب»، حتى لا تختلف بين الصفحات.
+          </p>
         </div>
       )}
       <ul className="divide-y divide-rule rounded-lg border border-rule bg-surface">
@@ -72,21 +75,6 @@ export default async function CommitteeMembersPage({ params }: PageProps<"/commi
             </Link>
             <span>{COMMITTEE_POSITIONS[m.position]}</span>
             <span className="text-ink-muted">منذ {formatGregorianDate(new Date(m.start_date))}</span>
-            {canEdit && !archived && (
-              <ConfirmButton
-                action={endCommitteeMembership.bind(null, committee.id, m.id)}
-                label="إنهاء العضوية"
-                confirm={`إنهاء عضوية ${m.person.full_name} في اللجنة اليوم؟ يبقى سجلها محفوظاً.`}
-              />
-            )}
-            {can(viewer.permissions, "/admin/roles", LEVELS.manage) && (
-              <ConfirmButton
-                action={deleteCommitteeMembership.bind(null, m.id)}
-                label={`حذف ${m.person.full_name} من اللجنة`}
-                icon={<Trash2 size={16} aria-hidden="true" />}
-                confirm={`حذف ${m.person.full_name} من أعضاء اللجنة نهائياً؟ لا يبقى للعضوية سجل (الشخص نفسه يبقى في النظام).`}
-              />
-            )}
           </li>
         ))}
       </ul>

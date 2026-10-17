@@ -2,10 +2,9 @@
 
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
-import { PersonPicker } from "@/components/org/person-picker";
-import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
-import { COMMITTEE_KINDS, COMMITTEE_POSITIONS } from "@/lib/org";
-import { addCommitteeMember, saveCommittee } from "./actions";
+import { Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
+import { COMMITTEE_KINDS } from "@/lib/org";
+import { saveCommittee } from "./actions";
 
 export function CommitteeForm({ committee }: { committee?: { id: string; name: string; mandate: string | null; kind?: string } }) {
   const [state, action] = useActionState(saveCommittee.bind(null, committee?.id ?? null), null);
@@ -34,38 +33,3 @@ export function CommitteeForm({ committee }: { committee?: { id: string; name: s
   );
 }
 
-export function AddCommitteeMemberForm({
-  committeeId,
-  people,
-}: {
-  committeeId: string;
-  people: { id: string; full_name: string }[];
-}) {
-  const [state, action] = useActionState(addCommitteeMember.bind(null, committeeId), null);
-  return (
-    <details className="rounded-lg border border-rule bg-surface">
-      <summary className={buttonClass("primary", "m-4 w-fit cursor-pointer list-none")}>إضافة عضو</summary>
-      <ActionForm action={action} state={state} className="flex flex-col gap-4 border-t border-rule p-5">
-        <PersonPicker people={people} />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="المنصب">
-            <select name="position" defaultValue="member" className={inputClass}>
-              {Object.entries(COMMITTEE_POSITIONS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="تاريخ بداية العضوية">
-            <input name="start_date" type="date" className={inputClass} />
-          </Field>
-        </div>
-        <FormMessage state={state} />
-        <SubmitButton pendingLabel="جارٍ الإضافة…" className="w-fit">
-          إضافة العضو
-        </SubmitButton>
-      </ActionForm>
-    </details>
-  );
-}

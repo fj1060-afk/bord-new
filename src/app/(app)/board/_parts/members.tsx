@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
 import { buttonClass } from "@/components/ui/styles";
-import { ConfirmButton } from "@/components/org/confirm-button";
 import { formatGregorianDate } from "@/lib/format";
 import { BOARD_CATEGORIES, BOARD_POSITIONS, currentYear, sortByPosition } from "@/lib/org";
 import { listPeople } from "@/lib/people";
 import { Executives } from "../executives";
 import { createClient } from "@/lib/supabase/server";
-import { deleteBoardMembership, endBoardMembership } from "../actions";
-import { AddBoardMemberForm, BoardForm } from "../board-forms";
+import { BoardForm } from "../board-forms";
 
 type MemberRow = {
   id: string;
@@ -19,7 +16,7 @@ type MemberRow = {
 };
 
 /** Members: composition, registration, the executive team and the board's own details. */
-export async function BoardMembers({ board, canEdit, canManage, canDelete, maxYears }: { board: { id: string; name: string; term_start: string; term_end: string }; canEdit: boolean; canManage: boolean; canDelete: boolean; maxYears: number }) {
+export async function BoardMembers({ board, canEdit, canManage, maxYears }: { board: { id: string; name: string; term_start: string; term_end: string }; canEdit: boolean; canManage: boolean; maxYears: number }) {
   const supabase = await createClient();
   const year = currentYear();
   const [{ data: rows }, people] = await Promise.all([
@@ -56,7 +53,13 @@ export async function BoardMembers({ board, canEdit, canManage, canDelete, maxYe
           <Link href="/board/members/new" className={buttonClass("primary", "w-fit")}>
             تسجيل عضو جديد
           </Link>
-          <AddBoardMemberForm boardId={board.id} people={people} />
+          <p className="rounded-md bg-paper px-4 py-3 text-sm text-ink-muted">
+            المناصب (الرئيس، النائب، الأعضاء) تُعدَّل من{" "}
+            <Link href="/admin/users" className="font-medium text-primary hover:underline">
+              المستخدمون والإدارات
+            </Link>{" "}
+            ← المستخدم ← تبويب «المنصب»، حتى لا تختلف بين الصفحات.
+          </p>
         </div>
       )}
 
@@ -68,7 +71,6 @@ export async function BoardMembers({ board, canEdit, canManage, canDelete, maxYe
               <th className="px-4 py-2.5 text-start font-medium">المنصب</th>
               <th className="px-4 py-2.5 text-start font-medium">الصفة</th>
               <th className="px-4 py-2.5 text-start font-medium">منذ</th>
-              {canEdit && <th className="px-4 py-2.5" />}
             </tr>
           </thead>
           <tbody className="divide-y divide-rule">
@@ -90,25 +92,6 @@ export async function BoardMembers({ board, canEdit, canManage, canDelete, maxYe
                 <td className="px-4 py-3">{BOARD_POSITIONS[m.position]}</td>
                 <td className="px-4 py-3">{BOARD_CATEGORIES[m.category]}</td>
                 <td className="px-4 py-3 text-ink-muted">{formatGregorianDate(new Date(m.start_date))}</td>
-                {canEdit && (
-                  <td className="px-4 py-3">
-                    <span className="flex items-center justify-end gap-2">
-                      <ConfirmButton
-                        action={endBoardMembership.bind(null, m.id)}
-                        label="إنهاء العضوية"
-                        confirm={`إنهاء عضوية ${m.person.full_name} اليوم؟ يبقى سجلها محفوظاً.`}
-                      />
-                      {canDelete && (
-                        <ConfirmButton
-                          action={deleteBoardMembership.bind(null, m.id)}
-                          label={`حذف ${m.person.full_name} من المجلس`}
-                          icon={<Trash2 size={16} aria-hidden="true" />}
-                          confirm={`حذف ${m.person.full_name} من أعضاء المجلس نهائياً؟ لا يبقى للعضوية سجل (الشخص نفسه يبقى في النظام).`}
-                        />
-                      )}
-                    </span>
-                  </td>
-                )}
               </tr>
             ))}
           </tbody>

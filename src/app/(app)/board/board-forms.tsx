@@ -5,8 +5,8 @@ import { useActionState, useState } from "react";
 import { PersonPicker } from "@/components/org/person-picker";
 import { buttonClass, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
 import { formatGregorianDate } from "@/lib/format";
-import { BOARD_CATEGORIES, BOARD_POSITIONS, TERM_YEARS, termEnd, termYears } from "@/lib/org";
-import { addBoardMember, addExecutive, saveBoard } from "./actions";
+import { TERM_YEARS, termEnd, termYears } from "@/lib/org";
+import { addExecutive, saveBoard } from "./actions";
 
 type Board = { id: string; name: string; term_start: string; term_end: string };
 
@@ -56,45 +56,6 @@ export function BoardForm({ board, maxYears = 4 }: { board?: Board; maxYears?: n
         </SubmitButton>
       </div>
     </ActionForm>
-  );
-}
-
-export function AddBoardMemberForm({ boardId, people }: { boardId: string; people: { id: string; full_name: string }[] }) {
-  const [state, action] = useActionState(addBoardMember.bind(null, boardId), null);
-  return (
-    <details className="rounded-lg border border-rule bg-surface">
-      <summary className={buttonClass("secondary", "m-4 w-fit cursor-pointer list-none")}>إضافة شخص مسجّل من قبل</summary>
-      <ActionForm action={action} state={state} className="flex flex-col gap-4 border-t border-rule p-5">
-        <PersonPicker people={people} />
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="المنصب">
-            <select name="position" defaultValue="member" className={inputClass}>
-              {Object.entries(BOARD_POSITIONS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="الصفة">
-            <select name="category" defaultValue="non_executive" className={inputClass}>
-              {Object.entries(BOARD_CATEGORIES).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="تاريخ بداية العضوية">
-            <input name="start_date" type="date" className={inputClass} />
-          </Field>
-        </div>
-        <FormMessage state={state} />
-        <SubmitButton pendingLabel="جارٍ الإضافة…" className="w-fit">
-          إضافة العضو
-        </SubmitButton>
-      </ActionForm>
-    </details>
   );
 }
 

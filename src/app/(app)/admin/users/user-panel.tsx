@@ -11,20 +11,22 @@ import { TabBar } from "@/components/ui/tab-bar";
 import { formatDateTime } from "@/lib/format";
 import { deleteUser, sendInvitation, setUserStatus, updateUserRoles } from "./actions";
 import { EditUserForm } from "./edit-user-form";
+import { PositionsForm, positionsText } from "./positions-form";
 import type { RoleOption, UserItem } from "./page";
 import { RoleChecklist, SetPasswordForm } from "./user-forms";
 import { Avatar, StatusPill } from "./user-row";
 
-type Tab = "basic" | "roles" | "account";
+type Tab = "basic" | "positions" | "roles" | "account";
 const TABS: [Tab, string][] = [
-  ["basic", "البيانات الأساسية"],
-  ["roles", "الأدوار والصلاحيات"],
+  ["basic", "البيانات"],
+  ["positions", "المنصب"],
+  ["roles", "الصلاحيات"],
   ["account", "إجراءات الحساب"],
 ];
 const same = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
 
 /** The side panel for one user: basic details, roles (save appears only after a change) and account actions. */
-export function UserPanel({ user, roles, departments, isSelf, canEdit, canManage, canDelete, onClose }: { user: UserItem; roles: RoleOption[]; departments: { id: string; name: string }[]; isSelf: boolean; canEdit: boolean; canManage: boolean; canDelete: boolean; onClose: () => void }) {
+export function UserPanel({ user, roles, departments, committees, isSelf, canEdit, canManage, canDelete, onClose }: { user: UserItem; roles: RoleOption[]; departments: { id: string; name: string }[]; committees: { id: string; name: string }[]; isSelf: boolean; canEdit: boolean; canManage: boolean; canDelete: boolean; onClose: () => void }) {
   const [tab, setTab] = useState<Tab>("basic");
   const [picked, setPicked] = useState(user.roleIds);
   const [rolesState, rolesAction] = useActionState(updateUserRoles.bind(null, user.id), null);
@@ -47,8 +49,9 @@ export function UserPanel({ user, roles, departments, isSelf, canEdit, canManage
         <Avatar name={who} size="size-12" />
         <span className="min-w-0">
           <span className="block truncate font-bold">{who}</span>
-          <span className="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
-            {roleNames[0] ?? "بدون دور"}
+          <span className="block text-xs font-medium text-primary">{positionsText(user, committees) || user.job_title || "بلا منصب"}</span>
+          <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+            الصلاحيات: {roleNames.join("، ") || "بدون دور"}
             <StatusPill user={user} />
           </span>
         </span>
@@ -79,6 +82,13 @@ export function UserPanel({ user, roles, departments, isSelf, canEdit, canManage
                 </div>
               ))}
             </dl>
+          ))}
+
+        {tab === "positions" &&
+          (canManage ? (
+            <PositionsForm user={user} committees={committees} />
+          ) : (
+            <p className="text-sm text-ink-muted">{positionsText(user, committees) || "بلا منصب في المجلس أو اللجان."}</p>
           ))}
 
         {tab === "roles" &&

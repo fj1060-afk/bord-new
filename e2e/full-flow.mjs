@@ -73,13 +73,14 @@ await step("إنشاء المجلس (إن لم يوجد)", async () => {
   }
 });
 
-await step("إضافة عضو جديد للمجلس", async () => {
-  await go("/board/members");
-  await page.click("summary:has-text('إضافة شخص مسجّل')");
-  await page.selectOption("select[name=person_id]", "new");
-  await page.fill("input[name=new_full_name]", `عضو اختبار ${stamp}`);
-  await page.click("button:has-text('إضافة العضو')");
-  await status("أُضيف العضو");
+await step("تسجيل عضو جديد للمجلس", async () => {
+  // Positions are changed only from the users page; registering a new member sets the first one.
+  await go("/board/members/new");
+  await page.fill("input[name=full_name]", `عضو اختبار ${stamp}`);
+  const account = page.locator("input[name=create_account]");
+  if (await account.isChecked()) await account.uncheck();
+  await page.click("button:has-text('تسجيل العضو')");
+  await page.waitForURL(/\/people\/[0-9a-f-]{36}/, { timeout: 20000 });
 });
 
 await step("إنشاء إدارة ثم حذفها", async () => {
@@ -95,17 +96,12 @@ await step("إنشاء إدارة ثم حذفها", async () => {
   await page.locator(`button:has-text('إدارة اختبار ${stamp}')`).waitFor({ state: "detached", timeout: 20000 });
 });
 
-await step("إنشاء لجنة وإضافة عضو", async () => {
+await step("إنشاء لجنة", async () => {
   await go("/committees");
   await page.click("summary:has-text('لجنة جديدة')");
   await page.fill("input[name=name]", `لجنة اختبار ${stamp}`);
   await page.click("button:has-text('إنشاء اللجنة')");
   await page.waitForURL(/\/committees\/[0-9a-f-]{36}/, { timeout: 20000 });
-  await page.click("summary:has-text('إضافة عضو')");
-  await page.selectOption("select[name=person_id]", { label: `عضو اختبار ${stamp}` });
-  await page.selectOption("select[name=position]", "chair");
-  await page.click("button:has-text('إضافة العضو')");
-  await status("أُضيف العضو");
 });
 
 await step("حذف لجنة الاختبار", async () => {

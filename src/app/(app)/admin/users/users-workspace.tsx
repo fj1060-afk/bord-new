@@ -7,7 +7,7 @@ import type { RoleOption, UserItem } from "./page";
 import { UserPanel } from "./user-panel";
 
 /** Departments as folds with a compact users table each; editing a user opens the side panel beside them. */
-export function UsersWorkspace({ groups, departments, users, roles, rights, open, showLoose, activeUsers }: { groups: DepartmentGroup[]; departments: { id: string; name: string }[]; users: UserItem[]; roles: RoleOption[]; rights: Rights; open: boolean; showLoose: boolean; activeUsers: { id: string; full_name: string; email: string }[] }) {
+export function UsersWorkspace({ groups, departments, committees, users, roles, rights, open, showLoose, activeUsers }: { groups: DepartmentGroup[]; departments: { id: string; name: string }[]; committees: { id: string; name: string }[]; users: UserItem[]; roles: RoleOption[]; rights: Rights; open: boolean; showLoose: boolean; activeUsers: { id: string; full_name: string; email: string }[] }) {
   const [selected, setSelected] = useState<string | null>(null);
   const user = users.find((u) => u.id === selected) ?? null;
   const byId = new Map(users.map((u) => [u.id, u]));
@@ -23,7 +23,7 @@ export function UsersWorkspace({ groups, departments, users, roles, rights, open
     <div className={clsx("grid items-start gap-4", user && "lg:grid-cols-[22rem_minmax(0,1fr)]")}>
       {user && (
         <div id="user-panel-anchor" className="scroll-mt-4">
-          <UserPanel key={user.id} user={user} roles={roles} departments={departments} isSelf={user.id === rights.viewerId} canEdit={rights.canEdit} canManage={rights.canManage} canDelete={rights.canDelete} onClose={() => setSelected(null)} />
+          <UserPanel key={user.id} user={user} roles={roles} departments={departments} committees={committees} isSelf={user.id === rights.viewerId} canEdit={rights.canEdit} canManage={rights.canManage} canDelete={rights.canDelete} onClose={() => setSelected(null)} />
         </div>
       )}
       <div className="motion-stagger flex min-w-0 flex-col gap-3">

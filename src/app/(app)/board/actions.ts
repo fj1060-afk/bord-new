@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { ActionState } from "@/components/ui/form";
 import { requirePage } from "@/lib/auth";
-import { BOARD_CATEGORIES, BOARD_POSITIONS, isOneOf, membershipError, TERM_YEARS, termEnd } from "@/lib/org";
+import { TERM_YEARS, termEnd } from "@/lib/org";
 import { companyProfile } from "@/lib/live-server";
 import { resolvePerson } from "@/lib/people";
 import { LEVELS } from "@/lib/permissions";
@@ -34,41 +34,6 @@ export async function saveBoard(boardId: string | null, _prev: ActionState, form
   return { ok: true, message: "حُفظت بيانات المجلس." };
 }
 
-export async function addBoardMember(boardId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
-  await requirePage(PAGE, LEVELS.edit);
-  const position = form.get("position");
-  const category = form.get("category");
-  if (!isOneOf(position, BOARD_POSITIONS) || !isOneOf(category, BOARD_CATEGORIES)) {
-    return { ok: false, message: "اختر المنصب والصفة." };
-  }
-  const supabase = await createClient();
-  const person = await resolvePerson(supabase, form);
-  if ("error" in person) return { ok: false, message: person.error };
-
-  const { error } = await supabase.from("board_members").insert({
-    board_id: boardId,
-    person_id: person.id,
-    position,
-    category,
-    start_date: String(form.get("start_date") || "") || undefined,
-  });
-  if (error) return { ok: false, message: membershipError(error.code, error.message) };
-  revalidatePath(PAGE);
-  return { ok: true, message: "أُضيف العضو." };
-}
-
-export async function endBoardMembership(membershipId: string) {
-  await requirePage(PAGE, LEVELS.edit);
-  const supabase = await createClient();
-  const today = new Date().toISOString().slice(0, 10);
-  const { error } = await supabase
-    .from("board_members")
-    .update({ status: "ended", end_date: today })
-    .eq("id", membershipId);
-  if (error) throw new Error("Could not end membership");
-  revalidatePath(PAGE);
-}
-
 /** Adds a person (existing or new) to executive management, for the disclosures register. */
 export async function addExecutive(_prev: ActionState, form: FormData): Promise<ActionState> {
   await requirePage(PAGE, LEVELS.edit);
@@ -91,11 +56,3 @@ export async function removeExecutive(personId: string) {
   revalidatePath(PAGE);
 }
 
-/** Deletes a trial membership outright (system administrator); ending it keeps the history instead. */
-export async function deleteBoardMembership(membershipId: string) {
-  await requirePage("/admin/roles", LEVELS.manage);
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("board_members").delete().eq("id", membershipId).select("id");
-  if (error || !data?.length) throw new Error("Could not delete membership");
-  revalidatePath("/", "layout");
-}

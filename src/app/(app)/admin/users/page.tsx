@@ -31,6 +31,8 @@ export type UserItem = {
   created_at: string;
   invite: InviteState;
   roleIds: string[];
+  /** Governance seats, set only from this page: on the board and per committee id. */
+  seats: { board: { position: string; category: string } | null; committees: Record<string, string> };
 };
 
 export default async function UsersPage({ searchParams }: PageProps<"/admin/users">) {
@@ -55,6 +57,21 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
     canEditDepartments ? supabase.rpc("list_active_users") : Promise.resolve({ data: [] }),
     lastSignIns(),
   ]);
+  const [{ data: people }, { data: boardSeats }, { data: committeeSeats }, { data: committees }] = await Promise.all([
+    supabase.from("people").select("id, user_id").not("user_id", "is", null),
+    supabase.from("board_members").select("person_id, position, category, board:boards!inner(status)").eq("status", "active").eq("board.status", "active"),
+    supabase.from("committee_members").select("person_id, committee_id, position").eq("status", "active"),
+    supabase.from("committees").select("id, name").eq("status", "active").order("name"),
+  ]);
+  const personOf = new Map((people ?? []).map((p) => [p.user_id as string, p.id]));
+  const seatsOf = (userId: string): UserItem["seats"] => {
+    const personId = personOf.get(userId);
+    const board = (boardSeats ?? []).find((b) => b.person_id === personId);
+    return {
+      board: board ? { position: board.position, category: board.category } : null,
+      committees: Object.fromEntries((committeeSeats ?? []).filter((c) => c.person_id === personId).map((c) => [c.committee_id, c.position])),
+    };
+  };
   const { data: everyone } = can(viewer.permissions, "/admin/roles", LEVELS.manage) ? await supabase.from("people").select("full_name") : { data: [] };
   const testPeople = (everyone ?? []).filter((p) => isTestPerson(p.full_name)).length;
   const groups: DepartmentGroup[] = (deptRows ?? []).map((d) => ({ id: d.id, name: d.name, code: d.code, status: d.status as DepartmentGroup["status"], userIds: (d.department_delegates as { user_id: string }[]).map((x) => x.user_id) }));
@@ -64,6 +81,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
       roleIds: (user_roles as { role_id: string }[]).map((r) => r.role_id),
       departmentId: groups.find((g) => g.status === "active" && g.userIds.includes(u.id))?.id ?? null,
       invite: (signedIn.has(u.id) ? "accepted" : u.invited_at ? "sent" : "none") as InviteState,
+      seats: seatsOf(u.id),
     }))
     .filter((u) => (!role || u.roleIds.includes(role)) && (!dept || (dept === "none" ? !groups.some((g) => g.userIds.includes(u.id)) : groups.find((g) => g.id === dept)?.userIds.includes(u.id))));
   const canManage = can(viewer.permissions, "/admin/users", LEVELS.manage);
@@ -124,6 +142,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
         <UsersWorkspace
           groups={shown}
           departments={groups.filter((g) => g.status === "active").map((g) => ({ id: g.id, name: g.name }))}
+          committees={committees ?? []}
           users={users}
           roles={roles ?? []}
           rights={{ viewerId: viewer.id, canEdit, canManage, canDelete: can(viewer.permissions, "/admin/roles", LEVELS.manage), canEditDepartments }}
