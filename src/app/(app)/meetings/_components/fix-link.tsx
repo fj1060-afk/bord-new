@@ -23,8 +23,10 @@ export function FixLink({ href, anchor, className, title, children }: { href: st
       onClick={(event) => {
         if (event.metaKey || event.ctrlKey || event.shiftKey) return;
         event.preventDefault();
-        const here = location.pathname + location.search;
-        if (here !== href) router.push(href, { scroll: false });
+        // Already on the right tab: just reveal the spot. A push here would re-render the tab and undo the reveal.
+        const target = new URL(href, location.href);
+        const tab = (u: URLSearchParams) => u.get("tab") ?? "overview";
+        if (target.pathname !== location.pathname || tab(target.searchParams) !== tab(new URLSearchParams(location.search))) router.push(href, { scroll: false });
         revealWhenReady(anchor, 6000);
       }}
     >

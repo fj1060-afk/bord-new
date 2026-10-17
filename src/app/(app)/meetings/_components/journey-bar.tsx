@@ -174,15 +174,39 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
         {items.length > 0 && (
           <div>
             <p className="mb-1.5 text-xs font-medium text-ink-muted">على البنود</p>
-            <div className={clsx(card, "flex flex-wrap items-center gap-3 px-4 py-3 text-sm")}>
-              <ChevronLeft size={16} aria-hidden="true" className="shrink-0 text-ink-muted" />
-              <span className="min-w-0 flex-1 basis-32">
-                <strong>{notesText(notes)}</strong> في {items.length === 1 ? "بند واحد" : items.length === 2 ? "بندين" : `${items.length} بنود`}
-              </span>
-              <FixLink href={agendaHref} anchor={items[0].anchor} className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs text-on-primary hover:opacity-90">
-                <ListChecks size={14} aria-hidden="true" /> انتقل للبند {items[0].n ?? "الأول"}
-              </FixLink>
-            </div>
+            {/* The notes live inside each item; this lists the items that have them, each one a link to it. */}
+            <details className={clsx(card, "group/items text-sm")}>
+              <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 px-4 py-3 hover:bg-paper [&::-webkit-details-marker]:hidden">
+                <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/items:rotate-180" />
+                <span className="min-w-0 flex-1 basis-48">
+                  <strong>{notesText(notes)}</strong> في {items.length === 1 ? "بند واحد" : items.length === 2 ? "بندين" : `${items.length} بنود`}
+                  <span className="block text-xs text-ink-muted">اضغط لعرض البنود</span>
+                </span>
+                <FixLink href={agendaHref} anchor={items[0].anchor} className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs text-on-primary hover:opacity-90">
+                  <ListChecks size={14} aria-hidden="true" /> انتقل للبند {items[0].n ?? "الأول"}
+                </FixLink>
+              </summary>
+              <ul className="divide-y divide-rule border-t border-rule">
+                {items.map((i) => {
+                  const need = needsAction(i.issues);
+                  return (
+                    <li key={i.anchor}>
+                      <FixLink href={agendaHref} anchor={i.anchor} className="flex items-start gap-3 px-4 py-2.5 hover:bg-paper">
+                        <span className={clsx("mt-1.5 size-2 shrink-0 rounded-full", need.level === "block" ? "bg-danger" : "bg-brass")} aria-hidden="true" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-medium">
+                            {i.n ? `البند ${i.n}: ` : ""}
+                            {i.label}
+                          </span>
+                          <span className="text-xs text-ink-muted">{i.issues.filter((x) => x.level !== "info").map((x) => x.chip).join(" · ")}</span>
+                        </span>
+                        <span className="shrink-0 text-xs text-primary">{notesText(need.count)}</span>
+                      </FixLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
           </div>
         )}
 
