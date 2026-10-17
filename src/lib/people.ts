@@ -1,6 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { groupPeople } from "./people-groups";
+
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim() || null;
 
 /**
@@ -25,9 +27,26 @@ export async function resolvePerson(
   return { id: data.id };
 }
 
-export type PersonOption = { id: string; full_name: string };
+/** A person for a picker, with the group they are listed under and a short role, e.g. "رئيس المجلس · مستقل". */
+export type PersonOption = { id: string; full_name: string; group: string; role: string };
 
+/** Everyone, grouped: board (chair first), committees, management, departments, then others. */
 export async function listPeople(supabase: SupabaseClient): Promise<PersonOption[]> {
-  const { data } = await supabase.from("people").select("id, full_name").order("full_name");
-  return data ?? [];
+  const [{ data: people }, { data: board }, { data: committees }, { data: delegates }] = await Promise.all([
+    supabase.from("people").select("id, full_name, executive_title, user_id").order("full_name"),
+    supabase.from("board_members").select("person_id, position, category, board:boards!inner(status)").eq("status", "active").eq("board.status", "active"),
+    supabase.from("committee_members").select("person_id, position, committee:committees!inner(name, status)").eq("status", "active").eq("committee.status", "active"),
+    supabase.from("department_delegates").select("user_id, department:departments(name)"),
+  ]);
+  const boardOf = new Map((board ?? []).map((b) => [b.person_id, { position: b.position, category: b.category }]));
+  const committeesOf = new Map<string, { name: string; position: string }[]>();
+  for (const c of (committees ?? []) as unknown as { person_id: string; position: string; committee: { name: string } }[])
+    committeesOf.set(c.person_id, [...(committeesOf.get(c.person_id) ?? []), { name: c.committee.name, position: c.position }]);
+  const deptsOf = new Map<string, string[]>();
+  for (const d of (delegates ?? []) as unknown as { user_id: string; department: { name: string } | null }[])
+    if (d.department) deptsOf.set(d.user_id, [...(deptsOf.get(d.user_id) ?? []), d.department.name]);
+  const groups = groupPeople(
+    (people ?? []).map((p) => ({ id: p.id, full_name: p.full_name, executive_title: p.executive_title, board: boardOf.get(p.id), committees: committeesOf.get(p.id), departments: p.user_id ? deptsOf.get(p.user_id) : undefined })),
+  );
+  return groups.flatMap((g) => g.people.map((p) => ({ ...p, group: g.label })));
 }
