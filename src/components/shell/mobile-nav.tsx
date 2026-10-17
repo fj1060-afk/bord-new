@@ -6,7 +6,7 @@ import { EASE_IN, EASE_OUT, motion, reducedMotion } from "@/lib/motion";
 import { SidebarBrand } from "./sidebar";
 import { SidebarNav, type CommitteeLink } from "./sidebar-nav";
 
-export function MobileNav({ allowed, committees }: { allowed: string[]; committees: CommitteeLink[] }) {
+export function MobileNav({ allowed, committees, portal }: { allowed: string[]; committees: CommitteeLink[]; portal?: { account: string } }) {
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -79,7 +79,7 @@ export function MobileNav({ allowed, committees }: { allowed: string[]; committe
               <X size={20} aria-hidden="true" />
             </button>
           </div>
-          <SidebarNav allowed={allowed} committees={committees} onNavigate={() => setOpen(false)} />
+          <SidebarNav allowed={allowed} committees={committees} portal={portal} onNavigate={() => setOpen(false)} />
         </div>
       </dialog>
     </>

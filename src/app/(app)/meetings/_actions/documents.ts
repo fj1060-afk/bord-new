@@ -42,5 +42,8 @@ export async function registerDocument(input: {
   }
   revalidatePath(`/meetings/${input.meetingId}`);
   revalidatePath("/meetings", "layout");
+  // The department's home and requests list show the request's new state.
+  revalidatePath("/");
+  revalidatePath("/requests", "layout");
   return { ok: true, message: "رُفع المستند." };
 }

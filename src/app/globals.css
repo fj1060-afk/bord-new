@@ -13,6 +13,9 @@
   --brass: #a8823a;
   --brass-soft: #f4ecdc;
   --danger: #a33a2f;
+  /* Quiet blue for «soon» (deadlines in the coming days). */
+  --info: #3d6a8a;
+  --info-soft: #e6eef4;
   --sidebar: #12302b;
   --sidebar-ink: #d7e3df;
   --sidebar-muted: #8fa8a1;
@@ -32,6 +35,8 @@
     --brass: #d1ad62;
     --brass-soft: #2a2416;
     --danger: #e07b6f;
+    --info: #8fb3cf;
+    --info-soft: #18242d;
     --sidebar: #0b1110;
     --sidebar-ink: #d7e3df;
     --sidebar-muted: #7d938d;
@@ -51,6 +56,8 @@
   --color-brass: var(--brass);
   --color-brass-soft: var(--brass-soft);
   --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
   --color-sidebar: var(--sidebar);
   --color-sidebar-ink: var(--sidebar-ink);
   --color-sidebar-muted: var(--sidebar-muted);

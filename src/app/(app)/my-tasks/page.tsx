@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import clsx from "clsx";
 import { PageHeader } from "@/components/ui/page-header";
+import { redirect } from "next/navigation";
 import { requirePage } from "@/lib/auth";
+import { can, type Level } from "@/lib/permissions";
+import { isPortalUser, portalEnabled } from "@/lib/portal";
 import { TASK_STATUS, isOverdue, resolutionReference, riyadhToday, type TaskStatus } from "@/lib/minutes";
 import { createClient } from "@/lib/supabase/server";
 import { ProgressForm } from "../resolutions/task-forms";
@@ -21,6 +24,8 @@ type Task = {
 
 export default async function MyTasksPage({ searchParams }: PageProps<"/my-tasks">) {
   const viewer = await requirePage("/my-tasks");
+  // Department users find their tasks among their requests (switched on per environment).
+  if (portalEnabled() && isPortalUser((page, level) => can(viewer.permissions, page, level as Level | undefined))) redirect("/requests");
   const { show = "open" } = (await searchParams) as { show?: string };
   const supabase = await createClient();
   const { data: delegations } = await supabase.from("department_delegates").select("department_id").eq("user_id", viewer.id);

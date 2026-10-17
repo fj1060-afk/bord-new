@@ -18,6 +18,7 @@ import {
   Send,
   Settings,
   ShieldCheck,
+  UserRound,
   Users,
   UsersRound,
 } from "lucide-react";
@@ -37,10 +38,25 @@ const bodyPages = (base: string, dashboard: string, members: string, body: strin
   { href: `${base}/documents`, label: "المستندات", icon: FileText, permission: "/documents" },
 ];
 
-/** Sidebar sections for a viewer: only links they may open, committees listed by name. */
-export function buildSidebar(allowed: string[], committees: { id: string; name: string }[]): SideSection[] {
+/** The department users' portal: home, their requests and the meetings they may see, then their account. */
+function portalSidebar(account: string): SideSection[] {
+  return [
+    {
+      label: "عام",
+      items: [
+        { href: "/", label: "الرئيسية", icon: LayoutDashboard, permission: "/" },
+        { href: "/requests", label: "الطلبات", icon: Inbox, permission: "/my-tasks" },
+        { href: "/meetings", label: "الاجتماعات", icon: CalendarDays, permission: "/meetings" },
+      ],
+    },
+    { label: "الحساب", items: [{ href: account, label: "حسابي", icon: UserRound, permission: "/" }] },
+  ];
+}
+
+/** Sidebar sections for a viewer: only links they may open, committees listed by name; department users get the portal's. */
+export function buildSidebar(allowed: string[], committees: { id: string; name: string }[], portal?: { account: string }): SideSection[] {
   const ok = (l: { permission: string }) => allowed.includes(l.permission);
-  const sections: SideSection[] = [
+  const sections: SideSection[] = portal ? portalSidebar(portal.account) : [
     {
       label: "عام",
       items: [

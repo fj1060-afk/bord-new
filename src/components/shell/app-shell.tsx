@@ -4,7 +4,8 @@ import { LogOut } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 import { navItems } from "@/config/navigation";
 import type { Viewer } from "@/lib/auth";
-import { can } from "@/lib/permissions";
+import { can, type Level } from "@/lib/permissions";
+import { isPortalUser, portalEnabled } from "@/lib/portal";
 import { MobileNav } from "./mobile-nav";
 import { Sidebar } from "./sidebar";
 import type { CommitteeLink } from "./sidebar-nav";
@@ -13,14 +14,16 @@ import { Today } from "./today";
 /** `committees` are the active committees the viewer may see, listed in the sidebar by name. */
 export function AppShell({ viewer, committees, children }: { viewer: Viewer; committees: CommitteeLink[]; children: ReactNode }) {
   const allowed = navItems.filter((item) => can(viewer.permissions, item.href)).map((item) => item.href);
+  // Department users get the requests portal's sidebar (switched on per environment).
+  const portal = portalEnabled() && isPortalUser((page, level) => can(viewer.permissions, page, level as Level | undefined)) ? { account: viewer.personId ? `/people/${viewer.personId}` : "/" } : undefined;
 
   return (
     <div className="flex min-h-dvh">
-      <Sidebar allowed={allowed} committees={committees} />
+      <Sidebar allowed={allowed} committees={committees} portal={portal} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b border-rule bg-paper/90 px-4 backdrop-blur sm:px-8">
           <div className="flex items-center gap-3">
-            <MobileNav allowed={allowed} committees={committees} />
+            <MobileNav allowed={allowed} committees={committees} portal={portal} />
             <Today />
           </div>
           <div className="flex items-center gap-3 text-sm">
