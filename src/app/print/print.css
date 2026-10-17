@@ -10,6 +10,7 @@
   --ink: #17211f; --ink-muted: #5b6763; --rule: #dce2de; --primary: #1f4d45; --primary-soft: #e6efec;
   --on-primary: #ffffff; --brass: #a8823a; --brass-soft: #f4ecdc; --danger: #a33a2f; --paper: #f6f7f5;
   color: var(--ink); background: #fff; font-size: 9.5pt; line-height: 1.6;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
   max-width: 184mm; margin: 0 auto; padding: 10mm 0;
 }
 .doc .num { font-family: var(--font-mono-latin), monospace; }
@@ -24,27 +25,31 @@
 .pair.top { align-items: flex-start; }
 .pair > .en { text-align: left; }
 .keep { break-inside: avoid; }
+/* English beneath Arabic: one smaller, lighter pattern everywhere. */
+.stack-l { display: block; }
+.stack-l > span:first-child { display: block; }
+.doc .sub { display: block; font-size: 7.6pt; font-weight: 400; color: var(--ink-muted); line-height: 1.35; }
+/* Under Arabic, the English line keeps the same edge (right) so each pair reads as one block. */
+.doc .stack-l > .sub, .doc td .sub, .doc-org .sub, .doc .doc-grid .sub, .doc th .sub { text-align: right; }
+.doc .nw { white-space: nowrap; }
 
-/* Letterhead and title */
-.doc-head { border-bottom: 2.5px solid var(--primary); padding-bottom: 8px; }
-.doc-head-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
-.doc-head-row > div:first-child span, .doc-head-row .en span { display: block; font-weight: 600; font-size: 8.5pt; }
-.doc-head .org { display: block; font-size: 14pt; color: var(--primary); font-family: var(--font-naskh), serif; }
-.doc-head .en .org { font-family: var(--font-body), sans-serif; font-size: 13pt; }
-.doc-seal { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--brass); color: var(--brass); display: grid; place-items: center; font: 700 20pt var(--font-naskh), serif; margin: 0 16px; }
-.doc-badges { display: flex; gap: 6px; justify-content: flex-end; }
-.doc-badges.en { justify-content: flex-start; }
-.doc-badge-row { display: flex; justify-content: space-between; margin-top: 6px; }
-.doc-badge { border: 1.5px solid; border-radius: 4px; padding: 0 8px; font-size: 8pt; font-weight: 700; white-space: nowrap; }
+/* Letterhead and title: compact, so the content starts high on the page. */
+.doc-head { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--primary); padding-bottom: 6px; }
+.doc-org { flex: 1; min-width: 0; line-height: 1.35; }
+.doc-org > span { display: block; font-size: 8pt; color: var(--ink-muted); }
+.doc-head .org { display: block; font-size: 12pt; color: var(--primary); font-family: var(--font-naskh), serif; }
+.doc-seal { width: 34px; height: 34px; flex: none; border-radius: 50%; border: 1.5px solid var(--brass); color: var(--brass); display: grid; place-items: center; font: 700 15pt var(--font-naskh), serif; }
+.doc-badges { display: flex; gap: 6px; flex: none; }
+.doc-badge { border: 1px solid; border-radius: 4px; padding: 0 7px; font-size: 7.6pt; font-weight: 600; white-space: nowrap; }
 .doc-badge.c { color: var(--danger); background: #fbf1f1; }
 .doc-badge.s { color: var(--brass); background: var(--brass-soft); }
 .doc-badge.ok { color: var(--primary); background: var(--primary-soft); }
-.doc-title { text-align: center; margin: 8px 0 8px; }
-.doc-title h1 { font-size: 17pt; }
-.doc-title .en { text-align: center; font-size: 12pt; color: var(--primary); font-weight: 600; }
-.doc-title p { margin: 0; font-weight: 600; color: var(--ink-muted); }
-.doc-title p.en { font-size: 9.5pt; color: var(--ink-muted); }
-.doc-title hr { width: 64px; border: 0; border-top: 3px solid var(--brass); margin: 6px auto 0; }
+.doc-title { text-align: center; margin: 6px 0 6px; }
+.doc-title h1 { font-size: 14pt; line-height: 1.4; }
+.doc-title .en { text-align: center; font-size: 10pt; color: var(--primary); font-weight: 500; }
+.doc-title p { margin: 0; font-size: 9pt; font-weight: 400; color: var(--ink-muted); }
+.doc-title p.sub { text-align: center; }
+.doc-title hr { width: 48px; border: 0; border-top: 2px solid var(--brass); margin: 4px auto 0; }
 
 /* Meeting card */
 .doc-card { display: grid; grid-template-columns: 92px 1fr; border: 1.5px solid var(--rule); border-radius: 10px; overflow: hidden; margin-bottom: 6px; break-inside: avoid; }
@@ -54,9 +59,10 @@
 .doc-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
 .doc-grid > div { padding: 5px 10px; border-inline-start: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
 .doc-grid > div:nth-last-child(-n+3) { border-bottom: 0; }
-.doc-grid .k { display: flex; font-size: 7.5pt; color: var(--ink-muted); }
-.doc-grid .v { font-weight: 700; font-size: 9.5pt; }
-.doc-grid .v.pair .en { font-weight: 600; }
+.doc-grid .k { font-size: 7.5pt; color: var(--ink-muted); line-height: 1.3; }
+.doc-grid .k .sub { font-size: 6.8pt; }
+.doc-grid .v { font-weight: 600; font-size: 9.2pt; line-height: 1.4; }
+
 
 /* Sections and tables */
 .doc h2 { font-size: 11.5pt; margin: 10px 0 4px; padding-inline-start: 8px; border-inline-start: 4px solid var(--primary); line-height: 1.35; break-after: avoid; }
@@ -64,14 +70,17 @@
 .doc-bi { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .doc-bi > .en { border-right: 1px solid var(--rule); padding-right: 12px; }
 .doc table { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 8.8pt; }
+/* Long tables carry on over pages with their header repeated; a row only moves whole. */
+.doc thead { display: table-header-group; }
 .doc tr { break-inside: avoid; }
-.doc th { background: var(--primary); color: var(--on-primary); font-weight: 600; padding: 5px 7px; text-align: start; }
-.doc th .en { font-weight: 500; font-size: 8pt; }
+.doc th { background: var(--primary); color: var(--on-primary); font-weight: 600; padding: 4px 7px; text-align: start; vertical-align: top; }
+.doc th .sub { color: rgb(255 255 255 / .8); font-size: 7pt; }
+.doc td .title { font-weight: 600; }
 .doc td { padding: 3px 7px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
 .doc tr:nth-child(even) td { background: #fbfbf9; }
 .doc td small { display: block; color: var(--ink-muted); font-size: 8pt; line-height: 1.3; }
 .doc td .en small { text-align: left; }
-.doc td.sign { height: 32px; min-width: 80px; }
+.doc td.sign { height: 28px; min-width: 80px; }
 .doc td .note-en { display: block; color: var(--ink-muted); font-size: 8pt; direction: ltr; text-align: left; }
 .pill { display: inline-block; white-space: nowrap; border-radius: 99px; padding: 0 8px; font-size: 8pt; font-weight: 600; background: var(--primary-soft); color: var(--primary); }
 .pill.r { background: #f7e6e6; color: var(--danger); }
@@ -92,14 +101,19 @@
 .doc-quorum .met b, .doc-quorum .unmet b { font-family: inherit; font-size: 10pt; display: block; line-height: 1.3; }
 
 /* Notes box, agenda list, items */
-.doc-box { border: 1.5px solid var(--rule); border-inline-start: 4px solid var(--brass); border-radius: 6px; padding: 6px 10px; margin: 8px 0; font-size: 9pt; break-inside: avoid; }
+.doc-box { border: 1px solid var(--rule); border-inline-start: 3px solid var(--brass); border-radius: 6px; padding: 5px 10px; margin: 8px 0; font-size: 8.2pt; line-height: 1.55; color: #2f3a37; }
+.doc-box p { margin: 0 0 4px; }
+.doc-box .label-row { font-size: 8.6pt; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
 .doc-box ol { margin: 0; padding-inline-start: 18px; }
 .doc-box .en ol { padding-left: 18px; padding-right: 0; }
 .doc-agenda { margin: 0 0 6px; }
 .doc-agenda > div { display: grid; grid-template-columns: 22px 1fr; padding: 2px 0; border-bottom: 1px dotted var(--rule); }
 .doc-agenda > div.bi { grid-template-columns: 22px 1fr 1fr; gap: 12px; }
-.doc-item { border: 1.5px solid var(--rule); border-radius: 8px; margin-bottom: 8px; overflow: hidden; break-inside: avoid; }
-.doc-item > header { background: var(--paper); border-bottom: 1px solid var(--rule); padding: 5px 10px; font-weight: 700; }
+/* An item may continue on the next page; its header never stays behind alone. */
+.doc-item { border: 1.5px solid var(--rule); border-radius: 8px; margin-bottom: 8px; }
+.doc-item > header { background: var(--paper); border-bottom: 1px solid var(--rule); padding: 5px 10px; font-weight: 700; break-after: avoid; border-radius: 8px 8px 0 0; }
+.doc-item > header .sub { font-weight: 500; }
+.doc-result, .doc-remark { break-inside: avoid; }
 .doc-item > div { padding: 6px 10px; }
 .doc .label { font-size: 8pt; font-weight: 700; color: var(--ink-muted); }
 .doc-result { background: var(--primary-soft); border-inline-start: 4px solid var(--primary); border-radius: 4px; padding: 5px 10px; margin-top: 5px; }
@@ -110,12 +124,13 @@
 .doc-remark { margin-top: 5px; font-size: 8.8pt; border-inline-start: 3px solid var(--brass); padding-inline-start: 8px; }
 .doc-remark.en { border-inline-start: 0; border-left: 3px solid var(--brass); padding-left: 8px; }
 
-/* Signatures: one card for everyone */
-.doc-sigs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
-.doc-sig { border: 1.5px solid var(--rule); border-radius: 8px; padding: 5px 8px; text-align: center; break-inside: avoid; }
-.doc-sig .role { color: var(--primary); font-weight: 700; font-size: 8.5pt; }
-.doc-sig > b { display: block; font-size: 9.5pt; }
-.doc-sig .box { border: 1.5px dashed #bfc5c1; border-radius: 6px; height: 32px; margin: 3px 0 2px; display: grid; place-items: center; font-size: 8pt; color: var(--primary); padding: 0 6px; }
-.doc-sig .box .pair { width: 100%; }
-.doc-sig .when { font-size: 7.8pt; color: var(--ink-muted); }
-.doc-sigs.two { grid-template-columns: repeat(2, 1fr); width: 70%; margin: 6px auto 0; }
+/* Signatures: a plain line with name, role and date; no form-like boxes. */
+.doc-sigs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 18px; margin-top: 8px; break-inside: avoid; }
+.doc-sig { text-align: center; break-inside: avoid; }
+.doc-sig .role { color: var(--primary); font-weight: 600; font-size: 8.2pt; }
+.doc-sig > b { display: block; font-size: 9.2pt; font-weight: 600; }
+.doc-sig .line { border-bottom: 1px solid #8f9894; height: 30px; margin: 2px 6px 3px; display: flex; align-items: flex-end; justify-content: center; }
+.doc-sig .signed { font-size: 7.6pt; color: var(--primary); padding-bottom: 2px; }
+.doc-sig .when { display: block; font-size: 7.6pt; color: var(--ink-muted); }
+.doc-sig .blank { display: inline-block; width: 70px; border-bottom: 1px dotted #8f9894; vertical-align: bottom; }
+.doc-sigs.two { grid-template-columns: repeat(2, 1fr); width: 70%; margin: 10px auto 0; }

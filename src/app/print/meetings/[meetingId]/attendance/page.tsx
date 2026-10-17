@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CATEGORIES_EN } from "@/lib/doc-labels";
 import { BOARD_CATEGORIES } from "@/lib/org";
-import { BiText, DocChrome, InfoCard, L, PersonCell, reference, Signatures } from "../../../doc";
+import { BiText, DocChrome, InfoCard, PersonCell, reference, Signatures, Th } from "../../../doc";
 import { loadMeeting } from "../_meeting";
 import { Capacity, H2, heldCells, heldDay, MeetingHead, Method, QuorumBox } from "../parts";
 
@@ -17,15 +17,11 @@ export default async function AttendancePrint({ params }: PageProps<"/print/meet
     const granted = Object.entries(m.holderOf).find(([, holder]) => holder === id);
     return granted ? [`يحمل إنابة: ${m.names[granted[0]]}`, `Holds proxy of: ${m.namesEn[granted[0]] || m.names[granted[0]]}`] : ["", ""];
   };
-  const th = (ar: string, en: string, width?: string) => (
-    <th style={width ? { width } : undefined}>
-      <L as="div" ar={ar} en={en} bi={bi} />
-    </th>
-  );
+  const th = (ar: string, en: string, width?: string) => <Th ar={ar} en={en} bi={bi} width={width} />;
 
   return (
     <main className="doc">
-      <DocChrome bi={bi} footer={`${ref} · كشف الحضور`} fileName={`${ref}-كشف-الحضور`} />
+      <DocChrome bi={bi} header={`${m.body} · ${ref} · كشف الحضور`} footer={`${ref} · كشف الحضور`} fileName={`${ref}-كشف-الحضور`} />
       <MeetingHead m={m} title="كشف حضور اجتماع" titleEn="Meeting Attendance Sheet" badges={[{ ar: "سري", en: "Confidential", tone: "c" }]} />
       <InfoCard bi={bi} day={heldDay(m)} cells={heldCells(m)} />
       {meeting.attendance_intro && <BiText bi={bi} ar={meeting.attendance_intro} en={meeting.attendance_intro_en} />}

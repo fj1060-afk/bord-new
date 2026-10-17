@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { englishDate, englishTime, ITEM_KINDS_EN, MEETING_MODES_EN, MEETING_TYPES_EN } from "@/lib/doc-labels";
 import { dateParts } from "@/lib/format";
 import { ITEM_KINDS, MEETING_MODES, MEETING_TYPES } from "@/lib/meetings";
-import { BiText, DocChrome, InfoCard, L, reference, Signatures } from "../../../doc";
+import { BiText, DocChrome, InfoCard, L, reference, Signatures, Th } from "../../../doc";
 import { loadMeeting } from "../_meeting";
 import { H2, MeetingHead } from "../parts";
 
@@ -27,30 +27,27 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
   const sent = meeting.pack_published_at ? new Date(meeting.pack_published_at) : null;
   const notice = sent ? Math.floor((start.getTime() - sent.getTime()) / 86400000) : null;
   const ref = reference(m.isBoard, meeting.number, meeting.starts_at);
+  const allDecision = (items ?? []).length > 0 && (items ?? []).every((i) => i.kind === "decision");
   const docCount = (id: string) => (docs ?? []).filter((d) => d.agenda_item_id === id).length;
   const mode = meeting.mode as keyof typeof MEETING_MODES;
   const type = meeting.meeting_type as keyof typeof MEETING_TYPES;
   const d = dateParts(start);
-  const th = (ar: string, en: string, width?: string) => (
-    <th style={width ? { width } : undefined}>
-      <L as="div" ar={ar} en={en} bi={bi} />
-    </th>
-  );
+  const th = (ar: string, en: string, width?: string) => <Th ar={ar} en={en} bi={bi} width={width} />;
 
   return (
     <main className="doc">
-      <DocChrome bi={bi} footer={`${ref} · جدول الأعمال`} fileName={`${ref}-جدول-الأعمال`} note={sent ? null : "لم تُرسل الدعوة بعد."} />
+      <DocChrome bi={bi} header={`${m.body} · ${ref} · جدول الأعمال`} footer={`${ref} · جدول الأعمال`} fileName={`${ref}-جدول-الأعمال`} note={sent ? null : "لم تُرسل الدعوة بعد."} />
       <MeetingHead m={m} title="دعوة وجدول أعمال اجتماع" titleEn="Meeting Invitation and Agenda" badges={[{ ar: "سري", en: "Confidential", tone: "c" }]} />
       <InfoCard
         bi={bi}
         day={{ ...d, en: englishDate(start) }}
         cells={[
-          { ar: "الوقت", en: "Time", value: `${d.time} – ${dateParts(end).time}`, valueEn: `${englishTime(start)} – ${englishTime(end)}` },
+          { ar: "الوقت", en: "Time", value: <span className="nw">{d.time} – {dateParts(end).time}</span>, valueEn: <span className="nw">{englishTime(start)} – {englishTime(end)}</span> },
           { ar: "نوع الاجتماع", en: "Type", value: MEETING_TYPES[type], valueEn: MEETING_TYPES_EN[type] },
           { ar: "طريقة الانعقاد", en: "Format", value: MEETING_MODES[mode], valueEn: MEETING_MODES_EN[mode] },
           { ar: "المكان", en: "Venue", value: mode === "virtual" ? "اتصال مرئي" : meeting.location, valueEn: mode === "virtual" ? "Video conference" : meeting.location_en || "—" },
           { ar: "الدعوة من", en: "Called by", value: m.chair, valueEn: m.chairEn || "—" },
-          { ar: "إرسال الدعوة", en: "Invitation sent", value: sent ? `${dateParts(sent).long} (قبل ${notice} أيام)` : "لم تُرسل", valueEn: sent ? `${englishDate(sent)} (${notice} days before)` : "Not sent" },
+          { ar: "إرسال الدعوة", en: "Invitation sent", value: sent ? `${dateParts(sent).long} (قبل ${notice} أيام)` : "—", valueEn: sent ? `${englishDate(sent)} (${notice} days before)` : "—" },
         ]}
       />
       {meeting.agenda_intro && <BiText bi={bi} ar={meeting.agenda_intro} en={meeting.agenda_intro_en} />}
@@ -60,14 +57,14 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
         </p>
       )}
 
-      <H2 ar="بنود جدول الأعمال" en="Agenda Items" bi={bi} />
+      <H2 ar={allDecision ? "بنود جدول الأعمال (جميعها للقرار)" : "بنود جدول الأعمال"} en={allDecision ? "Agenda Items (all for decision)" : "Agenda Items"} bi={bi} />
       <table>
         <thead>
           <tr>
             <th style={{ width: "4%" }}>م</th>
-            {th("البند", "Item")}
-            {th("الغرض", "Purpose", "15%")}
-            {th("العرض", "Presenter", "15%")}
+            {th("البند", "Item", allDecision ? "66%" : "58%")}
+            {!allDecision && th("الغرض", "Purpose", "10%")}
+            {th("العرض", "Presenter", "16%")}
             {th("المدة", "Min", "7%")}
             {th("مرفقات", "Docs", "7%")}
           </tr>
@@ -78,11 +75,16 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
             return (
               <tr key={i.id}>
                 <td className="num">{i.position}</td>
-                <td>{bi ? <L as="div" className="top" ar={<b>{i.title}</b>} en={i.title_en?.trim() ? <b>{i.title_en}</b> : <span className="missing">—</span>} bi /> : <b>{i.title}</b>}</td>
                 <td>
-                  <span className={kind === "decision" ? "pill" : "pill m"}>{ITEM_KINDS[kind]}</span>
-                  {bi && <span className="note-en">{ITEM_KINDS_EN[kind]}</span>}
+                  <span className="title">{i.title}</span>
+                  {bi && <span className="sub en">{i.title_en?.trim() || <span className="missing">English title not provided.</span>}</span>}
                 </td>
+                {!allDecision && (
+                  <td>
+                    <span className={kind === "decision" ? "pill" : "pill m"}>{ITEM_KINDS[kind]}</span>
+                    {bi && <span className="note-en">{ITEM_KINDS_EN[kind]}</span>}
+                  </td>
+                )}
                 <td>{i.presenter || "—"}</td>
                 <td className="num">{i.duration_minutes ?? "—"}</td>
                 <td className="num">{docCount(i.id) || "—"}</td>
@@ -93,9 +95,9 @@ export default async function AgendaPrint({ params }: PageProps<"/print/meetings
       </table>
 
       <div className="doc-box">
-        <L as="div" ar={<b>تنبيهات للأعضاء</b>} en={<b>Notes to members</b>} bi={bi} />
+        <L as="div" className="label-row" ar="تنبيهات للأعضاء" en="Notes to members" bi={bi} />
         {NOTES.map(([ar, en], i) => (
-          <div key={i} className={bi ? "doc-bi" : undefined} style={{ marginTop: 3 }}>
+          <div key={i} className={bi ? "doc-bi" : undefined}>
             <p>
               <span className="num">{i + 1}.</span> {ar}
             </p>

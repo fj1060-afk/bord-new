@@ -7,7 +7,7 @@ import { ITEM_KINDS } from "@/lib/meetings";
 import { resolutionReference } from "@/lib/minutes";
 import { BOARD_CATEGORIES } from "@/lib/org";
 import { REMARK_KINDS, voteTally, type RemarkKind } from "@/lib/secretary";
-import { BiText, DocChrome, InfoCard, L, PersonCell, reference, Signatures, type Signer } from "../../../doc";
+import { BiText, DocChrome, InfoCard, L, PersonCell, reference, S, Signatures, Th, type Signer } from "../../../doc";
 import { loadMeeting } from "../_meeting";
 import { Capacity, H2, heldCells, heldDay, MeetingHead, Method, QuorumBox } from "../parts";
 
@@ -48,11 +48,7 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
       : minutes.status === "review"
         ? { ar: `بانتظار التوقيع · الإصدار ${minutes.version}`, en: `Awaiting signature · v${minutes.version}`, tone: "s" as const }
         : { ar: "مسودة", en: "Draft", tone: "s" as const };
-  const th = (ar: string, en: string, width?: string) => (
-    <th style={width ? { width } : undefined}>
-      <L as="div" ar={ar} en={en} bi={bi} />
-    </th>
-  );
+  const th = (ar: string, en: string, width?: string) => <Th ar={ar} en={en} bi={bi} width={width} />;
   const signer = (personId: string | undefined, role: string, roleEn: string, name: string, nameEn: string): Signer => {
     const s = personId ? signed.get(personId) : undefined;
     return {
@@ -72,7 +68,7 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
 
   return (
     <main className="doc">
-      <DocChrome bi={bi} fileName={`${ref}-محضر-الاجتماع`} footer={minutes.version ? `${ref} · ${bi ? "v" : "الإصدار "}${minutes.version}` : `${ref} · ${bi ? "Draft" : "مسودة"}`} note={warnings.length ? <ul className="list-disc ps-5">{warnings.map((w) => <li key={w}>{w}</li>)}</ul> : null} />
+      <DocChrome bi={bi} header={`${m.body} · ${ref} · محضر الاجتماع`} fileName={`${ref}-محضر-الاجتماع`} footer={minutes.version ? `${ref} · ${bi ? "v" : "الإصدار "}${minutes.version}` : `${ref} · ${bi ? "Draft" : "مسودة"}`} note={warnings.length ? <ul className="list-disc ps-5">{warnings.map((w) => <li key={w}>{w}</li>)}</ul> : null} />
       <MeetingHead m={m} title={m.isBoard ? "محضر اجتماع مجلس الإدارة" : "محضر اجتماع"} titleEn={m.isBoard ? "Minutes of the Board of Directors Meeting" : "Meeting Minutes"} badges={[{ ar: "سري", en: "Confidential", tone: "c" }, status]} />
       <InfoCard bi={bi} day={heldDay(m)} cells={heldCells(m)} />
 
@@ -144,19 +140,15 @@ export default async function MinutesPrint({ params }: PageProps<"/print/meeting
         return (
           <section key={item.id} className="doc-item">
             <header>
-              <L
+              <S
                 as="div"
                 bi={bi}
                 ar={
                   <>
-                    البند <span className="num">{item.position}</span>: {item.title} <span className={kind === "decision" ? "pill" : "pill m"}>{item.status === "deferred" ? "مؤجل" : ITEM_KINDS[kind]}</span>
+                    البند <span className="num">{item.position}</span>: {item.title} <span className={kind === "decision" ? "pill" : "pill m"}>{item.status === "deferred" ? (bi ? "مؤجل · Deferred" : "مؤجل") : bi ? `${ITEM_KINDS[kind]} · ${ITEM_KINDS_EN[kind]}` : ITEM_KINDS[kind]}</span>
                   </>
                 }
-                en={
-                  <>
-                    Item {item.position}: {item.title_en?.trim() || <span className="missing">—</span>} <span className="pill m">{item.status === "deferred" ? "Deferred" : ITEM_KINDS_EN[kind]}</span>
-                  </>
-                }
+                en={<>Item {item.position}: {item.title_en?.trim() || "English title not provided."}</>}
               />
             </header>
             <div>

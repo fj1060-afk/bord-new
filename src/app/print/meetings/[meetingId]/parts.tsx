@@ -76,8 +76,8 @@ const timeEn = (iso: string | null) => (iso ? englishTime(new Date(iso)) : null)
 export function heldCells(m: Meeting): Cell[] {
   const { meeting } = m;
   const mode = meeting.mode as keyof typeof MEETING_MODES;
-  const actual = meeting.started_at ? `${time(meeting.started_at)} – ${time(meeting.ended_at) ?? "…"}` : "لم يُعقد";
-  const actualEn = meeting.started_at ? `${timeEn(meeting.started_at)} – ${timeEn(meeting.ended_at) ?? "…"}` : "Not held";
+  const actual = meeting.started_at ? <span className="nw">{time(meeting.started_at)} – {time(meeting.ended_at) ?? "…"}</span> : "لم يُعقد";
+  const actualEn = meeting.started_at ? <span className="nw">{timeEn(meeting.started_at)} – {timeEn(meeting.ended_at) ?? "…"}</span> : "Not held";
   return [
     { ar: "الموعد المقرر", en: "Scheduled", value: time(meeting.starts_at), valueEn: timeEn(meeting.starts_at) },
     { ar: "الانعقاد الفعلي", en: "Actual", value: actual, valueEn: actualEn },
