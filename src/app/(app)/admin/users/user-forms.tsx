@@ -170,6 +170,7 @@ export function UserRow({
   canEdit,
   canManage,
   canDelete,
+  extra,
 }: {
   user: UserItem;
   roles: RoleOption[];
@@ -178,6 +179,8 @@ export function UserRow({
   canManage: boolean;
   /** System administrator, while the data is trial. */
   canDelete?: boolean;
+  /** An action beside the row, e.g. removing the user from a department. */
+  extra?: React.ReactNode;
 }) {
   const [state, action] = useActionState(updateUserRoles.bind(null, user.id), null);
   const [pending, startTransition] = useTransition();
@@ -246,6 +249,7 @@ export function UserRow({
           {isSelf && <p className="text-sm text-ink-muted">لا يمكنك تعديل أدوارك أو تعطيل حسابك بنفسك.</p>}
         </div>
       </details>
+      {extra && <span className="shrink-0 py-3.5 pe-1">{extra}</span>}
       {canDelete && !isSelf && (
         <span className="shrink-0 py-3.5 pe-3">
           <ConfirmButton action={deleteUser.bind(null, user.id)} label={`حذف ${user.full_name || user.email}`} icon={<Trash2 size={16} aria-hidden="true" />} confirm={`حذف حساب «${user.full_name || user.email}» نهائياً؟ يبقى سجله في الأشخاص والتدقيق، ولا يمكن التراجع.`} />

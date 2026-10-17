@@ -82,11 +82,16 @@ await step("إضافة عضو جديد للمجلس", async () => {
   await status("أُضيف العضو");
 });
 
-await step("إنشاء إدارة", async () => {
-  await go("/admin/departments");
+await step("إنشاء إدارة ثم حذفها", async () => {
+  await go("/admin/users");
+  await page.click("summary:has-text('إضافة إدارة')");
   await page.fill("input[name=name]", `إدارة اختبار ${stamp}`);
   await page.click("button:has-text('إضافة الإدارة')");
   await status("أُنشئت الإدارة");
+  // Test departments would otherwise pile up in the list.
+  await page.click(`summary:has-text('إدارة اختبار ${stamp}')`);
+  await page.click(`button[aria-label='حذف إدارة اختبار ${stamp}']`);
+  await page.locator(`summary:has-text('إدارة اختبار ${stamp}')`).waitFor({ state: "detached", timeout: 20000 });
 });
 
 await step("إنشاء لجنة وإضافة عضو", async () => {

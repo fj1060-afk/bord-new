@@ -6,7 +6,6 @@ import {
   BookOpenCheck,
   Briefcase,
   Building,
-  Building2,
   CalendarDays,
   FileText,
   Gavel,
@@ -85,9 +84,8 @@ export function buildSidebar(allowed: string[], committees: { id: string; name: 
     {
       label: "الإدارة",
       items: [
-        { href: "/admin/users", label: "المستخدمون", icon: Users, permission: "/admin/users" },
+        { href: "/admin/users", label: "المستخدمون والإدارات", icon: Users, permission: "/admin/users" },
         { href: "/admin/roles", label: "الأدوار والصلاحيات", icon: ShieldCheck, permission: "/admin/roles" },
-        { href: "/admin/departments", label: "الإدارات", icon: Building2, permission: "/admin/departments" },
         { href: "/admin/company", label: "ملف الشركة", icon: Building, permission: "/admin/company" },
         { href: "/admin/settings", label: "الإعدادات", icon: Settings, permission: "/admin/settings" },
       ],

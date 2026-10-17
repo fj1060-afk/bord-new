@@ -7,6 +7,11 @@ import { LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
 const PAGE = "/admin/departments";
+// Departments are managed on the users page; refresh both.
+const refresh = () => {
+  revalidatePath(PAGE);
+  revalidatePath("/admin/users");
+};
 
 export async function createDepartment(_prev: ActionState, form: FormData): Promise<ActionState> {
   await requirePage(PAGE, LEVELS.edit);
@@ -19,7 +24,7 @@ export async function createDepartment(_prev: ActionState, form: FormData): Prom
   if (error) {
     return { ok: false, message: error.code === "23505" ? "يوجد إدارة بنفس الاسم أو الرمز." : "تعذّر إنشاء الإدارة." };
   }
-  revalidatePath(PAGE);
+  refresh();
   return { ok: true, message: "أُنشئت الإدارة." };
 }
 
@@ -28,7 +33,7 @@ export async function setDepartmentStatus(departmentId: string, status: "active"
   const supabase = await createClient();
   const { error } = await supabase.from("departments").update({ status }).eq("id", departmentId);
   if (error) throw new Error("Could not update department");
-  revalidatePath(PAGE);
+  refresh();
 }
 
 export async function addDelegate(departmentId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
@@ -39,7 +44,7 @@ export async function addDelegate(departmentId: string, _prev: ActionState, form
   const supabase = await createClient();
   const { error } = await supabase.from("department_delegates").insert({ department_id: departmentId, user_id: userId });
   if (error) return { ok: false, message: error.code === "23505" ? "هذا المستخدم مخوّل بالفعل." : "تعذّر الإضافة." };
-  revalidatePath(PAGE);
+  refresh();
   return { ok: true, message: "أُضيف المخوّل." };
 }
 
@@ -52,5 +57,14 @@ export async function removeDelegate(departmentId: string, userId: string) {
     .eq("department_id", departmentId)
     .eq("user_id", userId);
   if (error) throw new Error("Could not remove delegate");
-  revalidatePath(PAGE);
+  refresh();
+}
+
+/** Deletes a trial department (system administrator); its delegations go with it. */
+export async function deleteDepartment(departmentId: string) {
+  await requirePage("/admin/roles", LEVELS.manage);
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("departments").delete().eq("id", departmentId).select("id");
+  if (error || !data?.length) throw new Error("Could not delete department");
+  refresh();
 }
