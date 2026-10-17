@@ -34,7 +34,8 @@ export function PasswordField({ name = "password", required, who, placeholder }:
           onChange={(e) => setValue(e.target.value)}
           className={inputWith("pe-10")}
         />
-        <button type="button" onClick={() => setVisible((v) => !v)} aria-label={visible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} className="motion-press absolute inset-y-0 end-1 my-auto grid size-8 place-items-center rounded text-ink-muted hover:text-ink">
+        {/* The input reads left to right, so its end padding is on the right; the eye sits there (the page's start side). */}
+        <button type="button" onClick={() => setVisible((v) => !v)} aria-label={visible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} className="motion-press absolute inset-y-0 start-1 my-auto grid size-8 place-items-center rounded text-ink-muted hover:text-ink">
           {visible ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
         </button>
       </div>
