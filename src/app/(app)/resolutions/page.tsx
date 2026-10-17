@@ -56,7 +56,7 @@ export default async function ResolutionsPage({ searchParams }: PageProps<"/reso
           const overdue = tasks.filter((t) => isOverdue(t.due_date, t.status, today)).length;
           return (
             <li key={r.id}>
-              <Link href={`/resolutions/${r.id}`} className="block rounded-lg border border-rule bg-surface p-5 hover:border-primary">
+              <Link href={`/resolutions/${r.id}`} className="motion-lift block rounded-lg border border-rule bg-surface p-5 hover:border-primary">
                 <div className="mb-1 flex flex-wrap items-center gap-3 text-sm">
                   <span className="font-mono font-bold text-brass">قرار {resolutionReference(r.number, r.year)}</span>
                   {r.meeting && <span className="text-ink-muted">{(r.meeting.board ?? r.meeting.committee)?.name} · {r.meeting.title}</span>}

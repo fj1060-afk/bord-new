@@ -41,7 +41,7 @@ export default async function CommitteePage({ params }: PageProps<"/committees/[
     <>
       <PageHeader section="اللجان" title={committee.name} description={committee.status === "archived" ? "لجنة مؤرشفة" : undefined} />
       <div className="flex flex-col gap-6">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <div className="motion-stagger grid grid-cols-2 gap-3 lg:grid-cols-3">
           <StatTile label="الأعضاء" value={rows.length} href={`${base}/members`} />
           <StatTile label={`اجتماعات ${year}`} value={held} note={`${upcoming.length ? "وقادم " + upcoming.length : "لا اجتماعات قادمة"}`} href={`${base}/meetings`} />
           <StatTile label="تنفيذ القرارات" value={tasks.percent === null ? "—" : `${tasks.percent}%`} note={tasks.overdue ? `${tasks.overdue} مهمة متأخرة` : `${tasks.total} مهمة`} tone={tasks.overdue ? "alert" : "default"} href={`${base}/resolutions`} />

@@ -10,6 +10,7 @@ import { RequirementsPanel, SendRequirementsBar, type RequestMail, type Requirem
 import { ItemFindings } from "./item-review-panel";
 import { AuthorityBadge } from "./authority-badge";
 import { ExpandAll } from "./expand-all";
+import { FlipList } from "@/components/ui/flip-list";
 import { reviewItem, type ReviewContext } from "@/lib/item-review";
 import { bodyMismatch, duplicateOf } from "@/lib/item-body";
 import { withoutBeforeMeeting } from "@/lib/requirements";
@@ -105,7 +106,7 @@ export function AgendaTab({
       )}
       {/* One send box for the whole meeting, above the items it covers. */}
       {editable && requirements && requirements.length > 0 && <SendRequirementsBar meetingId={meetingId} rows={requirements} targets={targets} sentAt={requirementsSentAt ?? null} mails={requestMails} />}
-      <ol id="agenda-items" className="flex flex-col gap-3">
+      <FlipList as="ol" id="agenda-items" className="flex flex-col gap-3">
         {items.length === 0 && <li className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">لا توجد بنود بعد.</li>}
         {items.map((item, index) => {
           const itemDocs = documents.filter((d) => d.agenda_item_id === item.id);
@@ -128,7 +129,7 @@ export function AgendaTab({
                   <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-medium hover:bg-paper [&::-webkit-details-marker]:hidden">
                     <ListChecks size={16} aria-hidden="true" className="shrink-0 text-primary" />
                     <span className="min-w-0 flex-1">{/(بعد القرار:|After the resolution:)/.test(description + descriptionEn) ? "الوصف وما بعد القرار" : "الوصف"}</span>
-                    <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-200 group-open/desc:rotate-180" />
+                    <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/desc:rotate-180" />
                   </summary>
                   <div className="flex flex-col gap-3 border-t border-rule px-3 py-3">
                     {description && <p className="whitespace-pre-line text-sm leading-7">{description}</p>}
@@ -145,7 +146,7 @@ export function AgendaTab({
           );
 
           return (
-            <li key={item.id} id={`item-${item.id}`} className="scroll-mt-24 rounded-lg border border-rule bg-surface">
+            <li key={item.id} id={`item-${item.id}`} data-flip-key={item.id} data-flip-state={`${notes.length}:${waiting}`} className="scroll-mt-24 rounded-lg border border-rule bg-surface">
               <div className="flex">
                 <details className="group min-w-0 flex-1">
                   <summary className="flex cursor-pointer list-none items-start gap-3 p-4 hover:bg-paper [&::-webkit-details-marker]:hidden">
@@ -166,7 +167,7 @@ export function AgendaTab({
                         {notes.length > 0 && <span className="text-brass">{notes.length} ملاحظات</span>}
                       </span>
                     </span>
-                    <ChevronDown size={18} aria-hidden="true" className="mt-1 shrink-0 text-ink-muted transition-transform duration-200 group-open:rotate-180" />
+                    <ChevronDown size={18} aria-hidden="true" className="mt-1 shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open:rotate-180" />
                   </summary>
 
                   <div className="border-t border-rule p-4">
@@ -243,7 +244,7 @@ export function AgendaTab({
             </li>
           );
         })}
-      </ol>
+      </FlipList>
 
       {editable && (
         <details id="add-item" className="scroll-mt-24 rounded-lg border border-rule bg-surface">

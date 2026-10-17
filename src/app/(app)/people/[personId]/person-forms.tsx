@@ -1,5 +1,6 @@
 "use client";
 
+import { Collapse } from "@/components/ui/collapse";
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useState } from "react";
 import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
@@ -113,11 +114,13 @@ export function DisclosureForm({ personId, year }: { personId: string; year: num
           </label>
         ))}
       </fieldset>
-      {conflict === "yes" && (
-        <Field label="التفاصيل" hint="الجهة، وطبيعة المصلحة، ونسبة الملكية أو المنصب إن وجد.">
-          <textarea spellCheck lang="ar" name="details" rows={4} required className={inputClass} />
-        </Field>
-      )}
+      <Collapse show={conflict === "yes"}>
+        {conflict === "yes" && (
+          <Field label="التفاصيل" hint="الجهة، وطبيعة المصلحة، ونسبة الملكية أو المنصب إن وجد.">
+            <textarea spellCheck lang="ar" name="details" rows={4} required className={inputClass} />
+          </Field>
+        )}
+      </Collapse>
       <FormMessage state={state} />
       <SubmitButton pendingLabel="جارٍ التقديم…" className="w-fit">
         تقديم الإفصاح

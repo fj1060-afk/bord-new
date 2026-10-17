@@ -38,7 +38,7 @@ export default async function RolesPage({ searchParams }: PageProps<"/admin/role
                 href={`/admin/roles?role=${role.id}`}
                 aria-current={role.id === selected?.id ? "page" : undefined}
                 className={clsx(
-                  "rounded-md px-3 py-2 text-sm",
+                  "motion-colors rounded-md px-3 py-2 text-sm",
                   role.id === selected?.id ? "bg-primary-soft font-medium text-primary" : "hover:bg-paper",
                 )}
               >

@@ -81,7 +81,7 @@ export async function BoardOverview({ board, canEdit }: { board: Board; canEdit:
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="motion-stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="الأعضاء" value={rows.length} note={`${independent} مستقل`} href="/board/members" />
         <StatTile label={`اجتماعات ${year}`} value={`${held.length} / ${profile?.min_board_meetings ?? 4}`} note="المنعقدة من الحد الأدنى" tone={held.length < (profile?.min_board_meetings ?? 4) && new Date().getMonth() >= 9 ? "alert" : "default"} href="/board/meetings" />
         <StatTile label="تنفيذ القرارات" value={tasks.percent === null ? "—" : `${tasks.percent}%`} note={tasks.overdue ? `${tasks.overdue} مهمة متأخرة` : `${tasks.total} مهمة`} tone={tasks.overdue ? "alert" : "default"} href="/board/resolutions" />

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TabBar } from "@/components/ui/tab-bar";
 import clsx from "clsx";
 import { PageHeader } from "@/components/ui/page-header";
 import { requirePage } from "@/lib/auth";
@@ -44,17 +45,20 @@ export default async function CompanyPage({ searchParams }: PageProps<"/admin/co
           ))}
         </ul>
       )}
-      <nav className="mb-6 flex gap-1 overflow-x-auto border-b border-rule text-sm" aria-label="أقسام ملف الشركة">
+      <TabBar id="company-tabs" label="أقسام ملف الشركة" className="mb-6 flex gap-1 overflow-x-auto border-b border-rule text-sm">
         {Object.entries(TABS).map(([key, label]) => (
-          <Link key={key} href={`/admin/company?tab=${key}`} aria-current={tab === key ? "page" : undefined} className={clsx("shrink-0 border-b-2 px-4 py-2.5", tab === key ? "border-brass font-medium" : "border-transparent text-ink-muted hover:text-ink")}>
+          <Link key={key} href={`/admin/company?tab=${key}`} aria-current={tab === key ? "page" : undefined} className={clsx("motion-colors shrink-0 px-4 py-2.5", tab === key ? "font-medium text-ink" : "text-ink-muted hover:text-ink")}>
             {label}
           </Link>
         ))}
-      </nav>
+      </TabBar>
+      {/* Each tab's content enters on its own when the tab changes. */}
+      <div key={tab} className="page-in">
 
-      {(tab === "company" || tab === "rules" || tab === "secretary") && <ProfileTab show={tab} profile={profile} canEdit={canEdit} />}
-      {tab === "powers" && <PowersTab restricted={(profile as { bylaws_restrictions?: string[] }).bylaws_restrictions ?? []} canEdit={canEdit} />}
-      {tab === "texts" && <TextsTab canEdit={canEdit} />}
+        {(tab === "company" || tab === "rules" || tab === "secretary") && <ProfileTab show={tab} profile={profile} canEdit={canEdit} />}
+        {tab === "powers" && <PowersTab restricted={(profile as { bylaws_restrictions?: string[] }).bylaws_restrictions ?? []} canEdit={canEdit} />}
+        {tab === "texts" && <TextsTab canEdit={canEdit} />}
+      </div>
     </>
   );
 }

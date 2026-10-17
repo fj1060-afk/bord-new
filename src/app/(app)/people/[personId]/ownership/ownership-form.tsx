@@ -1,5 +1,6 @@
 "use client";
 
+import { Collapse } from "@/components/ui/collapse";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
@@ -95,25 +96,27 @@ export function OwnershipForm({ personId, initial }: { personId: string; initial
       {yesNo("ب. هل هناك أسهم مملوكة أو مسيطر عليها من قبل شركة يسيطر عليها ذلك الشخص؟", n.controlled, (v) => set({ controlled: v }))}
       {yesNo("ج. هل هناك أسهم مملوكة أو مسيطر عليها من قبل أشخاص يتصرفون بالاتفاق مع الشخص؟", n.concert, (v) => set({ concert: v }))}
       {anyInterest && <Holdings rows={n.interests} onChange={(interests) => set({ interests })} />}
-      {n.type === "change" && (
-        <>
-          <strong className="text-sm sm:col-span-2">6. تغيير المصلحة</strong>
-          <Field label="عدد وفئة الأسهم قبل التغيير">
-            <input value={n.before.shares} onChange={(e) => set({ before: { ...n.before, shares: e.target.value } })} className={inputClass} />
-          </Field>
-          <Field label="النسبة قبل التغيير %">
-            <input value={n.before.percent} dir="ltr" onChange={(e) => set({ before: { ...n.before, percent: e.target.value } })} className={inputClass} />
-          </Field>
-          <Field label="عدد وفئة الأسهم بعد التغيير">
-            <input value={n.after.shares} onChange={(e) => set({ after: { ...n.after, shares: e.target.value } })} className={inputClass} />
-          </Field>
-          <Field label="النسبة بعد التغيير %">
-            <input value={n.after.percent} dir="ltr" onChange={(e) => set({ after: { ...n.after, percent: e.target.value } })} className={inputClass} />
-          </Field>
-          <strong className="text-sm sm:col-span-2">7. تفاصيل تغيير المصلحة</strong>
-          <Holdings rows={n.changes} onChange={(changes) => set({ changes })} reason />
-        </>
-      )}
+      <Collapse show={n.type === "change"}>
+        {n.type === "change" && (
+          <>
+            <strong className="text-sm sm:col-span-2">6. تغيير المصلحة</strong>
+            <Field label="عدد وفئة الأسهم قبل التغيير">
+              <input value={n.before.shares} onChange={(e) => set({ before: { ...n.before, shares: e.target.value } })} className={inputClass} />
+            </Field>
+            <Field label="النسبة قبل التغيير %">
+              <input value={n.before.percent} dir="ltr" onChange={(e) => set({ before: { ...n.before, percent: e.target.value } })} className={inputClass} />
+            </Field>
+            <Field label="عدد وفئة الأسهم بعد التغيير">
+              <input value={n.after.shares} onChange={(e) => set({ after: { ...n.after, shares: e.target.value } })} className={inputClass} />
+            </Field>
+            <Field label="النسبة بعد التغيير %">
+              <input value={n.after.percent} dir="ltr" onChange={(e) => set({ after: { ...n.after, percent: e.target.value } })} className={inputClass} />
+            </Field>
+            <strong className="text-sm sm:col-span-2">7. تفاصيل تغيير المصلحة</strong>
+            <Holdings rows={n.changes} onChange={(changes) => set({ changes })} reason />
+          </>
+        )}
+      </Collapse>
       <Field label="8. تفاصيل عملية التملك">
         <input value={n.acquisition} onChange={(e) => set({ acquisition: e.target.value })} list="acq" className={inputClass} />
         <datalist id="acq">

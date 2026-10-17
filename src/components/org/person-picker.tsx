@@ -1,5 +1,6 @@
 "use client";
 
+import { Collapse } from "@/components/ui/collapse";
 import { useState } from "react";
 import { Field, inputClass } from "@/components/ui/form";
 
@@ -22,19 +23,21 @@ export function PersonPicker({ people }: { people: { id: string; full_name: stri
           <option value="new">+ شخص جديد</option>
         </select>
       </Field>
-      {choice === "new" && (
-        <div className="grid gap-3 rounded-md border border-dashed border-rule p-3 sm:grid-cols-3">
-          <Field label="الاسم الكامل">
-            <input name="new_full_name" required className={inputClass} />
-          </Field>
-          <Field label="البريد الإلكتروني">
-            <input name="new_email" type="email" dir="ltr" className={inputClass} />
-          </Field>
-          <Field label="الجوال">
-            <input name="new_phone" type="tel" dir="ltr" className={inputClass} />
-          </Field>
-        </div>
-      )}
+      <Collapse show={choice === "new"}>
+        {choice === "new" && (
+          <div className="grid gap-3 rounded-md border border-dashed border-rule p-3 sm:grid-cols-3">
+            <Field label="الاسم الكامل">
+              <input name="new_full_name" required className={inputClass} />
+            </Field>
+            <Field label="البريد الإلكتروني">
+              <input name="new_email" type="email" dir="ltr" className={inputClass} />
+            </Field>
+            <Field label="الجوال">
+              <input name="new_phone" type="tel" dir="ltr" className={inputClass} />
+            </Field>
+          </div>
+        )}
+      </Collapse>
     </div>
   );
 }

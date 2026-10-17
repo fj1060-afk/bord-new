@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import clsx from "clsx";
+import { CountUp } from "@/components/ui/count-up";
 import { AlertTriangle, BarChart3, Building2, CalendarDays, ChevronLeft, Clock, FileText, Gavel, PenLine, Send, ShieldCheck, User, Users, X } from "lucide-react";
 import { dueText, SEVERITY, type Attention, type AttentionIcon, type Sev } from "@/lib/attention";
 import type { Desk } from "@/lib/desk-server";
@@ -14,19 +15,32 @@ const STAGES = ["التحضير", "الدعوة", "الانعقاد", "المح�
 
 type Panel = { title: string; sub?: string; sev?: Sev; lines?: [string, ReactNode][]; list?: { text: string; side?: string; tone?: "block" | "warn" | "ok"; href?: string }[]; links: { label: string; href: string }[] };
 
-function Drawer({ panel, onClose }: { panel: Panel | null; onClose: () => void }) {
+function Drawer({ panel: open, onClose }: { panel: Panel | null; onClose: () => void }) {
   const close = useRef<HTMLButtonElement>(null);
+  // Keep showing the last panel while the drawer slides away.
+  const [kept, setKept] = useState<Panel | null>(open);
+  if (open && open !== kept) setKept(open);
+  const panel = open ?? kept;
+  const closeRef = useRef(onClose);
   useEffect(() => {
-    if (!panel) return;
+    closeRef.current = onClose;
+  });
+  useEffect(() => {
+    if (!open) return;
+    const back = document.activeElement as HTMLElement | null;
     close.current?.focus();
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && closeRef.current();
     window.addEventListener("keydown", esc);
-    return () => window.removeEventListener("keydown", esc);
-  }, [panel, onClose]);
+    return () => {
+      window.removeEventListener("keydown", esc);
+      back?.focus({ preventScroll: true }); // focus returns to what opened the drawer
+    };
+  }, [open]);
   return (
-    <div className={clsx("fixed inset-0 z-40 transition-[visibility] duration-200", panel ? "visible" : "invisible")} aria-hidden={!panel}>
-      <button type="button" aria-label="إغلاق" onClick={onClose} className={clsx("absolute inset-0 bg-black/35 transition-opacity duration-200", panel ? "opacity-100" : "opacity-0")} />
-      <div role="dialog" aria-modal="true" aria-labelledby="desk-panel-title" className={clsx("absolute inset-y-0 end-0 flex w-full max-w-md flex-col border-s border-rule bg-surface shadow-xl transition-transform duration-200 ease-out", panel ? "translate-x-0" : "-translate-x-full")}>
+    <div className={clsx("fixed inset-0 z-40 overflow-hidden transition-[visibility] duration-(--motion-page)", open ? "visible" : "invisible")} aria-hidden={!open} inert={!open}>
+      <button type="button" aria-label="إغلاق" onClick={onClose} className={clsx("absolute inset-0 bg-black/35 transition-opacity duration-(--motion-page) ease-(--ease-out)", open ? "opacity-100" : "opacity-0")} />
+      {/* The drawer sits at the end edge (left in Arabic) and slides in from it. */}
+      <div role="dialog" aria-modal="true" aria-labelledby="desk-panel-title" className={clsx("absolute inset-y-0 end-0 flex w-full max-w-md flex-col border-s border-rule bg-surface shadow-xl transition-transform duration-(--motion-page)", open ? "translate-x-0 ease-(--ease-out)" : "-translate-x-full ease-(--ease-in)")}>
         {panel && (
           <>
             <header className="flex items-start justify-between gap-3 border-b border-rule px-5 py-4">
@@ -35,7 +49,7 @@ function Drawer({ panel, onClose }: { panel: Panel | null; onClose: () => void }
                 <h3 id="desk-panel-title" className="mt-1 font-display text-lg font-bold text-balance">{panel.title}</h3>
                 {panel.sub && <p className="text-sm text-ink-muted">{panel.sub}</p>}
               </div>
-              <button ref={close} type="button" onClick={onClose} aria-label="إغلاق" className="rounded-md border border-rule p-1.5 hover:bg-paper">
+              <button ref={close} type="button" onClick={onClose} aria-label="إغلاق" className="motion-press rounded-md border border-rule p-1.5 hover:bg-paper">
                 <X size={18} aria-hidden="true" />
               </button>
             </header>
@@ -60,14 +74,14 @@ function Drawer({ panel, onClose }: { panel: Panel | null; onClose: () => void }
                       </>
                     );
                     const cls = clsx("flex justify-between gap-3 rounded-md border-s-[3px] bg-paper px-3 py-2.5", l.tone === "block" ? "border-danger" : l.tone === "warn" ? "border-brass" : l.tone === "ok" ? "border-primary" : "border-rule");
-                    return <li key={i}>{l.href ? <Link href={l.href} className={clsx(cls, "hover:bg-primary-soft")}>{body}</Link> : <div className={cls}>{body}</div>}</li>;
+                    return <li key={i}>{l.href ? <Link href={l.href} className={clsx(cls, "motion-colors hover:bg-primary-soft")}>{body}</Link> : <div className={cls}>{body}</div>}</li>;
                   })}
                 </ul>
               )}
             </div>
             <footer className="flex flex-wrap gap-2 border-t border-rule px-5 py-3">
               {panel.links.map((l, i) => (
-                <Link key={l.href + l.label} href={l.href} className={clsx("rounded-md px-4 py-2 text-sm", i === 0 ? "bg-primary text-on-primary hover:opacity-90" : "border border-rule hover:bg-paper")}>
+                <Link key={l.href + l.label} href={l.href} className={clsx("motion-press rounded-md px-4 py-2 text-sm", i === 0 ? "bg-primary text-on-primary hover:opacity-90" : "border border-rule hover:bg-paper")}>
                   {l.label}
                 </Link>
               ))}
@@ -91,14 +105,14 @@ function Donut({ slices, percent, onPick }: { slices: NonNullable<Desk["complian
         <circle cx="56" cy="56" r={r} fill="none" stroke="var(--rule)" strokeWidth="14" />
         {slices.map((s, i) => {
           const len = lens[i];
-          return <circle key={s.status} cx="56" cy="56" r={r} fill="none" stroke={color[s.status]} strokeWidth="14" strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-offs[i]} transform="rotate(-90 56 56)" className="cursor-pointer hover:[stroke-width:17]" onClick={() => onPick(s.status)} />;
+          return <circle key={s.status} cx="56" cy="56" r={r} fill="none" stroke={color[s.status]} strokeWidth="14" strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-offs[i]} transform="rotate(-90 56 56)" className="donut-slice cursor-pointer hover:[stroke-width:17]" onClick={() => onPick(s.status)} />;
         })}
         <text x="56" y="62" textAnchor="middle" className="fill-ink font-mono text-xl">{percent === null ? "—" : `${percent}%`}</text>
       </svg>
       <ul className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
         {slices.map((s) => (
           <li key={s.status}>
-            <button type="button" onClick={() => onPick(s.status)} className="flex w-full items-center justify-between rounded-md px-2 py-1 hover:bg-paper">
+            <button type="button" onClick={() => onPick(s.status)} className="motion-colors flex w-full items-center justify-between rounded-md px-2 py-1 hover:bg-paper">
               <span className="flex items-center gap-2">
                 <i className="size-2.5 rounded-full" style={{ background: color[s.status] }} />
                 {s.label}
@@ -128,12 +142,12 @@ function AttendanceChart({ points, onPick }: { points: NonNullable<Desk["attenda
           <text x="290" y={y(v) + 4} className="fill-ink-muted text-[11px]">{v}%</text>
         </g>
       ))}
-      {n > 1 && <path d={`${line} L${x(n - 1)} ${y(50)} L${x(0)} ${y(50)} Z`} fill="var(--primary-soft)" />}
-      {n > 1 && <path d={line} fill="none" stroke="var(--primary)" strokeWidth="2" />}
+      {n > 1 && <path d={`${line} L${x(n - 1)} ${y(50)} L${x(0)} ${y(50)} Z`} fill="var(--primary-soft)" className="chart-fade" />}
+      {n > 1 && <path d={line} fill="none" stroke="var(--primary)" strokeWidth="2" pathLength={1} className="chart-line" />}
       {points.map((p, i) => (
         <g key={p.id} role="button" tabIndex={0} aria-label={`${p.date}: ${p.rate}%`} className="cursor-pointer focus:outline-none [&:focus-visible>circle:last-child]:stroke-brass" onClick={() => onPick(i)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onPick(i)}>
           <circle cx={x(i)} cy={y(p.rate)} r="14" fill="transparent" />
-          <circle cx={x(i)} cy={y(p.rate)} r={i === n - 1 ? 5 : 4} fill="var(--primary)" stroke="var(--surface)" strokeWidth="2" />
+          <circle cx={x(i)} cy={y(p.rate)} r={i === n - 1 ? 5 : 4} fill="var(--primary)" stroke="var(--surface)" strokeWidth="2" className="chart-fade" />
           <text x={x(i)} y="126" textAnchor="middle" className="fill-ink-muted text-[11px]">{p.label}</text>
         </g>
       ))}
@@ -205,18 +219,18 @@ export function DeskView({ desk }: { desk: Desk }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="المؤشرات">
+      <section className="motion-stagger grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="المؤشرات">
         {desk.tiles.map((t) => {
           const Icon = ICONS[t.icon];
           return (
-            <button key={t.key} type="button" onClick={() => openTile(t)} className={clsx("flex flex-col gap-1.5 rounded-lg border bg-surface p-4 text-start transition-[border-color,box-shadow] hover:border-primary hover:shadow-sm", t.alert ? "border-danger/40" : "border-rule")}>
+            <button key={t.key} type="button" onClick={() => openTile(t)} className={clsx("motion-lift flex flex-col gap-1.5 rounded-lg border bg-surface p-4 text-start hover:border-primary", t.alert ? "border-danger/40" : "border-rule")}>
               <span className="flex items-center justify-between gap-2 text-sm text-ink-muted">
                 {t.label}
                 <span className={clsx("grid size-8 place-items-center rounded-md", t.alert ? "bg-danger/10 text-danger" : "bg-primary-soft text-primary")}>
                   <Icon size={17} aria-hidden="true" />
                 </span>
               </span>
-              <span className="font-mono text-3xl">{t.value}</span>
+              <span className="font-mono text-3xl"><CountUp value={t.value} id={`desk:${t.key}`} /></span>
               <span className={clsx("text-xs", t.alert ? "text-danger" : "text-ink-muted")}>{t.note}</span>
               <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-primary">
                 {t.open.kind === "filter" ? "عرضها في القائمة" : "التفاصيل"} <ChevronLeft size={12} aria-hidden="true" />
@@ -235,7 +249,7 @@ export function DeskView({ desk }: { desk: Desk }) {
             </div>
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="تصفية">
               {chips.map(([k, label, n]) => (
-                <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)} className={clsx("rounded-full border px-2.5 py-0.5 text-xs", filter === k ? "border-ink text-ink" : "border-rule text-ink-muted hover:text-ink")}>
+                <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)} className={clsx("motion-press rounded-full border px-2.5 py-0.5 text-xs", filter === k ? "border-ink text-ink" : "border-rule text-ink-muted hover:text-ink")}>
                   {label} <b className="font-mono font-medium">{n}</b>
                 </button>
               ))}
@@ -247,7 +261,7 @@ export function DeskView({ desk }: { desk: Desk }) {
               const Icon = ICONS[a.icon];
               return (
                 <li key={a.id}>
-                  <button type="button" onClick={() => openItem(a)} className="grid w-full grid-cols-[4px_34px_minmax(0,1fr)] items-center gap-3 px-4 py-3 text-start hover:bg-paper sm:grid-cols-[4px_34px_minmax(0,1fr)_auto]">
+                  <button type="button" onClick={() => openItem(a)} className="motion-colors grid w-full grid-cols-[4px_34px_minmax(0,1fr)] items-center gap-3 px-4 py-3 text-start hover:bg-paper sm:grid-cols-[4px_34px_minmax(0,1fr)_auto]">
                     <span className={clsx("self-stretch rounded", STRIPE[a.sev])} aria-hidden="true" />
                     <span className={clsx("grid size-[34px] place-items-center rounded-md", a.sev === "block" ? "bg-danger/10 text-danger" : a.sev === "warn" ? "bg-brass-soft text-brass" : "bg-paper text-ink-muted")}>
                       <Icon size={17} aria-hidden="true" />
@@ -286,15 +300,15 @@ export function DeskView({ desk }: { desk: Desk }) {
                 {bars.map((b, i) => {
                   const all = b.done + b.open + b.late || 1;
                   return (
-                    <button key={b.name} type="button" onClick={() => openBar(i)} className="rounded-md px-2 py-1.5 text-start hover:bg-paper">
+                    <button key={b.name} type="button" onClick={() => openBar(i)} className="motion-colors rounded-md px-2 py-1.5 text-start hover:bg-paper">
                       <span className="mb-1 flex justify-between text-sm">
                         <span>{b.name}</span>
                         <span className="font-mono">{Math.round((b.done / all) * 100)}%</span>
                       </span>
-                      <span className="flex h-2 overflow-hidden rounded-full bg-primary-soft" aria-label={`${b.done} منفّذ، ${b.open} قيد التنفيذ، ${b.late} متأخر`}>
-                        <i className="block bg-primary" style={{ width: `${(b.done / all) * 100}%` }} />
-                        <i className="block bg-brass" style={{ width: `${(b.open / all) * 100}%` }} />
-                        <i className="block bg-danger" style={{ width: `${(b.late / all) * 100}%` }} />
+                      <span className="motion-bar flex h-2 overflow-hidden rounded-full bg-primary-soft" aria-label={`${b.done} منفّذ، ${b.open} قيد التنفيذ، ${b.late} متأخر`}>
+                        <i className="block bg-primary transition-[width] duration-(--motion-page) ease-(--ease-out)" style={{ width: `${(b.done / all) * 100}%` }} />
+                        <i className="block bg-brass transition-[width] duration-(--motion-page) ease-(--ease-out)" style={{ width: `${(b.open / all) * 100}%` }} />
+                        <i className="block bg-danger transition-[width] duration-(--motion-page) ease-(--ease-out)" style={{ width: `${(b.late / all) * 100}%` }} />
                       </span>
                     </button>
                   );
@@ -322,7 +336,7 @@ export function DeskView({ desk }: { desk: Desk }) {
           <ul className="divide-y divide-rule">
             {pipeline.map((r) => (
               <li key={r.id}>
-                <button type="button" onClick={() => openMeeting(r.id)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 text-start hover:bg-paper md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]">
+                <button type="button" onClick={() => openMeeting(r.id)} className="motion-colors grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 text-start hover:bg-paper md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]">
                   <span className="min-w-0">
                     <span className="block font-medium">{r.title}</span>
                     <span className="block text-xs text-ink-muted">{r.where}</span>
@@ -330,7 +344,7 @@ export function DeskView({ desk }: { desk: Desk }) {
                   <span className="order-3 col-span-2 md:order-none md:col-span-1">
                     <span className="grid grid-cols-4 gap-1">
                       {STAGES.map((s, i) => (
-                        <span key={s} className={clsx("h-1.5 rounded", i + 1 < r.stage ? "bg-primary" : i + 1 === r.stage ? (r.stuck ? "bg-danger" : "bg-brass") : "bg-rule")} />
+                        <span key={s} className={clsx("motion-colors h-1.5 rounded", i + 1 < r.stage ? "bg-primary" : i + 1 === r.stage ? (r.stuck ? "bg-danger" : "bg-brass") : "bg-rule")} />
                       ))}
                     </span>
                     <span className="mt-1 grid grid-cols-4 gap-1 text-[11px] text-ink-muted">

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { EASE_IN_OUT, EASE_OUT, motion, reducedMotion } from "@/lib/motion";
 
 const running = new WeakMap<HTMLDetailsElement, Animation>();
-const EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)";
 
 /** Height of the element if it were open or closed, measured without a visible flash. */
 function heightWhen(details: HTMLDetailsElement, open: boolean) {
@@ -17,7 +17,7 @@ function heightWhen(details: HTMLDetailsElement, open: boolean) {
 /** Slides a <details> to open or closed; a click mid-way reverses from where it is. */
 export function slide(details: HTMLDetailsElement, open: boolean) {
   details.dataset.opening = open ? "1" : "0";
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if (reducedMotion()) {
     details.open = open;
     return;
   }
@@ -26,8 +26,14 @@ export function slide(details: HTMLDetailsElement, open: boolean) {
   const to = heightWhen(details, open);
   details.open = true; // keep the content visible while it moves
   details.style.overflow = "hidden";
-  const ms = Math.min(380, Math.max(240, Math.abs(to - from) * 0.7));
-  const animation = details.animate({ height: [`${from}px`, `${to}px`] }, { duration: ms, easing: EASE });
+  // Longer folds take a little longer, between the menu and page tokens.
+  const ms = Math.min(motion("page") + 60, Math.max(motion("menu"), Math.abs(to - from) * 0.6));
+  const animation = details.animate({ height: [`${from}px`, `${to}px`] }, { duration: ms, easing: open ? EASE_OUT : EASE_IN_OUT });
+  // The content settles in just after the fold starts opening, as one block (not each child).
+  if (open && from < to)
+    for (const child of details.children)
+      if (child.tagName !== "SUMMARY")
+        child.animate({ opacity: [0, 1], transform: [`translateY(${-motion("shift") * 0.6}px)`, "none"] }, { duration: ms, delay: Math.min(80, ms / 4), easing: EASE_OUT, fill: "backwards" });
   running.set(details, animation);
   const done = () => {
     running.delete(details);
@@ -46,7 +52,7 @@ export function reveal(el: HTMLElement) {
   const own = el instanceof HTMLDetailsElement ? el : el.querySelector<HTMLDetailsElement>(":scope > details, :scope > div > details");
   if (own && !own.open) slide(own, true);
   el.scrollIntoView({ behavior: "smooth", block: "start" });
-  el.animate({ boxShadow: ["0 0 0 0 transparent", "0 0 0 3px var(--brass)", "0 0 0 3px var(--brass)", "0 0 0 0 transparent"] }, { duration: 1800, easing: "ease-out" });
+  el.animate({ boxShadow: ["0 0 0 0 transparent", "0 0 0 3px var(--brass)", "0 0 0 3px var(--brass)", "0 0 0 0 transparent"] }, { duration: 1200, easing: EASE_OUT });
 }
 
 /** Waits for an element to appear (the page may still be loading) and reveals it. */

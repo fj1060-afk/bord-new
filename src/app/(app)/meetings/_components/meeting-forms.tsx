@@ -1,5 +1,6 @@
 "use client";
 
+import { Collapse } from "@/components/ui/collapse";
 import { ActionForm } from "@/components/ui/action-form";
 import { useActionState, useState } from "react";
 import { EnglishField, Field, FormMessage, inputClass, SubmitButton } from "@/components/ui/form";
@@ -83,17 +84,21 @@ export function MeetingDetailsForm({ meeting, bodies, allowRemote = true }: { me
       <Field label="طريقة الانعقاد">
         <Select name="mode" options={allowRemote ? MEETING_MODES : Object.fromEntries(Object.entries(MEETING_MODES).filter(([k]) => k === "in_person" || k === meeting?.mode))} defaultValue={mode} onChange={setMode} />
       </Field>
-      {mode !== "virtual" && (
-        <Field label="المكان">
-          <input name="location" defaultValue={meeting?.location ?? ""} required className={inputClass} />
-          <EnglishField name="location_en" defaultValue={meeting?.location_en} />
-        </Field>
-      )}
-      {mode !== "in_person" && (
-        <Field label="رابط الاجتماع">
-          <input name="virtual_link" type="url" dir="ltr" placeholder="https://" defaultValue={meeting?.virtual_link ?? ""} required className={inputClass} />
-        </Field>
-      )}
+      <Collapse show={mode !== "virtual"}>
+        {mode !== "virtual" && (
+          <Field label="المكان">
+            <input name="location" defaultValue={meeting?.location ?? ""} required className={inputClass} />
+            <EnglishField name="location_en" defaultValue={meeting?.location_en} />
+          </Field>
+        )}
+      </Collapse>
+      <Collapse show={mode !== "in_person"}>
+        {mode !== "in_person" && (
+          <Field label="رابط الاجتماع">
+            <input name="virtual_link" type="url" dir="ltr" placeholder="https://" defaultValue={meeting?.virtual_link ?? ""} required className={inputClass} />
+          </Field>
+        )}
+      </Collapse>
       <div className="flex flex-col gap-3 sm:col-span-2">
         <FormMessage state={state} />
         <SubmitButton pendingLabel="جارٍ الحفظ…" className="w-fit">
@@ -215,18 +220,20 @@ export function ReviewAgendaRequestForm({ requestId, meetings }: { requestId: st
           </label>
         ))}
       </div>
-      {decision === "accepted" && (
-        <select name="meeting_id" required defaultValue="" className={inputClass}>
-          <option value="" disabled>
-            {meetings.length ? "اختر الاجتماع" : "لا توجد اجتماعات قادمة لهذه الجهة"}
-          </option>
-          {meetings.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
+      <Collapse show={decision === "accepted"}>
+        {decision === "accepted" && (
+          <select name="meeting_id" required defaultValue="" className={inputClass}>
+            <option value="" disabled>
+              {meetings.length ? "اختر الاجتماع" : "لا توجد اجتماعات قادمة لهذه الجهة"}
             </option>
-          ))}
-        </select>
-      )}
+            {meetings.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </Collapse>
       <input name="review_note" placeholder={decision === "rejected" ? "سبب الرفض" : "ملاحظة (اختياري)"} required={decision === "rejected"} className={inputClass} />
       <FormMessage state={state} />
       <SubmitButton variant="secondary" pendingLabel="…" className="w-fit">

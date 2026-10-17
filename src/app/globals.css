@@ -56,12 +56,18 @@
   --color-sidebar-muted: var(--sidebar-muted);
   --color-sidebar-active: var(--sidebar-active);
 
+  /* Plain transition-* utilities use the motion tokens too. */
+  --default-transition-duration: var(--motion-fast);
+  --default-transition-timing-function: var(--ease-out);
+
   --font-sans: var(--font-body);
   --font-display: var(--font-naskh);
   --font-mono: var(--font-mono-latin);
 }
 
 html {
+  /* Entering elements travel vertically only; this keeps any sideways overflow from ever scrolling the page. */
+  overflow-x: clip;
   background: var(--paper);
   color: var(--ink);
 }
@@ -76,19 +82,128 @@ body {
   outline-offset: 2px;
 }
 
-/* Motion: every <details> slides open and shut through SmoothDetails (src/components/ui/smooth-details.tsx). */
+/* ── Motion system ─────────────────────────────────────────────────────────
+   Every duration, curve, distance and delay on the site comes from these
+   tokens; CSS reads them directly and src/lib/motion.ts reads them for the
+   few animations run from script (details, drawers, counters). Change them
+   here and the whole site follows. */
+:root {
+  --motion-fast: 150ms;    /* buttons, links, fields, chips */
+  --motion-menu: 220ms;    /* menus, tabs, folds, indicators */
+  --motion-page: 300ms;    /* pages, dialogs, drawers */
+  --motion-stagger: 40ms;  /* between siblings of a group */
+  --motion-stagger-max: 300ms;
+  --motion-shift: 10px;    /* how far an entering element travels */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+/* Phones: shorter travel and page entries. */
+@media (max-width: 640px) {
+  :root { --motion-shift: 6px; --motion-page: 250ms; }
+}
+/* Reduced motion: keep state changes, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-fast: 1ms; --motion-menu: 1ms; --motion-page: 1ms; --motion-stagger: 0ms; --motion-stagger-max: 0ms; --motion-shift: 0px; }
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+}
 
-/* A new page fades in; the loading skeleton waits a moment so quick pages never flash it. */
-@keyframes page-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: none; }
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(var(--motion-shift)); }
 }
-@keyframes appear {
+@keyframes fade-in {
   from { opacity: 0; }
-  to { opacity: 1; }
 }
-.page-in { animation: page-in 180ms ease-out both; }
-.appear-late { animation: appear 200ms ease-out 150ms both; }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(calc(var(--motion-shift) * -0.5)) scale(0.98); }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+}
+@keyframes grow-y {
+  from { transform: scaleY(0); }
+}
+@keyframes draw {
+  from { stroke-dashoffset: var(--draw-length, 1000); }
+}
+@keyframes flash {
+  from { background-color: var(--brass-soft); }
+}
+
+/* Colours, borders and shadows ease on hover, focus and state changes (never `transition: all`). */
+@utility motion-colors {
+  transition-property: color, background-color, border-color, outline-color, box-shadow, fill, stroke, opacity, text-decoration-color;
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--ease-out);
+}
+/* A light press on buttons. */
+@utility motion-press {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--ease-out);
+  &:active:not(:disabled) { transform: scale(0.97); }
+}
+/* Clickable cards rise slightly on hover, only where there is a pointer that hovers. */
+@utility motion-lift {
+  transition-property: border-color, box-shadow, transform, background-color;
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--ease-out);
+  @media (hover: hover) {
+    &:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -14px color-mix(in oklab, var(--ink) 45%, transparent); }
+  }
+  &:active { transform: translateY(0); }
+}
+/* An element entering: a page, a panel, a message. */
+@utility motion-enter {
+  animation: enter-up var(--motion-page) var(--ease-out) both;
+}
+@utility motion-pop {
+  animation: pop-in var(--motion-menu) var(--ease-out) both;
+}
+/* Children of a new group enter one after another, capped so the last is never late. */
+@utility motion-stagger {
+  & > * { animation: enter-up var(--motion-page) var(--ease-out) both; }
+  & > :nth-child(2) { animation-delay: calc(var(--motion-stagger) * 1); }
+  & > :nth-child(3) { animation-delay: calc(var(--motion-stagger) * 2); }
+  & > :nth-child(4) { animation-delay: calc(var(--motion-stagger) * 3); }
+  & > :nth-child(5) { animation-delay: calc(var(--motion-stagger) * 4); }
+  & > :nth-child(6) { animation-delay: calc(var(--motion-stagger) * 5); }
+  & > :nth-child(7) { animation-delay: calc(var(--motion-stagger) * 6); }
+  & > :nth-child(n + 8) { animation-delay: min(calc(var(--motion-stagger) * 7), var(--motion-stagger-max)); }
+}
+/* Bars and meters grow from the start edge on first show, then glide between values. */
+@utility motion-bar {
+  transform-origin: right center;
+  animation: grow-x calc(var(--motion-page) * 2) var(--ease-out) both;
+  transition: width var(--motion-page) var(--ease-out), height var(--motion-page) var(--ease-out);
+  [dir="ltr"] & { transform-origin: left center; }
+}
+/* A row whose state just changed glows once. */
+@utility motion-flash {
+  animation: flash 1200ms var(--ease-out);
+}
+
+/* Charts: the first view draws them in; later value changes glide. */
+@keyframes ring-in {
+  from { stroke-dasharray: 0 1000; }
+}
+.donut-slice { animation: ring-in calc(var(--motion-page) * 3) var(--ease-out) both; transition: stroke-dasharray var(--motion-page) var(--ease-out), stroke-dashoffset var(--motion-page) var(--ease-out), stroke-width var(--motion-fast) var(--ease-out); }
+.chart-line { stroke-dasharray: 1; animation: draw calc(var(--motion-page) * 3) var(--ease-out) both; --draw-length: 1; }
+.chart-fade { animation: fade-in calc(var(--motion-page) * 2) var(--ease-out) var(--motion-page) both; }
+
+/* Every link, button and field eases its colours on hover, focus and state
+   changes; utilities that set their own transition take precedence. */
+@layer base {
+  a, button, summary, select, input, textarea, [role="button"], [role="tab"] {
+    transition-property: color, background-color, border-color, outline-color, box-shadow, opacity, text-decoration-color, fill, stroke;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--ease-out);
+  }
+}
+
+/* A new page enters; the loading skeleton waits a moment so quick pages never flash it. */
+.page-in { animation: enter-up var(--motion-page) var(--ease-out) both; }
+.appear-late { animation: fade-in var(--motion-menu) var(--ease-out) 150ms both; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

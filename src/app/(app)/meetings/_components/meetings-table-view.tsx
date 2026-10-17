@@ -1,11 +1,14 @@
 "use client";
 
+import { Collapse } from "@/components/ui/collapse";
 import { useEffect, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { Building2, CalendarDays, ChevronLeft, ChevronRight, Clock, FileText, FolderOpen, MonitorSmartphone, Plus, ScrollText, Search, Trash2, Users, Video } from "lucide-react";
 import { ConfirmButton } from "@/components/org/confirm-button";
+import { TabBar } from "@/components/ui/tab-bar";
+import { FlipList } from "@/components/ui/flip-list";
 import { buttonClass, inputClass } from "@/components/ui/styles";
 import { MEETING_STATES, PAGE_SIZES, PERIODS, pageWindow, tableHref, type MeetingState, type Period, type TableQuery } from "@/lib/meeting-table";
 import { MEETING_MODES } from "@/lib/meetings";
@@ -38,7 +41,7 @@ const STATE_TONE: Record<MeetingState, string> = {
 const MODE_ICON = { in_person: Building2, virtual: Video, hybrid: MonitorSmartphone } as const;
 
 const chip = "inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs";
-const iconButton = "grid size-8 place-items-center rounded-md border border-rule text-ink-muted transition-colors hover:border-primary hover:text-primary";
+const iconButton = "motion-press grid size-8 place-items-center rounded-md border border-rule text-ink-muted hover:border-primary hover:text-primary";
 
 function StateChip({ state }: { state: MeetingState }) {
   return (
@@ -175,13 +178,13 @@ export function MeetingsTableView({
             </option>
           ))}
         </select>
-        <nav aria-label="الفترة" className="flex rounded-md border border-rule p-0.5 text-sm">
+        <TabBar id="meetings-period" label="الفترة" variant="pill" className="flex rounded-md border border-rule p-0.5 text-sm">
           {(Object.entries(PERIODS) as [Period, string][]).map(([value, label]) => (
-            <Link key={value} href={tableHref(base, query, { period: value })} scroll={false} aria-current={query.period === value ? "page" : undefined} className={clsx("rounded px-3 py-1", query.period === value ? "bg-primary text-on-primary" : "hover:bg-primary-soft")}>
+            <Link key={value} href={tableHref(base, query, { period: value })} scroll={false} aria-current={query.period === value ? "page" : undefined} className={clsx("motion-colors relative z-[1] rounded px-3 py-1", query.period === value ? "text-on-primary" : "hover:bg-primary-soft")}>
               {label}
             </Link>
           ))}
-        </nav>
+        </TabBar>
         {newHref && (
           <Link href={newHref} className={buttonClass()}>
             <Plus size={16} aria-hidden="true" /> اجتماع جديد
@@ -189,26 +192,28 @@ export function MeetingsTableView({
         )}
       </div>
 
-      {canDelete && selected.length > 0 && (
-        <div className="flex items-center gap-3 border-b border-rule bg-brass-soft px-4 py-2 text-sm">
-          <span>
-            تم تحديد <span className="font-mono">{selected.length}</span>
-          </span>
-          <button type="button" onClick={() => setSelected([])} className="text-primary hover:underline">
-            إلغاء التحديد
-          </button>
-          <span className="ms-auto">
-            <ConfirmButton
-              action={async () => {
-                await deleteMeetings(selected);
-                setSelected([]);
-              }}
-              label={`حذف ${selected.length} اجتماع`}
-              confirm={`حذف ${selected.length} اجتماع نهائياً مع كل بنودها ومحاضرها وقراراتها؟ لا يمكن التراجع.`}
-            />
-          </span>
-        </div>
-      )}
+      <Collapse show={canDelete && selected.length > 0}>
+        {canDelete && selected.length > 0 && (
+          <div className="flex items-center gap-3 border-b border-rule bg-brass-soft px-4 py-2 text-sm">
+            <span>
+              تم تحديد <span className="font-mono">{selected.length}</span>
+            </span>
+            <button type="button" onClick={() => setSelected([])} className="text-primary hover:underline">
+              إلغاء التحديد
+            </button>
+            <span className="ms-auto">
+              <ConfirmButton
+                action={async () => {
+                  await deleteMeetings(selected);
+                  setSelected([]);
+                }}
+                label={`حذف ${selected.length} اجتماع`}
+                confirm={`حذف ${selected.length} اجتماع نهائياً مع كل بنودها ومحاضرها وقراراتها؟ لا يمكن التراجع.`}
+              />
+            </span>
+          </div>
+        )}
+      </Collapse>
 
       <div className={clsx("transition-opacity", pending && "opacity-60")}>
         {rows.length === 0 && <p className="p-10 text-center text-sm text-ink-muted">لا توجد اجتماعات تطابق التصفية.</p>}
@@ -232,9 +237,9 @@ export function MeetingsTableView({
                 <th className="px-4 py-3 text-start font-medium">الإجراءات</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rule">
+            <FlipList as="tbody" className="divide-y divide-rule">
               {rows.map((r) => (
-                <tr key={r.id} className={clsx("transition-colors hover:bg-paper", selected.includes(r.id) && "bg-primary-soft/50")}>
+                <tr key={r.id} data-flip-key={r.id} data-flip-state={r.state} className={clsx("motion-colors hover:bg-paper", selected.includes(r.id) && "bg-primary-soft/50")}>
                   {canDelete && (
                     <td className="px-4 py-3">
                       <input type="checkbox" aria-label={`تحديد ${r.title}`} checked={selected.includes(r.id)} onChange={() => toggle(r.id)} className="accent-primary" />
@@ -272,7 +277,7 @@ export function MeetingsTableView({
                   </td>
                 </tr>
               ))}
-            </tbody>
+            </FlipList>
           </table>
         )}
 

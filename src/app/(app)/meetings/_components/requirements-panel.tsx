@@ -53,7 +53,7 @@ export function RequirementsPanel({ meetingId, itemId, rows, targets, dueDefault
           <strong className="min-w-0 flex-1">متطلبات البند</strong>
           {unassigned > 0 && <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[11px] text-danger">{unassigned} بلا جهة</span>}
           <span className="text-xs text-ink-muted">{summary}</span>
-          <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-200 group-open/req:rotate-180" />
+          <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/req:rotate-180" />
         </summary>
         <div className="flex flex-col gap-2 border-t border-rule p-3">
       {drafts.map((r) => (

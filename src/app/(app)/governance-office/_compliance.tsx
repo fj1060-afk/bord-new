@@ -43,7 +43,7 @@ export async function ComplianceTab({ supabase }: { supabase: Supabase }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="motion-stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="نسبة الامتثال" value={pct === null ? "—" : `${pct}%`} note="من القواعد الإلزامية" tone={count("violation") ? "alert" : "default"} />
         <StatTile label="مخالفات" value={count("violation")} tone={count("violation") ? "alert" : "default"} />
         <StatTile label="تنبيهات" value={count("warning")} />

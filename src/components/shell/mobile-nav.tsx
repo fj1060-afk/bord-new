@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { EASE_IN, EASE_OUT, motion, reducedMotion } from "@/lib/motion";
 import { SidebarBrand } from "./sidebar";
 import { SidebarNav, type CommitteeLink } from "./sidebar-nav";
 
@@ -13,9 +14,9 @@ export function MobileNav({ allowed, committees }: { allowed: string[]; committe
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const motion = (reverse: boolean) => {
-      const options: KeyframeAnimationOptions = { duration: reverse ? 200 : 280, easing: reverse ? "cubic-bezier(0.4, 0, 1, 1)" : "cubic-bezier(0.2, 0.8, 0.2, 1)", direction: reverse ? "reverse" : "normal", fill: "both" };
+    const still = reducedMotion();
+    const play = (reverse: boolean) => {
+      const options: KeyframeAnimationOptions = { duration: reverse ? motion("menu") : motion("page"), easing: reverse ? EASE_IN : EASE_OUT, direction: reverse ? "reverse" : "normal", fill: "both" };
       const panel = dialog.animate({ transform: ["translateX(100%)", "translateX(0)"] }, options);
       try {
         dialog.animate({ opacity: [0, 1] }, { ...options, pseudoElement: "::backdrop" });
@@ -28,7 +29,7 @@ export function MobileNav({ allowed, committees }: { allowed: string[]; committe
       dialog.getAnimations().forEach((a) => a.cancel());
       dialog.showModal();
       dialog.focus();
-      if (!still) motion(false);
+      if (!still) play(false);
     }
     if (!open && dialog.open) {
       if (still) dialog.close();
@@ -37,7 +38,7 @@ export function MobileNav({ allowed, committees }: { allowed: string[]; committe
           dialog.close();
           dialog.getAnimations().forEach((a) => a.cancel());
         };
-        motion(true).finished.then(shut, shut);
+        play(true).finished.then(shut, shut);
       }
     }
   }, [open]);

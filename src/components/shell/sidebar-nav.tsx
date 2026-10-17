@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import clsx from "clsx";
@@ -12,15 +12,65 @@ export type CommitteeLink = { id: string; name: string };
 /** A thin bar under the clicked link while its page loads; always rendered, so nothing shifts. */
 function Pending() {
   const { pending } = useLinkStatus();
-  return <span aria-hidden className={clsx("absolute inset-x-3 bottom-0.5 h-0.5 rounded-full bg-brass transition-opacity duration-300", pending ? "animate-pulse opacity-100" : "opacity-0")} />;
+  return <span aria-hidden className={clsx("absolute inset-x-3 bottom-0.5 h-0.5 rounded-full bg-brass transition-opacity duration-(--motion-page)", pending ? "animate-pulse opacity-100" : "opacity-0")} />;
 }
 
 const linkClass = (active: boolean, nested?: boolean) =>
   clsx(
-    "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150",
+    "motion-colors relative flex items-center gap-3 rounded-md px-3 py-2 text-sm",
     nested && "ps-9 py-1.5",
-    active ? "bg-sidebar-active text-white shadow-[inset_-3px_0_0_var(--brass)]" : "text-sidebar-ink hover:bg-white/5",
+    active ? "bg-sidebar-active text-white" : "text-sidebar-ink hover:bg-white/5",
   );
+
+/** The brass bar beside the current link; it slides between links and follows folds as they open and close. */
+function ActiveBar({ navRef, current }: { navRef: React.RefObject<HTMLElement | null>; current?: string }) {
+  const bar = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    const el = bar.current;
+    if (!nav || !el) return;
+    let frame = 0;
+    const place = () => {
+      const link = nav.querySelector<HTMLElement>('a[aria-current="page"]');
+      const rect = link?.getBoundingClientRect();
+      if (!link || !rect || rect.height < 4 || link.closest("[inert]")) {
+        el.style.opacity = "0";
+        return;
+      }
+      const top = rect.top - nav.getBoundingClientRect().top;
+      el.style.opacity = "1";
+      el.style.transform = `translateY(${top + 6}px)`;
+      el.style.height = `${rect.height - 12}px`;
+    };
+    // Follow the layout for a moment while folds open or close around the link.
+    const follow = (ms: number) => {
+      const end = performance.now() + ms;
+      cancelAnimationFrame(frame);
+      const tick = () => {
+        place();
+        if (performance.now() < end) frame = requestAnimationFrame(tick);
+      };
+      tick();
+    };
+    follow(400);
+    const resize = new ResizeObserver(() => follow(300));
+    resize.observe(nav);
+    nav.addEventListener("transitionend", place);
+    return () => {
+      cancelAnimationFrame(frame);
+      resize.disconnect();
+      nav.removeEventListener("transitionend", place);
+    };
+  }, [navRef, current]);
+  return (
+    <span
+      ref={bar}
+      aria-hidden="true"
+      style={{ opacity: 0 }}
+      className="pointer-events-none absolute start-0 top-0 w-[3px] rounded-full bg-brass transition-[transform,height,opacity] duration-(--motion-menu) ease-(--ease-out)"
+    />
+  );
+}
 
 /** Opens when you navigate into it, and the chevron can still close it. */
 function useOpen(inside: boolean) {
@@ -36,14 +86,14 @@ function useOpen(inside: boolean) {
 /** Rows animate between 0fr and 1fr, so the list slides open and shut. */
 function Slide({ shown, children }: { shown: boolean; children: ReactNode }) {
   return (
-    <div className={clsx("grid transition-[grid-template-rows] duration-200 ease-out", shown ? "grid-rows-[1fr]" : "grid-rows-[0fr]")} inert={!shown}>
+    <div className={clsx("grid transition-[grid-template-rows] duration-(--motion-menu) ease-(--ease-out)", shown ? "grid-rows-[1fr]" : "grid-rows-[0fr]")} inert={!shown}>
       <ul className="flex min-h-0 flex-col gap-0.5 overflow-hidden">{children}</ul>
     </div>
   );
 }
 
 function Chevron({ open }: { open: boolean }) {
-  return <ChevronDown size={14} aria-hidden="true" className={clsx("transition-transform duration-200", open ? "" : "rotate-90")} />;
+  return <ChevronDown size={14} aria-hidden="true" className={clsx("transition-transform duration-(--motion-menu) ease-(--ease-out)", open ? "" : "rotate-90")} />;
 }
 
 function Item({ link, active, onNavigate, nested }: { link: SideLink; active: boolean; onNavigate?: (href: string) => void; nested?: boolean }) {
@@ -83,7 +133,7 @@ function Branch({ branch, inside, current, onNavigate }: { branch: SideBranch; i
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-label={`${open ? "إخفاء" : "إظهار"} صفحات ${branch.label}`}
-          className="absolute inset-y-0 end-1 my-auto grid size-7 place-items-center rounded text-sidebar-muted hover:bg-white/10 hover:text-white"
+          className="motion-colors absolute inset-y-0 end-1 my-auto grid size-7 place-items-center rounded text-sidebar-muted hover:bg-white/10 hover:text-white"
         >
           <Chevron open={open} />
         </button>
@@ -106,7 +156,7 @@ function Section({ section, current, onNavigate }: { section: SideSection; curre
   return (
     <div>
       {section.collapsible ? (
-        <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={shown} className="mb-2 flex w-full items-center justify-between px-3 text-xs font-medium text-sidebar-muted hover:text-white">
+        <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={shown} className="motion-colors mb-2 flex w-full items-center justify-between px-3 text-xs font-medium text-sidebar-muted hover:text-white">
           {section.label}
           <Chevron open={shown} />
         </button>
@@ -142,8 +192,10 @@ export function SidebarNav({
   // Highlight the clicked link at once, before its page arrives.
   const [clicked, setClicked] = useState<{ href: string; from: string } | null>(null);
   const current = clicked && clicked.from === pathname ? clicked.href : activeLink(sections, pathname, search);
+  const navRef = useRef<HTMLElement>(null);
   return (
-    <nav aria-label="القائمة الرئيسية" className="flex flex-col gap-6">
+    <nav ref={navRef} aria-label="القائمة الرئيسية" className="relative flex flex-col gap-6">
+      <ActiveBar navRef={navRef} current={current} />
       {sections.map((s) => (
         <Section
           key={s.label}

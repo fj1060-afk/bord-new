@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, type ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 import { buttonClass } from "@/components/ui/form";
 
 /** Runs a server action after the user confirms, e.g. ending a membership. */
@@ -23,6 +24,7 @@ export function ConfirmButton({
     <button
       type="button"
       disabled={pending}
+      aria-busy={pending || undefined}
       onClick={() => {
         if (window.confirm(confirm)) startTransition(() => action());
       }}
@@ -30,7 +32,7 @@ export function ConfirmButton({
       title={icon ? label : undefined}
       className={buttonClass(variant, icon ? "p-1.5" : "px-3 py-1 text-xs")}
     >
-      {icon ?? label}
+      {pending ? <Loader2 size={icon ? 16 : 14} aria-hidden="true" className="animate-spin" /> : icon ?? label}
     </button>
   );
 }

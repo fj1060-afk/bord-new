@@ -54,12 +54,12 @@ export default async function CommitteesPage() {
           لا توجد لجان بعد.
         </p>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="motion-stagger grid gap-3 sm:grid-cols-2">
           {committees.map((c) => {
             const active = c.committee_members.filter((m) => m.status === "active");
             const chair = active.find((m) => m.position === "chair");
             return (
-              <li key={c.id} className="flex items-start gap-2 rounded-lg border border-rule bg-surface p-5 transition-colors hover:border-primary">
+              <li key={c.id} className="motion-lift flex items-start gap-2 rounded-lg border border-rule bg-surface p-5 hover:border-primary">
                 <Link href={`/committees/${c.id}`} className="block min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="font-display text-lg font-bold">{c.name}</h2>

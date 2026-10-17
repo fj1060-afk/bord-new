@@ -56,7 +56,7 @@ export async function WorkTab({ supabase, today }: { supabase: Supabase; today: 
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="motion-stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="طلبات بنود معلّقة" value={rows.agenda.length} />
         <StatTile label="مستندات بانتظار الاعتماد" value={rows.review.length} />
         <StatTile label="محاضر غير معتمدة" value={rows.minutes.length} />

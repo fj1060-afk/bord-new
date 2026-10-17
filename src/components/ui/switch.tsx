@@ -11,8 +11,8 @@ export function SwitchRow({ label, hint, children, ...input }: { label: string; 
         </span>
         <span className="relative mt-0.5 inline-flex shrink-0">
           <input type="checkbox" role="switch" className="peer sr-only" {...input} />
-          <span aria-hidden className="h-6 w-11 rounded-full bg-rule transition-colors peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2 peer-disabled:opacity-50" />
-          <span aria-hidden className="absolute top-0.5 start-0.5 size-5 rounded-full bg-surface shadow transition-transform peer-checked:-translate-x-5" />
+          <span aria-hidden className="h-6 w-11 rounded-full bg-rule transition-colors duration-(--motion-menu) peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2 peer-disabled:opacity-50" />
+          <span aria-hidden className="absolute top-0.5 start-0.5 size-5 rounded-full bg-surface shadow transition-transform duration-(--motion-menu) peer-checked:-translate-x-5 peer-active:scale-x-110" />
         </span>
       </label>
       {children}

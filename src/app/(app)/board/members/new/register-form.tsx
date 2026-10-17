@@ -1,5 +1,6 @@
 "use client";
 
+import { Collapse } from "@/components/ui/collapse";
 import { useActionState, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { ActionForm } from "@/components/ui/action-form";
@@ -135,11 +136,13 @@ export function RegisterMemberForm({ boardId, accountsReady }: { boardId: string
             <option value="representative">ممثل لجهة</option>
           </select>
         </Field>
-        {basis === "representative" && (
-          <Field label="الجهة التي يمثلها">
-            <input name="represents" required className={inputClass} />
-          </Field>
-        )}
+        <Collapse show={basis === "representative"}>
+          {basis === "representative" && (
+            <Field label="الجهة التي يمثلها">
+              <input name="represents" required className={inputClass} />
+            </Field>
+          )}
+        </Collapse>
         <Field label="قرار التعيين" hint={basis === "appointed_vacancy" ? "قرار المجلس بالتعيين في المقعد الشاغر، ويُعرض على أول جمعية لإقراره." : "رقم قرار الجمعية العامة وتاريخه."}>
           <input name="appointment_ref" className={inputClass} />
         </Field>

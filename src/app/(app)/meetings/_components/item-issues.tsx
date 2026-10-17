@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import clsx from "clsx";
+import { Collapse } from "@/components/ui/collapse";
 import { FixLink } from "./fix-link";
 import { OverrideForm } from "./override-form";
 
@@ -35,19 +36,21 @@ export function ItemIssues({ meetingId, href, items }: { meetingId: string; href
                     type="button"
                     aria-expanded={open === key}
                     onClick={() => setOpen(open === key ? null : key)}
-                    className={clsx("rounded-full px-2.5 py-0.5 text-xs transition-shadow", CHIP[issue.level], open === key && "ring-1 ring-current")}
+                    className={clsx("motion-press rounded-full px-2.5 py-0.5 text-xs", CHIP[issue.level], open === key && "ring-1 ring-current")}
                   >
                     {issue.chip}
                   </button>
                 );
               })}
             </div>
-            {picked && (
-              <div className="ps-6 text-xs leading-6 text-ink-muted">
-                <p>{picked.explain}</p>
-                {picked.overridable && <OverrideForm meetingId={meetingId} rule={picked.id} />}
-              </div>
-            )}
+            <Collapse show={!!picked}>
+              {picked && (
+                <div className="ps-6 text-xs leading-6 text-ink-muted">
+                  <p>{picked.explain}</p>
+                  {picked.overridable && <OverrideForm meetingId={meetingId} rule={picked.id} />}
+                </div>
+              )}
+            </Collapse>
           </li>
         );
       })}

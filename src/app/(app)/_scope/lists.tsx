@@ -134,7 +134,7 @@ export async function CommitteeCards({ boardId }: { boardId?: string }) {
   const { data } = await query;
   const now = new Date().toISOString();
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="motion-stagger grid gap-4 md:grid-cols-2">
       {(data ?? []).length === 0 && <p className="text-sm text-ink-muted">لا لجان بعد.</p>}
       {((data ?? []) as unknown as Committee[]).map((c) => {
         const active = c.committee_members.filter((m) => m.status === "active");
@@ -143,7 +143,7 @@ export async function CommitteeCards({ boardId }: { boardId?: string }) {
         const last = live.filter((m) => m.live_status === "ended").sort((a, b) => b.starts_at.localeCompare(a.starts_at))[0];
         const next = live.filter((m) => m.live_status !== "ended" && m.starts_at >= now).sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0];
         return (
-          <Link key={c.id} href={`/committees/${c.id}`} className="flex flex-col gap-1 rounded-lg border border-rule bg-surface p-5 text-sm hover:border-primary">
+          <Link key={c.id} href={`/committees/${c.id}`} className="motion-lift flex flex-col gap-1 rounded-lg border border-rule bg-surface p-5 text-sm hover:border-primary">
             <strong className="font-display text-lg">{c.name}</strong>
             <span className="text-ink-muted">{chair ? `الرئيس: ${chair}` : "لم يُحدد الرئيس"} · {active.length} أعضاء</span>
             <span className="text-ink-muted">

@@ -4,6 +4,8 @@ import type { ComponentProps, ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { useActionFormPending } from "./action-form";
 import clsx from "clsx";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Collapse } from "./collapse";
 import { buttonClass, inputClass, type ButtonVariant } from "./styles";
 
 export { buttonClass, inputClass } from "./styles";
@@ -25,21 +27,27 @@ export function SubmitButton({ children, pendingLabel, variant, className, ...pr
   const native = useFormStatus().pending;
   const pending = useActionFormPending() ?? native;
   return (
-    <button type="submit" disabled={pending} className={buttonClass(variant, className)} {...props}>
+    <button type="submit" disabled={pending} aria-busy={pending || undefined} className={buttonClass(variant, className)} {...props}>
+      {pending && <Loader2 size={15} aria-hidden="true" className="animate-spin" />}
       {pending && pendingLabel ? pendingLabel : children}
     </button>
   );
 }
 
+/** The server's answer to a form: shown only once it has arrived, and it folds in rather than jumping. */
 export function FormMessage({ state }: { state: ActionState }) {
-  if (!state?.message) return null;
   return (
-    <p
-      role={state.ok ? "status" : "alert"}
-      className={clsx("rounded-md px-3 py-2 text-sm", state.ok ? "bg-primary-soft text-primary" : "bg-danger/10 text-danger")}
-    >
-      {state.message}
-    </p>
+    <Collapse show={!!state?.message}>
+      {state?.message && (
+        <p
+          role={state.ok ? "status" : "alert"}
+          className={clsx("flex items-start gap-2 rounded-md px-3 py-2 text-sm", state.ok ? "bg-primary-soft text-primary" : "bg-danger/10 text-danger")}
+        >
+          {state.ok ? <CheckCircle2 size={16} aria-hidden="true" className="mt-0.5 shrink-0" /> : <AlertCircle size={16} aria-hidden="true" className="mt-0.5 shrink-0" />}
+          <span>{state.message}</span>
+        </p>
+      )}
+    </Collapse>
   );
 }
 

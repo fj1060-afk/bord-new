@@ -66,16 +66,16 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
           const reachable = s.n <= current;
           const body = (
             <>
-              <span className={clsx("grid size-7 shrink-0 place-items-center rounded-full border-2 text-xs font-bold", complete ? "border-primary bg-primary text-on-primary" : s.n === view ? "border-brass text-brass" : "border-rule text-ink-muted")}>
+              <span className={clsx("motion-colors grid size-7 shrink-0 place-items-center rounded-full border-2 text-xs font-bold", complete ? "border-primary bg-primary text-on-primary" : s.n === view ? "border-brass text-brass" : "border-rule text-ink-muted")}>
                 {complete ? <CheckIcon size={14} aria-hidden="true" /> : s.n}
               </span>
               <span className={clsx("text-sm", s.n === view ? "font-bold" : "text-ink-muted")}>{s.title}</span>
             </>
           );
           return (
-            <li key={s.n} className={clsx("flex-1 border-b-2", s.n === view ? "border-brass" : "border-transparent")}>
+            <li key={s.n} className={clsx("motion-colors flex-1 border-b-2", s.n === view ? "border-brass" : "border-transparent")}>
               {reachable ? (
-                <Link href={stageHref(s.n)} aria-current={s.n === view ? "step" : undefined} className="flex items-center justify-center gap-2 px-2 py-3 hover:bg-paper">
+                <Link href={stageHref(s.n)} aria-current={s.n === view ? "step" : undefined} className="motion-colors flex items-center justify-center gap-2 px-2 py-3 hover:bg-paper">
                   {body}
                 </Link>
               ) : (
@@ -88,6 +88,8 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
         })}
       </ol>
 
+      {/* The viewed stage's checks enter afresh when the stage changes. */}
+      <div key={view} className="page-in">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3 text-sm">
         <strong className="min-w-0 flex-1">{done ? (view === 4 ? "اكتملت رحلة الاجتماع." : "المرحلة مكتملة، جاهز للانتقال.") : `لا يمكن الانتقال بعد: ${blockersText(blockers)}`}</strong>
         <span className="flex gap-1.5">
@@ -110,15 +112,15 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
                       {c.ref && <span className="ms-2 text-xs font-normal text-ink-muted">{c.ref}</span>}
                     </span>
                     {c.fix?.href ? (
-                      <Link href={c.fix.href} className="shrink-0 rounded-md border border-rule px-3 py-1 text-xs hover:border-primary">
+                      <Link href={c.fix.href} className="motion-press shrink-0 rounded-md border border-rule px-3 py-1 text-xs hover:border-primary">
                         {c.fix.label}
                       </Link>
                     ) : (
-                      <FixLink href={stageHref(view, c.tab)} anchor={c.fix?.anchor} className="shrink-0 rounded-md border border-rule px-3 py-1 text-xs hover:border-primary">
+                      <FixLink href={stageHref(view, c.tab)} anchor={c.fix?.anchor} className="motion-press shrink-0 rounded-md border border-rule px-3 py-1 text-xs hover:border-primary">
                         {c.fix?.label ?? "أكمِل"}
                       </FixLink>
                     )}
-                    <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-200 group-open/row:rotate-180" />
+                    <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-ink-muted transition-transform duration-(--motion-menu) group-open/row:rotate-180" />
                   </summary>
                   <div className="flex flex-col gap-1 pb-3 pe-5 ps-10 text-xs leading-6 text-ink-muted">
                     {c.detail && <p>{c.detail}</p>}
@@ -168,6 +170,8 @@ export function JourneyBar({ meetingId, checks, current, view }: { meetingId: st
           </ul>
         </details>
       )}
+
+      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule px-5 py-3">
         {view > 1 ? (

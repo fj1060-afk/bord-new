@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TabBar } from "@/components/ui/tab-bar";
 import { notFound } from "next/navigation";
 import clsx from "clsx";
 import { ConfirmButton } from "@/components/org/confirm-button";
@@ -126,169 +127,172 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
 
       {checks && <JourneyBar meetingId={meetingId} checks={checks} current={current} view={view} />}
 
-      <nav className="mb-6 flex gap-1 overflow-x-auto border-b border-rule text-sm" aria-label="أقسام الاجتماع">
+      <TabBar id="meeting-tabs" label="أقسام الاجتماع" className="mb-6 flex gap-1 overflow-x-auto border-b border-rule text-sm">
         {visible.map((key) => [key, TABS[key]] as const).map(([key, label]) => (
           <Link
             key={key}
             href={`/meetings/${meetingId}?${checks ? `stage=${view}&` : ""}tab=${key}`}
             aria-current={tab === key ? "page" : undefined}
-            className={clsx("whitespace-nowrap border-b-2 px-4 py-2.5", tab === key ? "border-brass font-medium text-ink" : "border-transparent text-ink-muted hover:text-ink")}
+            className={clsx("motion-colors whitespace-nowrap px-4 py-2.5", tab === key ? "font-medium text-ink" : "text-ink-muted hover:text-ink")}
           >
             {label}
           </Link>
         ))}
-      </nav>
+      </TabBar>
+      {/* Each tab's content enters on its own when the tab changes. */}
+      <div key={tab} className="page-in">
 
-      {tab === "overview" && (
-        <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-          <div className="flex flex-col gap-6">
-            {mine && status === "scheduled" && <RsvpForm meetingId={meetingId} current={mine.rsvp} />}
-            <dl className="grid gap-px overflow-hidden rounded-lg border border-rule bg-rule sm:grid-cols-2">
-              {[
-                ["طريقة الانعقاد", MEETING_MODES[meeting.mode as keyof typeof MEETING_MODES]],
-                ["المكان", meeting.location ?? "—"],
-                ["بنود الأجندة", `${agenda.length} بنود · ${totalMinutes(agenda)} دقيقة`],
-                ["المدعوون", `${inviteeRows.length} · سيحضر ${rsvp.accepted} · معتذر ${rsvp.declined} · لم يرد ${rsvp.pending}`],
-                ["حزمة المجلس", meeting.pack_published_at ? `منشورة ${formatDateTime(new Date(meeting.pack_published_at))}` : "غير منشورة"],
-                ["المستندات", `${(documents ?? []).length}`],
-              ].map(([label, value]) => (
-                <div key={label} className="bg-surface p-4">
-                  <dt className="text-xs text-ink-muted">{label}</dt>
-                  <dd className="mt-1 text-sm">{value}</dd>
-                </div>
-              ))}
-              {meeting.virtual_link && (
-                <div className="bg-surface p-4 sm:col-span-2">
-                  <dt className="text-xs text-ink-muted">رابط الاجتماع</dt>
-                  <dd className="mt-1 text-sm">
-                    <a href={meeting.virtual_link} target="_blank" rel="noreferrer" dir="ltr" className="text-primary hover:underline">
-                      {meeting.virtual_link}
-                    </a>
-                  </dd>
-                </div>
+        {tab === "overview" && (
+          <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+            <div className="flex flex-col gap-6">
+              {mine && status === "scheduled" && <RsvpForm meetingId={meetingId} current={mine.rsvp} />}
+              <dl className="grid gap-px overflow-hidden rounded-lg border border-rule bg-rule sm:grid-cols-2">
+                {[
+                  ["طريقة الانعقاد", MEETING_MODES[meeting.mode as keyof typeof MEETING_MODES]],
+                  ["المكان", meeting.location ?? "—"],
+                  ["بنود الأجندة", `${agenda.length} بنود · ${totalMinutes(agenda)} دقيقة`],
+                  ["المدعوون", `${inviteeRows.length} · سيحضر ${rsvp.accepted} · معتذر ${rsvp.declined} · لم يرد ${rsvp.pending}`],
+                  ["حزمة المجلس", meeting.pack_published_at ? `منشورة ${formatDateTime(new Date(meeting.pack_published_at))}` : "غير منشورة"],
+                  ["المستندات", `${(documents ?? []).length}`],
+                ].map(([label, value]) => (
+                  <div key={label} className="bg-surface p-4">
+                    <dt className="text-xs text-ink-muted">{label}</dt>
+                    <dd className="mt-1 text-sm">{value}</dd>
+                  </div>
+                ))}
+                {meeting.virtual_link && (
+                  <div className="bg-surface p-4 sm:col-span-2">
+                    <dt className="text-xs text-ink-muted">رابط الاجتماع</dt>
+                    <dd className="mt-1 text-sm">
+                      <a href={meeting.virtual_link} target="_blank" rel="noreferrer" dir="ltr" className="text-primary hover:underline">
+                        {meeting.virtual_link}
+                      </a>
+                    </dd>
+                  </div>
+                )}
+              </dl>
+              {editable && (
+                <details id="meeting-details" className="scroll-mt-24 rounded-lg border border-rule bg-surface">
+                  <summary className="cursor-pointer px-5 py-4 text-sm font-medium">تعديل بيانات الاجتماع</summary>
+                  <div className="border-t border-rule p-5">
+                    <MeetingDetailsForm meeting={meeting} allowRemote={services.remote_meetings} />
+                  </div>
+                </details>
               )}
-            </dl>
-            {editable && (
-              <details id="meeting-details" className="scroll-mt-24 rounded-lg border border-rule bg-surface">
-                <summary className="cursor-pointer px-5 py-4 text-sm font-medium">تعديل بيانات الاجتماع</summary>
-                <div className="border-t border-rule p-5">
-                  <MeetingDetailsForm meeting={meeting} allowRemote={services.remote_meetings} />
-                </div>
-              </details>
-            )}
-            <PrintDocs meetingId={meetingId} hasMinutes={!!minutesRow} />
-          </div>
+              <PrintDocs meetingId={meetingId} hasMinutes={!!minutesRow} />
+            </div>
 
-          {organizer && (
-            <aside className="flex flex-col gap-3 rounded-lg border border-rule bg-surface p-5 text-sm">
-              <h2 className="font-display text-lg font-bold">الإجراءات</h2>
-              {status === "draft" && (
-                <>
-                  <p className="text-ink-muted">المسودة لا يراها إلا المنظمون. اعتمد الموعد لتظهر الدعوة للأعضاء ويردّوا عليها.</p>
-                  {checks && !stageDone(checks, 1) ? (
-                    <p className="rounded-md bg-brass-soft px-3 py-2 text-xs text-brass">أكمل شروط مرحلة التحضير أولاً.</p>
-                  ) : <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "scheduled")} label="اعتماد الموعد وإرسال الدعوة" variant="secondary" confirm="اعتماد الموعد وإظهار الدعوة للمدعوين؟" />}
-                </>
-              )}
-              {status === "scheduled" && (
-                <>
-                  <ConfirmButton
-                    action={setPackPublished.bind(null, meetingId, !meeting.pack_published_at)}
-                    label={meeting.pack_published_at ? "سحب حزمة المجلس" : "نشر حزمة المجلس للمدعوين"}
-                    variant="secondary"
-                    confirm={meeting.pack_published_at ? "إخفاء المستندات عن المدعوين؟" : "إتاحة مستندات الاجتماع لكل المدعوين؟"}
+            {organizer && (
+              <aside className="flex flex-col gap-3 rounded-lg border border-rule bg-surface p-5 text-sm">
+                <h2 className="font-display text-lg font-bold">الإجراءات</h2>
+                {status === "draft" && (
+                  <>
+                    <p className="text-ink-muted">المسودة لا يراها إلا المنظمون. اعتمد الموعد لتظهر الدعوة للأعضاء ويردّوا عليها.</p>
+                    {checks && !stageDone(checks, 1) ? (
+                      <p className="rounded-md bg-brass-soft px-3 py-2 text-xs text-brass">أكمل شروط مرحلة التحضير أولاً.</p>
+                    ) : <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "scheduled")} label="اعتماد الموعد وإرسال الدعوة" variant="secondary" confirm="اعتماد الموعد وإظهار الدعوة للمدعوين؟" />}
+                  </>
+                )}
+                {status === "scheduled" && (
+                  <>
+                    <ConfirmButton
+                      action={setPackPublished.bind(null, meetingId, !meeting.pack_published_at)}
+                      label={meeting.pack_published_at ? "سحب حزمة المجلس" : "نشر حزمة المجلس للمدعوين"}
+                      variant="secondary"
+                      confirm={meeting.pack_published_at ? "إخفاء المستندات عن المدعوين؟" : "إتاحة مستندات الاجتماع لكل المدعوين؟"}
+                    />
+                    <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "draft")} label="إرجاع إلى مسودة" variant="secondary" confirm="إرجاع الاجتماع إلى مسودة؟ ستختفي الدعوة عن المدعوين." />
+                  </>
+                )}
+                {status !== "cancelled" && can(viewer.permissions, "/meetings", LEVELS.manage) && (
+                  <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "cancelled")} label="إلغاء الاجتماع" confirm="إلغاء الاجتماع؟ يبقى سجله محفوظاً." />
+                )}
+                {mail && status !== "cancelled" && (
+                  <OutlookPanel
+                    meetingId={meetingId}
+                    meeting={mail.meeting}
+                    minutes={mail.minutes}
+                    invitees={mail.invitees}
+                    items={mail.items}
+                    deadline={packDeadline(meeting.starts_at, mailProfile?.invite_days ?? 5)}
+                    today={riyadhToday()}
+                    packEmailedAt={meeting.pack_emailed_at}
                   />
-                  <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "draft")} label="إرجاع إلى مسودة" variant="secondary" confirm="إرجاع الاجتماع إلى مسودة؟ ستختفي الدعوة عن المدعوين." />
-                </>
-              )}
-              {status !== "cancelled" && can(viewer.permissions, "/meetings", LEVELS.manage) && (
-                <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "cancelled")} label="إلغاء الاجتماع" confirm="إلغاء الاجتماع؟ يبقى سجله محفوظاً." />
-              )}
-              {mail && status !== "cancelled" && (
-                <OutlookPanel
-                  meetingId={meetingId}
-                  meeting={mail.meeting}
-                  minutes={mail.minutes}
-                  invitees={mail.invitees}
-                  items={mail.items}
-                  deadline={packDeadline(meeting.starts_at, mailProfile?.invite_days ?? 5)}
-                  today={riyadhToday()}
-                  packEmailedAt={meeting.pack_emailed_at}
-                />
-              )}
-            </aside>
-          )}
-        </div>
-      )}
+                )}
+              </aside>
+            )}
+          </div>
+        )}
 
-      {tab === "agenda" && organizer && (
-        <div className="mb-6">
-          <DocIntroForm meetingId={meetingId} doc="agenda" intro={meeting.agenda_intro} introEn={meeting.agenda_intro_en} />
-        </div>
-      )}
-      {tab === "agenda" && packBlocked && (
-        <p className="mb-4 rounded-lg border border-brass bg-brass-soft p-4 text-sm">
-          تُفتح مستندات الحزمة بعد تقديم إفصاحك السنوي عن تعارض المصالح لهذا العام.{" "}
-          {viewer.personId && (
-            <Link href={`/people/${viewer.personId}`} className="font-medium text-primary hover:underline">
-              تقديم الإفصاح
-            </Link>
-          )}
-        </p>
-      )}
-      {tab === "agenda" && (
-        <AgendaTab
-          meetingId={meetingId}
-          items={agenda}
-          documents={documents ?? []}
-          docRequests={(docRequests ?? []) as never}
-          targets={[
-            ...(departments ?? []).map((d) => ({ value: `department:${d.id}`, label: d.name, group: "department" as const })),
-            ...((users ?? []) as { user_id: string; full_name: string; department_name: string | null }[]).map((u) => ({ value: `user:${u.user_id}`, label: u.full_name, group: "user" as const, dept: u.department_name ?? undefined })),
-          ]}
-          viewerId={viewer.id}
-          dueDefault={defaultDue(meeting.starts_at, profileDays ?? 5, riyadhToday())}
-          editable={editable}
-          packPublished={Boolean(meeting.pack_published_at)}
-          myDepartmentIds={(delegations ?? []).map((d) => d.department_id)}
-          library={libraryTemplates(library ?? [])}
-          requirements={organizer ? withObsolete(requirementRows ?? [], agenda, libraryTemplates(library ?? []), wordings) : undefined}
-          requirementsSentAt={meeting.requirements_sent_at}
-          requestMails={mail ? mail.recipients.map((r) => ({ name: r.name, to: r.to, ...requestsMail(mail.meeting, r.name, r.requests, mail.tasksUrl) })) : undefined}
-          body={wordings}
-          review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1, powers, affiliations, company: profile?.name ?? "", committeeKind: meeting.board_id ? undefined : ((meeting.committee as { kind?: string } | null)?.kind ?? "other"), meetingDay: new Date(Date.parse(meeting.starts_at) + 3 * 3600000).toISOString().slice(0, 10) } : undefined}
-        />
-      )}
-      {tab === "agenda" && (
-        <InfoRequests meetingId={meetingId} items={agenda} organizer={organizer} invitee={Boolean(meeting.pack_published_at) && inviteeRows.some((i) => i.person_id === viewer.personId)} />
-      )}
-
-      {tab === "invitees" && <InviteesTab meetingId={meetingId} invitees={inviteeRows} people={people} editable={editable} />}
-
-      {tab === "minutes" && <MinutesTab meeting={meeting} items={agenda} viewerId={viewer.id} organizer={organizer} />}
-
-      {tab === "live" && organizer && (
-        <div className="mb-6">
-          <DocIntroForm meetingId={meetingId} doc="attendance" intro={meeting.attendance_intro} introEn={meeting.attendance_intro_en} />
-        </div>
-      )}
-      {tab === "live" &&
-        (status === "scheduled" ? (
-          <LiveTab
-            canRun={organizer}
-            data={{
-              meeting,
-              invitees: inviteeRows,
-              items: agenda as unknown as LiveData["items"],
-              ...(await loadLive(supabase, meetingId, !!meeting.board_id)),
-              remoteAllowed: services.remote_meetings,
-            }}
-          />
-        ) : (
-          <p className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">
-            يُعقد الاجتماع بعد اعتماد موعده.
+        {tab === "agenda" && organizer && (
+          <div className="mb-6">
+            <DocIntroForm meetingId={meetingId} doc="agenda" intro={meeting.agenda_intro} introEn={meeting.agenda_intro_en} />
+          </div>
+        )}
+        {tab === "agenda" && packBlocked && (
+          <p className="mb-4 rounded-lg border border-brass bg-brass-soft p-4 text-sm">
+            تُفتح مستندات الحزمة بعد تقديم إفصاحك السنوي عن تعارض المصالح لهذا العام.{" "}
+            {viewer.personId && (
+              <Link href={`/people/${viewer.personId}`} className="font-medium text-primary hover:underline">
+                تقديم الإفصاح
+              </Link>
+            )}
           </p>
-        ))}
+        )}
+        {tab === "agenda" && (
+          <AgendaTab
+            meetingId={meetingId}
+            items={agenda}
+            documents={documents ?? []}
+            docRequests={(docRequests ?? []) as never}
+            targets={[
+              ...(departments ?? []).map((d) => ({ value: `department:${d.id}`, label: d.name, group: "department" as const })),
+              ...((users ?? []) as { user_id: string; full_name: string; department_name: string | null }[]).map((u) => ({ value: `user:${u.user_id}`, label: u.full_name, group: "user" as const, dept: u.department_name ?? undefined })),
+            ]}
+            viewerId={viewer.id}
+            dueDefault={defaultDue(meeting.starts_at, profileDays ?? 5, riyadhToday())}
+            editable={editable}
+            packPublished={Boolean(meeting.pack_published_at)}
+            myDepartmentIds={(delegations ?? []).map((d) => d.department_id)}
+            library={libraryTemplates(library ?? [])}
+            requirements={organizer ? withObsolete(requirementRows ?? [], agenda, libraryTemplates(library ?? []), wordings) : undefined}
+            requirementsSentAt={meeting.requirements_sent_at}
+            requestMails={mail ? mail.recipients.map((r) => ({ name: r.name, to: r.to, ...requestsMail(mail.meeting, r.name, r.requests, mail.tasksUrl) })) : undefined}
+            body={wordings}
+            review={organizer ? { disclosures, listed: profile?.company_type === "listed_jsc", year: currentYear() - 1, powers, affiliations, company: profile?.name ?? "", committeeKind: meeting.board_id ? undefined : ((meeting.committee as { kind?: string } | null)?.kind ?? "other"), meetingDay: new Date(Date.parse(meeting.starts_at) + 3 * 3600000).toISOString().slice(0, 10) } : undefined}
+          />
+        )}
+        {tab === "agenda" && (
+          <InfoRequests meetingId={meetingId} items={agenda} organizer={organizer} invitee={Boolean(meeting.pack_published_at) && inviteeRows.some((i) => i.person_id === viewer.personId)} />
+        )}
+
+        {tab === "invitees" && <InviteesTab meetingId={meetingId} invitees={inviteeRows} people={people} editable={editable} />}
+
+        {tab === "minutes" && <MinutesTab meeting={meeting} items={agenda} viewerId={viewer.id} organizer={organizer} />}
+
+        {tab === "live" && organizer && (
+          <div className="mb-6">
+            <DocIntroForm meetingId={meetingId} doc="attendance" intro={meeting.attendance_intro} introEn={meeting.attendance_intro_en} />
+          </div>
+        )}
+        {tab === "live" &&
+          (status === "scheduled" ? (
+            <LiveTab
+              canRun={organizer}
+              data={{
+                meeting,
+                invitees: inviteeRows,
+                items: agenda as unknown as LiveData["items"],
+                ...(await loadLive(supabase, meetingId, !!meeting.board_id)),
+                remoteAllowed: services.remote_meetings,
+              }}
+            />
+          ) : (
+            <p className="rounded-lg border border-dashed border-rule bg-surface p-8 text-center text-sm text-ink-muted">
+              يُعقد الاجتماع بعد اعتماد موعده.
+            </p>
+          ))}
+      </div>
     </>
   );
 }
