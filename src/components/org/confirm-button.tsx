@@ -11,6 +11,7 @@ export function ConfirmButton({
   confirm,
   variant = "danger",
   icon,
+  className,
 }: {
   action: () => Promise<void>;
   label: string;
@@ -18,6 +19,8 @@ export function ConfirmButton({
   variant?: "danger" | "secondary";
   /** Shown instead of the label, which then names the button for screen readers. */
   icon?: ReactNode;
+  /** Replaces the default sizing, e.g. a full-width button showing an icon with its label. */
+  className?: string;
 }) {
   const [pending, startTransition] = useTransition();
   return (
@@ -28,9 +31,9 @@ export function ConfirmButton({
       onClick={() => {
         if (window.confirm(confirm)) startTransition(() => action());
       }}
-      aria-label={icon ? label : undefined}
-      title={icon ? label : undefined}
-      className={buttonClass(variant, icon ? "p-1.5" : "px-3 py-1 text-xs")}
+      aria-label={icon && !className ? label : undefined}
+      title={icon && !className ? label : undefined}
+      className={buttonClass(variant, className ?? (icon ? "p-1.5" : "px-3 py-1 text-xs"))}
     >
       {pending ? <Loader2 size={icon ? 16 : 14} aria-hidden="true" className="animate-spin" /> : icon ?? label}
     </button>

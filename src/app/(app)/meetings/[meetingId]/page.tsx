@@ -4,9 +4,9 @@ import { TabBar } from "@/components/ui/tab-bar";
 import { notFound } from "next/navigation";
 import clsx from "clsx";
 import { ConfirmButton } from "@/components/org/confirm-button";
-import { PageHeader } from "@/components/ui/page-header";
+import { CalendarCheck, Files, FileText, Layers, MapPin, Settings, Trash2, TriangleAlert, Undo2, Users, UsersRound } from "lucide-react";
 import { requirePage } from "@/lib/auth";
-import { formatDateTime } from "@/lib/format";
+import { dateParts, formatDateTime } from "@/lib/format";
 import { MEETING_MODES, MEETING_STATUS, MEETING_TYPES, meetingReference, rsvpSummary, totalMinutes } from "@/lib/meetings";
 import { can, LEVELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -24,7 +24,9 @@ import { defaultDue } from "@/lib/requirements";
 import { packDeadline, requestsMail } from "@/lib/meeting-mail";
 import { meetingMail } from "@/lib/meeting-mail-server";
 import { loadPowers } from "@/lib/authority-server";
-import { JourneyBar } from "../_components/journey-bar";
+import { JourneyBar, StageNav } from "../_components/journey-bar";
+import { MeetingHeader } from "../_components/meeting-header";
+import { Card, MeetingDetailsCard } from "../_components/overview-cards";
 import { itemIssues } from "../_components/item-issue-data";
 import { loadJourney } from "../_actions/journey-data";
 import { currentStage, stageDone, STAGES } from "@/lib/journey";
@@ -115,26 +117,26 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
 
   return (
     <>
-      <PageHeader
+      <MeetingHeader
         section={`${body?.name ?? ""} · اجتماع ${meetingReference(meeting.number, meeting.starts_at)}`}
         title={meeting.title}
-        description={`${formatDateTime(new Date(meeting.starts_at))} · ${meeting.duration_minutes} دقيقة · ${MEETING_TYPES[meeting.meeting_type as keyof typeof MEETING_TYPES]}`}
-        actions={
-          <span className={clsx("rounded-full px-3 py-1 text-sm", status === "scheduled" ? "bg-primary-soft text-primary" : status === "draft" ? "bg-brass-soft text-brass" : "border border-rule text-ink-muted")}>
-            {MEETING_STATUS[status]}
-          </span>
-        }
+        when={dateParts(new Date(meeting.starts_at)).long}
+        time={dateParts(new Date(meeting.starts_at)).time}
+        minutes={meeting.duration_minutes}
+        type={MEETING_TYPES[meeting.meeting_type as keyof typeof MEETING_TYPES]}
+        status={status}
+        statusLabel={MEETING_STATUS[status]}
       />
 
       {checks && <JourneyBar meetingId={meetingId} checks={checks} current={current} view={view} />}
 
-      <TabBar id="meeting-tabs" label="أقسام الاجتماع" className="mb-6 flex gap-1 overflow-x-auto border-b border-rule text-sm">
+      <TabBar id="meeting-tabs" label="أقسام الاجتماع" className="mb-6 flex overflow-x-auto border-b border-rule text-sm">
         {visible.map((key) => [key, TABS[key]] as const).map(([key, label]) => (
           <Link
             key={key}
             href={`/meetings/${meetingId}?${checks ? `stage=${view}&` : ""}tab=${key}`}
             aria-current={tab === key ? "page" : undefined}
-            className={clsx("motion-colors whitespace-nowrap px-4 py-2.5", tab === key ? "font-medium text-ink" : "text-ink-muted hover:text-ink")}
+            className={clsx("motion-colors flex-1 whitespace-nowrap px-4 py-3 text-center sm:flex-none", tab === key ? "font-bold text-brass" : "text-ink-muted hover:text-ink")}
           >
             {label}
           </Link>
@@ -144,70 +146,56 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
       <div key={tab} className="page-in">
 
         {tab === "overview" && (
-          <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+          <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
             <div className="flex flex-col gap-6">
               {mine && status === "scheduled" && <RsvpForm meetingId={meetingId} current={mine.rsvp} />}
-              <dl className="grid gap-px overflow-hidden rounded-lg border border-rule bg-rule sm:grid-cols-2">
-                {[
-                  ["طريقة الانعقاد", MEETING_MODES[meeting.mode as keyof typeof MEETING_MODES]],
-                  ["المكان", meeting.location ?? "—"],
-                  ["بنود الأجندة", `${agenda.length} بنود · ${totalMinutes(agenda)} دقيقة`],
-                  ["المدعوون", `${inviteeRows.length} · سيحضر ${rsvp.accepted} · معتذر ${rsvp.declined} · لم يرد ${rsvp.pending}`],
-                  ["حزمة المجلس", meeting.pack_published_at ? `منشورة ${formatDateTime(new Date(meeting.pack_published_at))}` : "غير منشورة"],
-                  ["المستندات", `${(documents ?? []).length}`],
-                ].map(([label, value]) => (
-                  <div key={label} className="bg-surface p-4">
-                    <dt className="text-xs text-ink-muted">{label}</dt>
-                    <dd className="mt-1 text-sm">{value}</dd>
-                  </div>
-                ))}
-                {meeting.virtual_link && (
-                  <div className="bg-surface p-4 sm:col-span-2">
-                    <dt className="text-xs text-ink-muted">رابط الاجتماع</dt>
-                    <dd className="mt-1 text-sm">
-                      <a href={meeting.virtual_link} target="_blank" rel="noreferrer" dir="ltr" className="text-primary hover:underline">
-                        {meeting.virtual_link}
-                      </a>
-                    </dd>
-                  </div>
-                )}
-              </dl>
-              {editable && (
-                <details id="meeting-details" className="scroll-mt-24 rounded-lg border border-rule bg-surface">
-                  <summary className="cursor-pointer px-5 py-4 text-sm font-medium">تعديل بيانات الاجتماع</summary>
-                  <div className="border-t border-rule p-5">
-                    <MeetingDetailsForm meeting={meeting} allowRemote={services.remote_meetings} />
-                  </div>
-                </details>
-              )}
+              <MeetingDetailsCard
+                tiles={[
+                  { icon: Users, label: "طريقة الانعقاد", value: MEETING_MODES[meeting.mode as keyof typeof MEETING_MODES] },
+                  { icon: MapPin, label: "المكان", value: meeting.location ?? "—" },
+                  { icon: FileText, label: "بنود الأجندة", value: `${agenda.length} بنود · ${totalMinutes(agenda)} دقيقة` },
+                  { icon: UsersRound, label: "المدعوون", value: `${rsvp.accepted} سيحضر · ${rsvp.declined} معتذر · ${rsvp.pending} لم يرد` },
+                  { icon: Layers, label: "حزمة المجلس", value: meeting.pack_published_at ? `منشورة ${formatDateTime(new Date(meeting.pack_published_at))}` : "غير منشورة" },
+                  { icon: Files, label: "المستندات", value: `${(documents ?? []).length}` },
+                ]}
+                link={meeting.virtual_link}
+                editForm={editable ? <MeetingDetailsForm meeting={meeting} allowRemote={services.remote_meetings} /> : undefined}
+              />
               <PrintDocs meetingId={meetingId} hasMinutes={!!minutesRow} />
             </div>
 
             {organizer && (
-              <aside className="flex flex-col gap-3 rounded-lg border border-rule bg-surface p-5 text-sm">
-                <h2 className="font-display text-lg font-bold">الإجراءات</h2>
-                {status === "draft" && (
-                  <>
-                    <p className="text-ink-muted">المسودة لا يراها إلا المنظمون. اعتمد الموعد لتظهر الدعوة للأعضاء ويردّوا عليها.</p>
-                    {checks && !stageDone(checks, 1) ? (
-                      <p className="rounded-md bg-brass-soft px-3 py-2 text-xs text-brass">أكمل شروط مرحلة التحضير أولاً.</p>
-                    ) : <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "scheduled")} label="اعتماد الموعد وإرسال الدعوة" variant="secondary" confirm="اعتماد الموعد وإظهار الدعوة للمدعوين؟" />}
-                  </>
-                )}
-                {status === "scheduled" && (
-                  <>
-                    <ConfirmButton
-                      action={setPackPublished.bind(null, meetingId, !meeting.pack_published_at)}
-                      label={meeting.pack_published_at ? "سحب حزمة المجلس" : "نشر حزمة المجلس للمدعوين"}
-                      variant="secondary"
-                      confirm={meeting.pack_published_at ? "إخفاء المستندات عن المدعوين؟" : "إتاحة مستندات الاجتماع لكل المدعوين؟"}
-                    />
-                    <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "draft")} label="إرجاع إلى مسودة" variant="secondary" confirm="إرجاع الاجتماع إلى مسودة؟ ستختفي الدعوة عن المدعوين." />
-                  </>
-                )}
-                {status !== "cancelled" && can(viewer.permissions, "/meetings", LEVELS.manage) && (
-                  <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "cancelled")} label="إلغاء الاجتماع" confirm="إلغاء الاجتماع؟ يبقى سجله محفوظاً." />
-                )}
+              <aside className="flex flex-col gap-6">
+                <Card title="الإجراءات" icon={Settings}>
+                  {status === "draft" && (
+                    <>
+                      <p className="text-sm text-ink-muted">المسودة يراها المنظمون فقط. اعتمد الموعد لإظهار الدعوة للأعضاء.</p>
+                      {checks && !stageDone(checks, 1) ? (
+                        <p className="inline-flex items-center gap-2 rounded-lg border border-brass/50 bg-brass-soft px-3 py-2.5 text-sm text-brass">
+                          <TriangleAlert size={18} aria-hidden="true" className="shrink-0" /> أكمل شروط مرحلة التحضير أولاً.
+                        </p>
+                      ) : (
+                        <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "scheduled")} label="اعتماد الموعد وإرسال الدعوة" variant="secondary" confirm="اعتماد الموعد وإظهار الدعوة للمدعوين؟" className="w-full" icon={<><CalendarCheck size={16} aria-hidden="true" /> اعتماد الموعد وإرسال الدعوة</>} />
+                      )}
+                    </>
+                  )}
+                  {status === "scheduled" && (
+                    <>
+                      <ConfirmButton
+                        action={setPackPublished.bind(null, meetingId, !meeting.pack_published_at)}
+                        label={meeting.pack_published_at ? "سحب حزمة المجلس" : "نشر حزمة المجلس للمدعوين"}
+                        variant="secondary"
+                        confirm={meeting.pack_published_at ? "إخفاء المستندات عن المدعوين؟" : "إتاحة مستندات الاجتماع لكل المدعوين؟"}
+                        className="w-full"
+                        icon={<><Layers size={16} aria-hidden="true" /> {meeting.pack_published_at ? "سحب حزمة المجلس" : "نشر حزمة المجلس للمدعوين"}</>}
+                      />
+                      <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "draft")} label="إرجاع إلى مسودة" variant="secondary" confirm="إرجاع الاجتماع إلى مسودة؟ ستختفي الدعوة عن المدعوين." className="w-full" icon={<><Undo2 size={16} aria-hidden="true" /> إرجاع إلى مسودة</>} />
+                    </>
+                  )}
+                  {status !== "cancelled" && can(viewer.permissions, "/meetings", LEVELS.manage) && (
+                    <ConfirmButton action={setMeetingStatus.bind(null, meetingId, "cancelled")} label="إلغاء الاجتماع" confirm="إلغاء الاجتماع؟ يبقى سجله محفوظاً." className="w-full" icon={<><Trash2 size={16} aria-hidden="true" /> إلغاء الاجتماع</>} />
+                  )}
+                </Card>
                 {mail && status !== "cancelled" && (
                   <OutlookPanel
                     meetingId={meetingId}
@@ -295,6 +283,8 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
             </p>
           ))}
       </div>
+
+      {checks && <StageNav meetingId={meetingId} checks={checks} view={view} />}
     </>
   );
 }

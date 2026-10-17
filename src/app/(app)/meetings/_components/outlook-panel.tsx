@@ -1,9 +1,10 @@
-import { CalendarPlus, FileDown } from "lucide-react";
+import { CalendarDays, CalendarPlus, Check, CircleAlert, ExternalLink, FileDown, Mail, Users } from "lucide-react";
 import { buttonClass } from "@/components/ui/styles";
 import { inviteText, packMail, type MailMeeting } from "@/lib/meeting-mail";
 import { outlookWebInvite } from "@/lib/outlook";
 import { markPackEmailed } from "../_actions/mail";
 import { MailButton } from "./outlook-buttons";
+import { Card } from "./overview-cards";
 
 type Props = {
   meetingId: string;
@@ -25,45 +26,54 @@ export function OutlookPanel({ meetingId, meeting, minutes, invitees, items, dea
   const web = outlookWebInvite({ title: `${meeting.title} – ${meeting.body}`, start: new Date(meeting.startsAt), minutes, location: meeting.place, description: inviteText(meeting, items.map((i) => i.title)), attendees: invitees.flatMap((i) => (i.email ? [{ name: i.name, email: i.email }] : [])) });
 
   return (
-    <section className="flex flex-col gap-3 border-t border-rule pt-3">
-      <h3 className="font-medium">المراسلات عبر Outlook</h3>
-      {missing.length > 0 && <p className="text-xs text-danger">بلا بريد إلكتروني: {missing.join("، ")}</p>}
+    <Card title="المراسلات عبر Outlook" icon={Mail}>
+      {missing.length > 0 && (
+        <p className="inline-flex items-start gap-1.5 text-xs text-danger">
+          <CircleAlert size={14} aria-hidden="true" className="mt-0.5 shrink-0" /> لا يوجد بريد إلكتروني في ملف: {missing.join("، ")}
+        </p>
+      )}
 
-      <div className="flex flex-col gap-2">
-        <a href={web} target="_blank" rel="noreferrer" className={buttonClass("primary", "w-fit gap-2")}>
-          <CalendarPlus size={16} aria-hidden="true" /> دعوة الأعضاء في تقويم Outlook
+      <a href={web} target="_blank" rel="noreferrer" className={buttonClass("primary", "min-h-11 w-full")}>
+        <CalendarPlus size={18} aria-hidden="true" /> دعوة الأعضاء في تقويم Outlook
+      </a>
+      <p className="text-xs leading-6 text-ink-muted">يفتح موعداً جاهزاً بالأعضاء والوقت والمكان وجدول الأعمال. أرفق ملف PDF ثم أرسل الدعوة.</p>
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs">
+        <a href={`/print/meetings/${meetingId}/agenda?do=pdf`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary hover:underline">
+          <FileDown size={14} aria-hidden="true" /> تحميل جدول الأعمال PDF
         </a>
-        <p className="text-xs text-ink-muted">يفتح تقويم Outlook بموعد جديد جاهز: الأعضاء والوقت والمكان وجدول الأعمال. أرفق ملف PDF ثم اضغط إرسال، ويظهر الموعد في Outlook على جهازك أيضاً.</p>
-        <a href={`/print/meetings/${meetingId}/agenda?do=pdf`} target="_blank" rel="noreferrer" className="flex w-fit items-center gap-1 text-xs text-primary hover:underline">
-          <FileDown size={14} aria-hidden="true" /> جدول الأعمال PDF للإرفاق بالدعوة
+        <span aria-hidden="true" className="h-4 w-px bg-rule" />
+        <a href={`/meetings/${meetingId}/invite.ics`} download title="حمّل ملف الدعوة ثم افتحه من قائمة التنزيلات" className="inline-flex items-center gap-1.5 text-primary hover:underline">
+          <ExternalLink size={14} aria-hidden="true" /> فتح Outlook على الجهاز
         </a>
-        <details className="text-xs text-ink-muted">
-          <summary className="w-fit cursor-pointer">أو افتحها في برنامج Outlook على الجهاز</summary>
-          <p className="mt-1">
-            <a href={`/meetings/${meetingId}/invite.ics`} download className="text-primary hover:underline">
-              تحميل ملف الدعوة
-            </a>{" "}
-            ثم افتحه من قائمة التنزيلات. لتفتح مباشرة في كل مرة: في قائمة التنزيلات اضغط «…» على الملف واختر «فتح هذا النوع من الملفات تلقائياً».
-          </p>
-        </details>
       </div>
 
-      <div className={`flex flex-col gap-2 rounded-md p-3 ${due ? "border border-brass bg-brass-soft" : "bg-paper"}`}>
-        <p className="text-xs">
-          {packEmailedAt ? (
-            <span className="text-primary">✓ أُرسلت الحزمة بالبريد في {packEmailedAt.slice(0, 10)}</span>
-          ) : (
-            <>
-              إرسال الحزمة (جدول الأعمال والمستندات الداعمة) للأعضاء: <strong>آخر موعد نظامي {deadline}</strong>
-              {due && " — حان الموعد"}
-            </>
-          )}
+      <div className={`flex flex-col items-center gap-2 rounded-lg border p-4 text-center ${due ? "border-brass bg-brass-soft" : "border-rule"}`}>
+        <p className="inline-flex items-center gap-2 font-bold">
+          <Users size={18} aria-hidden="true" /> إرسال الحزمة للأعضاء
         </p>
-        {!packEmailedAt && <MailButton to={to} subject={pack.subject} body={pack.body} label="رسالة الحزمة للأعضاء" variant={due ? "primary" : "secondary"} />}
+        <p className="-mt-1 text-xs text-ink-muted">جدول الأعمال والمستندات الداعمة</p>
+        {packEmailedAt ? (
+          <p className="inline-flex items-center gap-1.5 text-xs text-primary">
+            <Check size={14} aria-hidden="true" /> أُرسلت الحزمة بالبريد في {packEmailedAt.slice(0, 10)}
+          </p>
+        ) : (
+          <>
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-rule bg-surface px-3 py-1 text-xs">
+              <CalendarDays size={14} aria-hidden="true" /> آخر موعد: <span className="font-mono">{deadline}</span>
+              {due && <strong className="text-brass"> · حان الموعد</strong>}
+            </span>
+            <MailButton to={to} subject={pack.subject} body={pack.body} label="رسالة الحزمة للأعضاء" variant={due ? "primary" : "secondary"} />
+            {!to.length && (
+              <p className="inline-flex items-center gap-1.5 text-xs text-danger">
+                <CircleAlert size={14} aria-hidden="true" /> لا يوجد بريد إلكتروني مضاف للأعضاء.
+              </p>
+            )}
+          </>
+        )}
         <form action={markPackEmailed.bind(null, meetingId, !packEmailedAt)}>
           <button className="text-xs text-ink-muted hover:underline">{packEmailedAt ? "إلغاء تأكيد الإرسال" : "تأكيد أنها أُرسلت"}</button>
         </form>
       </div>
-    </section>
+    </Card>
   );
 }

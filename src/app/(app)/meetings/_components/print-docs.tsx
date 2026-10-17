@@ -1,44 +1,46 @@
-import { Download, Eye, Printer } from "lucide-react";
-import { buttonClass } from "@/components/ui/styles";
+import { Download, Eye, FileText, Printer, Users } from "lucide-react";
+import { Card } from "./overview-cards";
 
 const DOCS = [
-  { key: "agenda", label: "الدعوة وجدول الأعمال" },
-  { key: "attendance", label: "كشف الحضور" },
-  { key: "minutes", label: "محضر الاجتماع" },
+  { key: "agenda", label: "الدعوة وجدول الأعمال", icon: FileText },
+  { key: "attendance", label: "كشف الحضور", icon: Users },
+  { key: "minutes", label: "محضر الاجتماع", icon: FileText },
 ] as const;
+
+const pill = "motion-press inline-flex items-center gap-1.5 rounded-md border border-rule px-2.5 py-1.5 text-xs hover:border-primary";
 
 /** The meeting's printable documents: preview, print or download each as PDF. */
 export function PrintDocs({ meetingId, hasMinutes }: { meetingId: string; hasMinutes: boolean }) {
-  const link = "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-primary hover:bg-primary-soft";
   return (
-    <section className="rounded-lg border border-rule bg-surface">
-      <h2 className="border-b border-rule px-5 py-3 font-display text-lg font-bold">المستندات المطبوعة</h2>
-      <ul className="divide-y divide-rule text-sm">
+    <Card title="المستندات المطبوعة">
+      <ul className="divide-y divide-rule overflow-hidden rounded-lg border border-rule text-sm">
         {DOCS.map((d) => {
           const href = `/print/meetings/${meetingId}/${d.key}`;
           const available = d.key !== "minutes" || hasMinutes;
+          const Icon = d.icon;
           return (
-            <li key={d.key} className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5">
-              <span>{d.label}</span>
+            <li key={d.key} className="flex flex-wrap items-center gap-2 px-3 py-2.5">
+              <Icon size={18} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-ink-muted" />
+              <span className="min-w-0 flex-1 font-medium">{d.label}</span>
               {available ? (
-                <span className="flex gap-1">
-                  <a href={href} target="_blank" className={link}>
+                <span className="flex gap-1.5">
+                  <a href={href} target="_blank" className={`${pill} text-primary`}>
                     <Eye size={14} aria-hidden="true" /> معاينة
                   </a>
-                  <a href={`${href}?do=print`} target="_blank" className={link}>
+                  <a href={`${href}?do=print`} target="_blank" className={`${pill} text-primary`}>
                     <Printer size={14} aria-hidden="true" /> طباعة
                   </a>
-                  <a href={`${href}?do=pdf`} target="_blank" className={buttonClass("secondary", "px-2 py-1 text-xs")}>
+                  <a href={`${href}?do=pdf`} target="_blank" className={pill}>
                     <Download size={14} aria-hidden="true" /> PDF
                   </a>
                 </span>
               ) : (
-                <span className="text-xs text-ink-muted">بعد إعداد المحضر</span>
+                <span className="rounded-md border border-rule px-2.5 py-1.5 text-xs text-ink-muted">بعد إعداد المحضر</span>
               )}
             </li>
           );
         })}
       </ul>
-    </section>
+    </Card>
   );
 }
